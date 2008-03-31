@@ -1,8 +1,14 @@
 /*
- * Quick mash-up of CSS for the TG quick start page.
+ *  style.css
+ *  HvZ
+ *
+ *  Created by Ross Light on March 30, 2008.
  */
 
-html, body {
+/* MAIN CONTENT AREAS */
+
+html, body
+{
   color: black;
   background-color: #ddd;
   font: x-small "Lucida Grande", "Lucida Sans Unicode", geneva, verdana, sans-serif;
