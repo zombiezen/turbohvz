@@ -25,13 +25,14 @@ class Root(turbogears.controllers.RootController):
     def index(self):
         import time
         # log.debug("Happy TurboGears Controller Responding For Duty")
-        flash("Your application is now running")
+        turbogears.flash("Your application is now running")
         return dict(now=time.ctime())
     
     @expose(template="hvz.templates.login")
     def login(self, forward_url=None, previous_url=None, *args, **kw):
-        if not identity.current.anonymous and identity.was_login_attempted() \
-                and not identity.get_identity_errors():
+        if not identity.current.anonymous and \
+           identity.was_login_attempted() and \
+           not identity.get_identity_errors():
             raise redirect(url(forward_url or previous_url or '/', kw))
         forward_url = None
         previous_url = cherrypy.request.path
