@@ -9,8 +9,11 @@ import logging
 import cherrypy
 import turbogears
 from turbogears import expose, url, identity, redirect
+from turbogears.database import session
+from turbogears.paginate import paginate
+from turbogears.widgets import PaginateDataGrid
 
-from hvz import model #, json
+from hvz import model, util #, json
 
 __author__ = 'Ross Light'
 __date__ = 'March 30, 2008'
@@ -19,8 +22,36 @@ __all__ = ['log',
 
 log = logging.getLogger("hvz.controllers")
 
+class GameController(turbogears.controllers.Controller):
+    @expose("hvz.templates.game.index")
+    @paginate('games', default_order='-game_id')
+    def index(self):
+        all_games = session.query(model.Game)
+        grid_columns = [
+            (_("ID"), 'game_id'),
+            (_("Created"), 'created'),
+            (_("State"), 'state'),
+            PaginateDataGrid.Column('player_count',
+                                    (lambda g: len(g.entries)),
+                                    _("Players")),
+        ]
+        grid = PaginateDataGrid(grid_columns)
+        return dict(games=all_games,
+                    grid=grid,)
+    
+    @expose("hvz.templates.game.view")
+    def view(self, game_id):
+        requested_game = model.Game.get(game_id)
+        if requested_game is not None:
+            return dict(game=requested_game)
+        else:
+            raise ValueError("404")
+
 class Root(turbogears.controllers.RootController):
-    @expose(template="hvz.templates.welcome")
+    def __init__(self):
+        self.game = GameController()
+    
+    @expose("hvz.templates.welcome")
     # @identity.require(identity.in_group("admin"))
     def index(self):
         import time
@@ -28,7 +59,7 @@ class Root(turbogears.controllers.RootController):
         turbogears.flash("Your application is now running")
         return dict(now=time.ctime())
     
-    @expose(template="hvz.templates.login")
+    @expose("hvz.templates.login")
     def login(self, forward_url=None, previous_url=None, *args, **kw):
         if not identity.current.anonymous and \
            identity.was_login_attempted() and \

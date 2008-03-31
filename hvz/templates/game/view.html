@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+
+<py:def function="page_title">Game <span py:replace="game.game_id">#</span></py:def>
+<py:def function="head_info">
+<style type="text/css">
+    .game_info
+    {
+        border: none;
+    }
+    
+    .game_info th, .game_info td
+    {
+        color: black;
+        background: none;
+        border: none;
+    }
+    
+    .game_info th
+    {
+        font-weight: bold;
+        text-align: right;
+    }
+</style>
+</py:def>
+
+<py:match path="content">
+    <h1>Game <span py:replace="game.game_id">#</span></h1>
+    <table class="game_info">
+        <tr>
+            <th>Created:</th>
+            <td><span class="date" py:content="game.created">[date]</span></td>
+        </tr>
+        <tr>
+            <th>Started:</th>
+            <td><span py:choose="" py:strip=""><span py:when="game.started is None" py:strip="">Not yet started</span><span py:otherwise="" class="date" py:content="date">[date]</span></span></td>
+        </tr>
+        <tr>
+            <th>Ended:</th>
+            <td><span py:choose="" py:strip=""><span py:when="game.started is None" py:strip="">Not yet started</span><span py:when="game.ended is None" py:strip="">In progress</span><span py:otherwise="" class="date" py:content="date">[date]</span></span></td>
+        </tr>
+    </table>
+    <h2>Player Roster</h2>
+    <table>
+        <thead>
+            <th>Name</th>
+            <th>Kills</th>
+        </thead>
+        <tr py:for="entry in game.entries">
+            <td py:content="entry.player.display_name">[name]</td>
+            <td py:content="entry.kills">[kills]</td>
+        </tr>
+    </table>
+</py:match>
+
+<xi:include href="../master.html" />
+
+</html>
