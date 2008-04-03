@@ -11,9 +11,8 @@ import turbogears
 from turbogears import expose, url, identity, redirect
 from turbogears.database import session
 from turbogears.paginate import paginate
-from turbogears.widgets import PaginateDataGrid
 
-from hvz import model, util #, json
+from hvz import model, util, widgets #, json
 
 __author__ = 'Ross Light'
 __date__ = 'March 30, 2008'
@@ -27,15 +26,7 @@ class GameController(turbogears.controllers.Controller):
     @paginate('games', default_order='-game_id')
     def index(self):
         all_games = session.query(model.Game)
-        grid_columns = [
-            (_("ID"), 'game_id'),
-            (_("Created"), 'created'),
-            (_("State"), 'state'),
-            PaginateDataGrid.Column('player_count',
-                                    (lambda g: len(g.entries)),
-                                    _("Players")),
-        ]
-        grid = PaginateDataGrid(grid_columns)
+        grid = widgets.GameList()
         return dict(games=all_games,
                     grid=grid,)
     
@@ -43,7 +34,9 @@ class GameController(turbogears.controllers.Controller):
     def view(self, game_id):
         requested_game = model.Game.get(game_id)
         if requested_game is not None:
-            return dict(game=requested_game)
+            grid = widgets.EntryList()
+            return dict(game=requested_game,
+                        grid=grid,)
         else:
             raise ValueError("404")
 

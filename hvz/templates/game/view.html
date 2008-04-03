@@ -45,16 +45,7 @@
         </tr>
     </table>
     <h2>Player Roster</h2>
-    <table>
-        <thead>
-            <th>Name</th>
-            <th>Kills</th>
-        </thead>
-        <tr py:for="entry in game.entries">
-            <td py:content="entry.player.display_name">[name]</td>
-            <td py:content="entry.kills">[kills]</td>
-        </tr>
-    </table>
+    <span py:replace="tg.display(grid, game.entries)">[players]</span>
 </py:match>
 
 <xi:include href="../master.html" />
