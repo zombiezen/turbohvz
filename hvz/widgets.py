@@ -98,8 +98,8 @@ class GameList(CustomDataGrid):
 class EntryList(CustomDataGrid):
     name = "player_list"
     grid_class = "player_list"
-    default_columns = ['game_id', 'name', 'death_date', 'kills']
-    column_titles = {'game_id': _("Game ID"),
+    default_columns = ['player_gid', 'name', 'death_date', 'kills']
+    column_titles = {'player_gid': _("Game ID"),
                      'name': _("Player Name"),
                      'death_date': _("Death Date"),
                      'kills': _("Kills"),}

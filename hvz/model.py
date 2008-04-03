@@ -62,7 +62,7 @@ class PlayerEntry(Entity):
     entry_id = Field(Integer, primary_key=True)
     player = ManyToOne('User', inverse='entries')
     game = ManyToOne('Game', inverse='entries')
-    player_game_id = Field(String(128))
+    player_gid = Field(String(128))
     state = Field(Integer)
     death_date = Field(DateTime)
     feed_date = Field(DateTime)
@@ -70,6 +70,11 @@ class PlayerEntry(Entity):
     killed_by = ManyToOne('User')
     original_pool = Field(Boolean)
     starve_date = Field(DateTime)
+    
+    @classmethod
+    def by_player_gid(cls, game, gid):
+        """Fetches an entry by game and player_gid."""
+        return cls.query.filter_by(game=game, player_gid=gid).first()
     
     def __init__(self, game, player):
         assert game is not None
@@ -83,6 +88,31 @@ class PlayerEntry(Entity):
         self.kills = 0
         self.original_pool = False
         self.starve_date = None
+    
+    def kill(self, other, date=None):
+        if date is None:
+            date = datetime.utcnow()
+        if self.state < 0:
+            if other.state == 1:
+                self.kills += 1
+                self.feed_date = other.death_date = date
+                other.state = -1
+                other.killed_by = self.player
+            else:
+                raise ValueError("Victim is nonhuman")
+        else:
+            raise ValueError("Killer is nonzombie")
+    
+    def __repr__(self):
+        return "<PlayerEntry %i:%s (%s)>" % (self.game.game_id,
+                                             self.player_gid,
+                                             self.player.user_name,)
+    
+    def __str__(self):
+        return unicode(self).encode()
+    
+    def __unicode__(self):
+        return unicode(self.player)
 
 class Game(Entity):
     """
@@ -210,7 +240,7 @@ class User(Entity):
         if display_name is None:
             display_name = name
         self.user_name = unicode(name)
-        self.email_address = unicode(email)
+        self.email_address = unicode(email) if email is not None else None
         self.display_name = unicode(display_name)
         self.password = password
         self.created = datetime.utcnow()
