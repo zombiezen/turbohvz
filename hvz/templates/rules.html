@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+<py:def function="page_title">Humans vs. Zombies</py:def>
+<py:def function="head_info"></py:def>
+
+<py:match path="content">
+    <h1>Humans vs. Zombies</h1>
+    <p>AOC Rules written by Ross Light and TJ Ferrell<br />
+    Based on the original by Brad Sappington and Chris Weed</p>
+    <h2>Overview</h2>
+    <p>Humans vs. Zombies is a game of tag. All players begin as humans, and one is randomly chosen to be the “Original Zombie.” The Original Zombie tags human players and turns them into zombies. The zombies must tag and “feed” on a human every 48 hours or he starves to death and is out of the game.</p>
+    <h2>Objectives</h2>
+    <p>The Zombies win when all human players have been tagged and turned into zombies. The Humans win by surviving long enough for all of the zombies to starve.</p>
+</py:match>
+
+<xi:include href="master.html" />
+
+</html>

@@ -52,6 +52,10 @@ class Root(turbogears.controllers.RootController):
         turbogears.flash("Your application is now running")
         return dict(now=time.ctime())
     
+    @expose("hvz.templates.rules")
+    def rules(self):
+        return dict()
+    
     @expose("hvz.templates.login")
     def login(self, forward_url=None, previous_url=None, *args, **kw):
         if not identity.current.anonymous and \
