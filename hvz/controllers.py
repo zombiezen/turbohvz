@@ -57,10 +57,23 @@ class GameController(turbogears.controllers.Controller):
     @error_handler(reportkill)
     @validate(widgets.kill_form)
     def action_kill(self, game_id, victim_id, kill_date):
+        user = identity.current.user
         game_id = int(game_id)
         requested_game = model.Game.get(game_id)
         if requested_game is not None:
-            log.info("OMG, they killed Kenny! (%s, %s)", victim_id, kill_date)
+            # Retrieve killer and victim
+            killer = model.PlayerEntry.query.filter_by(game=requested_game,
+                                                       player=user).first()
+            if killer is None:
+                raise ValueError("You are not a part of this game")
+            victim = model.PlayerEntry.by_player_gid(requested_game,
+                                                     victim_id)
+            if victim is None:
+                raise ValueError("Invalid victim")
+            # Kill user in question
+            killer.kill(victim, kill_date)
+            # Log it and return to game
+            log.info("OMG, %s killed %s!  Those idiots!", killer, victim)
             raise turbogears.redirect('/game/view/' + str(game_id))
         else:
             raise ValueError("404")
