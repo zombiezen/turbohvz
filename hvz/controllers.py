@@ -8,7 +8,7 @@ import logging
 
 import cherrypy
 import turbogears
-from turbogears import expose, url, identity, redirect
+from turbogears import error_handler, expose, url, identity, validate
 from turbogears.database import session
 from turbogears.paginate import paginate
 
@@ -32,11 +32,36 @@ class GameController(turbogears.controllers.Controller):
     
     @expose("hvz.templates.game.view")
     def view(self, game_id):
+        game_id = int(game_id)
         requested_game = model.Game.get(game_id)
         if requested_game is not None:
             grid = widgets.EntryList()
             return dict(game=requested_game,
                         grid=grid,)
+        else:
+            raise ValueError("404")
+    
+    @expose("hvz.templates.game.reportkill")
+    @identity.require(identity.not_anonymous())
+    def reportkill(self, game_id):
+        game_id = int(game_id)
+        requested_game = model.Game.get(game_id)
+        if requested_game is not None:
+            return dict(game=requested_game,
+                        form=widgets.kill_form,)
+        else:
+            raise ValueError("404")
+    
+    @expose()
+    @identity.require(identity.not_anonymous())
+    @error_handler(reportkill)
+    @validate(widgets.kill_form)
+    def action_kill(self, game_id, victim_id, kill_date):
+        game_id = int(game_id)
+        requested_game = model.Game.get(game_id)
+        if requested_game is not None:
+            log.info("OMG, they killed Kenny! (%s, %s)", victim_id, kill_date)
+            raise turbogears.redirect('/game/view/' + str(game_id))
         else:
             raise ValueError("404")
 
@@ -61,7 +86,7 @@ class Root(turbogears.controllers.RootController):
         if not identity.current.anonymous and \
            identity.was_login_attempted() and \
            not identity.get_identity_errors():
-            raise redirect(url(forward_url or previous_url or '/', kw))
+            raise turbogears.redirect(url(forward_url or previous_url or '/', kw))
         forward_url = None
         previous_url = cherrypy.request.path
         if identity.was_login_attempted():
@@ -83,5 +108,5 @@ class Root(turbogears.controllers.RootController):
     @expose()
     def logout(self):
         identity.current.logout()
-        raise redirect("/")
+        raise turbogears.redirect("/")
 

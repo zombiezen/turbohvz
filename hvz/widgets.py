@@ -14,8 +14,11 @@ from hvz import util
 __author__ = "Ross Light"
 __date__ = "March 31, 2008"
 __all__ = ['CustomDataGrid',
-           'PlayerList',
-           'GameList',]
+           'EntryList',
+           'GameList',
+           'KillSchema',
+           'KillFields',
+           'kill_form',]
 
 class CustomDataGrid(Widget):
     name = "custom_grid"
@@ -110,4 +113,23 @@ class EntryList(CustomDataGrid):
                        href=url("/player/view/" + str(player.user_id)))
         link.text = player.display_name
         return link
+
+class KillSchema(validators.Schema):
+    game_id = validators.Int()
+    victim_id = validators.String(min=1, max=128)
+    kill_date = validators.DateTimeConverter()
+
+class KillFields(WidgetsList):
+    game_id = widgets.HiddenField()
+    victim_id = widgets.TextField(
+        label=_("Victim"),
+        attrs=dict(size=64),)
+    kill_date = widgets.CalendarDateTimePicker(
+        label=_("Time of Demise"),)
+
+kill_form = widgets.TableForm(name='kill_form',
+                              fields=KillFields(),
+                              validator=KillSchema(),
+                              action=turbogears.url('/game/action.kill'),
+                              submit_text=_("Report"),)
 
