@@ -58,6 +58,7 @@ class GameController(turbogears.controllers.Controller):
     @validate(widgets.kill_form)
     def action_kill(self, game_id, victim_id, kill_date):
         user = identity.current.user
+        kill_date = model.as_local(kill_date)
         game_id = int(game_id)
         requested_game = model.Game.get(game_id)
         if requested_game is not None:

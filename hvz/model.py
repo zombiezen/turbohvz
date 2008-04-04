@@ -5,19 +5,29 @@
 #
 
 from datetime import datetime
+import random
+import string
 
 import pkg_resources
 pkg_resources.require("SQLAlchemy>=0.3.10")
 pkg_resources.require("Elixir>=0.4.0")
+pkg_resources.require("pytz")
 
 from elixir import (Entity, Field, OneToMany, ManyToOne, ManyToMany,
-                    options_defaults, using_options, setup_all,
+                    options_defaults, using_options,
+                    using_table_options, setup_all,
                     String, Unicode, Integer, Boolean, DateTime)
-from turbogears import identity
+import pytz
+from sqlalchemy import UniqueConstraint
+from turbogears import identity, config
 
 __author__ = 'Ross Light'
 __date__ = 'March 30, 2008'
-__all__ = ['PlayerEntry',
+__all__ = ['as_local',
+           'as_utc',
+           'to_local',
+           'to_utc',
+           'PlayerEntry',
            'Game',
            'Visit',
            'VisitIdentity',
@@ -26,6 +36,50 @@ __all__ = ['PlayerEntry',
            'Permission',]
 
 options_defaults['autosetup'] = False
+
+# Date functions
+
+def _get_local_timezone():
+    return pytz.timezone(config.get('hvz.timezone', 'UTC'))
+
+def as_local(date, tz=None):
+    if tz is None:
+        tz = _get_local_timezone()
+    return tz.localize(date)
+
+def as_utc(date):
+    return date.replace(tzinfo=pytz.utc)
+
+def to_local(date, tz=None):
+    if tz is None:
+        tz = _get_local_timezone()
+    if date.tzinfo is None:
+        date = as_utc(date)
+    return date.astimezone(tz)
+
+def to_utc(date):
+    if date.tzinfo is None:
+        date = as_utc(date)
+    return date.astimezone(pytz.utc)
+
+def _get_date_prop(name):
+    def get_prop(self):
+        value = getattr(self, name)
+        if value is None:
+            return None
+        else:
+            return as_utc(value)
+    return get_prop
+
+def _set_date_prop(name):
+    def set_prop(self, value):
+        if value is not None:
+            value = to_utc(value)
+        setattr(self, name, value)
+    return set_prop
+
+def _date_prop(name):
+    return property(_get_date_prop(name), _set_date_prop(name))
 
 # your data model
 
@@ -64,12 +118,18 @@ class PlayerEntry(Entity):
     game = ManyToOne('Game', inverse='entries')
     player_gid = Field(String(128))
     state = Field(Integer)
-    death_date = Field(DateTime)
-    feed_date = Field(DateTime)
+    _death_date = Field(DateTime, colname='death_date', synonym='death_date')
+    _feed_date = Field(DateTime, colname='feed_date', synonym='feed_date')
     kills = Field(Integer)
     killed_by = ManyToOne('User')
     original_pool = Field(Boolean)
-    starve_date = Field(DateTime)
+    _starve_date = Field(DateTime, colname='starve_date', synonym='starve_date')
+    
+    @staticmethod
+    def _generate_id(id_length):
+        id_chars = string.ascii_uppercase + string.digits
+        result = ''.join(random.choice(id_chars) for i in xrange(id_length))
+        return result
     
     @classmethod
     def by_player_gid(cls, game, gid):
@@ -79,9 +139,10 @@ class PlayerEntry(Entity):
     def __init__(self, game, player):
         assert game is not None
         assert player is not None
+        id_length = int(config.get('hvz.id_length', '16'), 10)
         self.game = game
         self.player = player
-        # TODO: self.player_game_id
+        self.player_gid = self._generate_id(id_length)
         self.state = 1
         self.death_date = None
         self.feed_date = None
@@ -91,7 +152,7 @@ class PlayerEntry(Entity):
     
     def kill(self, other, date=None):
         if date is None:
-            date = datetime.utcnow()
+            date = as_utc(datetime.utcnow())
         if self.state < 0:
             if other.state == 1:
                 self.kills += 1
@@ -113,6 +174,12 @@ class PlayerEntry(Entity):
     
     def __unicode__(self):
         return unicode(self.player)
+    
+    death_date = _date_prop('_death_date')
+    feed_date = _date_prop('_feed_date')
+    starve_date = _date_prop('_starve_date')
+    
+    #using_table_options(UniqueConstraint('game_id', 'player_gid'))
 
 class Game(Entity):
     """
@@ -143,9 +210,9 @@ class Game(Entity):
     using_options(tablename='game')
     
     game_id = Field(Integer, primary_key=True)
-    created = Field(DateTime)
-    started = Field(DateTime)
-    ended = Field(DateTime)
+    _created = Field(DateTime, colname='created', synonym='created')
+    _started = Field(DateTime, colname='started', synonym='started')
+    _ended = Field(DateTime, colname='ended', synonym='ended')
     state = Field(Integer)
     entries = OneToMany('PlayerEntry', inverse='game')
     
@@ -166,6 +233,10 @@ class Game(Entity):
     @property
     def players(self):
         return [entry.player for entry in self.entries]
+    
+    created = _date_prop('_created')
+    started = _date_prop('_started')
+    ended = _date_prop('_ended')
 
 # the identity model
 
@@ -176,13 +247,15 @@ class Visit(Entity):
     using_options(tablename='visit')
 
     visit_key = Field(String(40), primary_key=True)
-    created = Field(DateTime, nullable=False, default=datetime.utcnow)
+    _created = Field(DateTime, colname='created', synonym='created',
+                     nullable=False, default=datetime.utcnow,)
     expiry = Field(DateTime)
     
     @classmethod
     def lookup_visit(cls, visit_key):
         return Visit.get(visit_key)
-
+    
+    created = _date_prop('_created')
 
 class VisitIdentity(Entity):
     """
@@ -193,7 +266,6 @@ class VisitIdentity(Entity):
     visit_key = Field(String(40), primary_key=True)
     user = ManyToOne('User', colname='user_id', use_alter=True)
 
-
 class Group(Entity):
     """
     An ultra-simple group definition.
@@ -203,7 +275,7 @@ class Group(Entity):
     group_id = Field(Integer, primary_key=True)
     group_name = Field(Unicode(16), unique=True)
     display_name = Field(Unicode(255), nullable=False)
-    created = Field(DateTime, default=datetime.utcnow)
+    _created = Field(DateTime, colname='created', synonym='created')
     users = ManyToMany('User', tablename='user_group')
     permissions = ManyToMany('Permission', tablename='group_permission')
     
@@ -213,6 +285,8 @@ class Group(Entity):
         self.group_name = unicode(name)
         self.display_name = unicode(display_name)
         self.created = datetime.utcnow()
+    
+    created = _date_prop('_created')
 
 class User(Entity):
     """
@@ -225,8 +299,8 @@ class User(Entity):
     user_name = Field(Unicode(16), unique=True)
     email_address = Field(Unicode(255))
     display_name = Field(Unicode(255), nullable=False)
-    _password = Field(Unicode(40), colname='tg_password')
-    created = Field(DateTime)
+    _password = Field(Unicode(40), colname='tg_password', synonym='password')
+    _created = Field(DateTime, colname='created', synonym='created')
     groups = ManyToMany('Group', tablename='user_group')
     
     entries = OneToMany('PlayerEntry', inverse='player')
@@ -270,6 +344,7 @@ class User(Entity):
     def set_raw_password(self, new_password):
         self._password = unicode(new_password)
     
+    created = _date_prop('_created')
     password = property(_get_password, _set_password)
 
 class Permission(Entity):
