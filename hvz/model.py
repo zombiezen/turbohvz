@@ -114,14 +114,14 @@ class PlayerEntry(Entity):
     using_options(tablename='entries')
     
     entry_id = Field(Integer, primary_key=True)
-    player = ManyToOne('User', inverse='entries')
-    game = ManyToOne('Game', inverse='entries')
+    player = ManyToOne('User', colname='player_id', inverse='entries')
+    game = ManyToOne('Game', colname='game_id', inverse='entries')
     player_gid = Field(String(128))
     state = Field(Integer)
     _death_date = Field(DateTime, colname='death_date', synonym='death_date')
     _feed_date = Field(DateTime, colname='feed_date', synonym='feed_date')
     kills = Field(Integer)
-    killed_by = ManyToOne('User')
+    killed_by = ManyToOne('User', colname='killed_by')
     original_pool = Field(Boolean)
     _starve_date = Field(DateTime, colname='starve_date', synonym='starve_date')
     
@@ -179,7 +179,7 @@ class PlayerEntry(Entity):
     feed_date = _date_prop('_feed_date')
     starve_date = _date_prop('_starve_date')
     
-    #using_table_options(UniqueConstraint('game_id', 'player_gid'))
+    using_table_options(UniqueConstraint('game_id', 'player_gid'))
 
 class Game(Entity):
     """
