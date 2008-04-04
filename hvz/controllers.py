@@ -78,6 +78,23 @@ class GameController(turbogears.controllers.Controller):
             raise turbogears.redirect('/game/view/' + str(game_id))
         else:
             raise ValueError("404")
+    
+    @expose()
+    @identity.require(identity.not_anonymous()) # TODO: Admin
+    @error_handler(view)
+    @validate(validators=widgets.StageSchema)
+    def action_stage(self, game_id, btnPrev=None, btnNext=None):
+        user = identity.current.user
+        game_id = int(game_id)
+        requested_game = model.Game.get(game_id)
+        if requested_game is not None:
+            if btnNext:
+                requested_game.next_state()
+            elif btnPrev:
+                requested_game.previous_state()
+            raise turbogears.redirect('/game/view/' + str(game_id))
+        else:
+            raise ValueError("404")
 
 class Root(turbogears.controllers.RootController):
     def __init__(self):

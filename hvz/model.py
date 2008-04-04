@@ -209,6 +209,14 @@ class Game(Entity):
     """
     using_options(tablename='game')
     
+    STATE_CREATED = 0
+    STATE_OPEN = 1
+    STATE_CLOSED = 2
+    STATE_CHOOSE_ZOMBIE = 3
+    STATE_STARTED = 4
+    STATE_REVEAL_ZOMBIE = 5
+    STATE_ENDED = 6
+    
     game_id = Field(Integer, primary_key=True)
     _created = Field(DateTime, colname='created', synonym='created')
     _started = Field(DateTime, colname='started', synonym='started')
@@ -220,19 +228,51 @@ class Game(Entity):
         self.created = datetime.utcnow()
         self.started = None
         self.ended = None
-        self.state = 0
+        self.state = self.STATE_CREATED
     
     @property
     def revealed_original_zombie(self):
-        return self.state >= 5
+        return self.state >= self.STATE_REVEAL_ZOMBIE
     
     @property
     def registration_open(self):
-        return self.state == 1
+        return self.state == self.STATE_OPEN
     
     @property
     def players(self):
         return [entry.player for entry in self.entries]
+    
+    @property
+    def is_first_state(self):
+        return bool(self.state <= self.STATE_CREATED)
+    
+    @property
+    def is_last_state(self):
+        return bool(self.state >= self.STATE_ENDED)
+    
+    def previous_state(self):
+        # Check if we can do this
+        if self.is_first_state:
+            raise ValueError("The game has not yet begun")
+        # Go previous state
+        self.state -= 1
+        # Do state hooks
+        if self.state == self.STATE_STARTED - 1:
+            self.started = None
+        elif self.state == self.STATE_ENDED - 1:
+            self.ended = None
+    
+    def next_state(self):
+        # Check if we can do this
+        if self.is_last_state:
+            raise ValueError("The game is already over")
+        # Go next state
+        self.state += 1
+        # Do state hooks
+        if self.state == self.STATE_STARTED:
+            self.started = datetime.utcnow()
+        elif self.state == self.STATE_ENDED:
+            self.ended = datetime.utcnow()
     
     created = _date_prop('_created')
     started = _date_prop('_started')

@@ -42,11 +42,11 @@
         </tr>
         <tr>
             <th>Started:</th>
-            <td><span py:choose="" py:strip=""><span py:when="game.started is None" py:strip="">Not yet started</span><span py:otherwise="" class="date" py:content="date">[date]</span></span></td>
+            <td><span py:choose="" py:strip=""><span py:when="game.started is None" py:strip="">Not yet started</span><span py:otherwise="" class="date" py:content="game.started">[date]</span></span></td>
         </tr>
         <tr>
             <th>Ended:</th>
-            <td><span py:choose="" py:strip=""><span py:when="game.started is None" py:strip="">Not yet started</span><span py:when="game.ended is None" py:strip="">In progress</span><span py:otherwise="" class="date" py:content="date">[date]</span></span></td>
+            <td><span py:choose="" py:strip=""><span py:when="game.started is None" py:strip="">Not yet started</span><span py:when="game.ended is None" py:strip="">In progress</span><span py:otherwise="" class="date" py:content="game.ended">[date]</span></span></td>
         </tr>
     </table>
     <h2>Player Roster</h2>
@@ -82,6 +82,14 @@
             <td>Game over</td>
         </tr>
     </table>
+    <!-- TODO: Check for admin -->
+    <form py:if="not tg.identity.anonymous" action="${tg.url('/game/action.stage')}">
+        <input type="hidden" name="game_id" value="${game.game_id}" />
+        <p>
+            <input py:if="not game.is_first_state" type="submit" name="btnPrev" value="Previous Stage" />
+            <input py:if="not game.is_last_state" type="submit" name="btnNext" value="Next Stage" />
+        </p>
+    </form>
 </py:match>
 
 <xi:include href="../master.html" />

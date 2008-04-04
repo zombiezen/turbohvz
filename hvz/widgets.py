@@ -18,7 +18,8 @@ __all__ = ['CustomDataGrid',
            'GameList',
            'KillSchema',
            'KillFields',
-           'kill_form',]
+           'kill_form',
+           'StageSchema',]
 
 class CustomDataGrid(Widget):
     name = "custom_grid"
@@ -132,4 +133,9 @@ kill_form = widgets.TableForm(name='kill_form',
                               validator=KillSchema(),
                               action=turbogears.url('/game/action.kill'),
                               submit_text=_("Report"),)
+
+class StageSchema(validators.Schema):
+    game_id = validators.Int()
+    btnPrev = validators.UnicodeString(if_empty=None)
+    btnNext = validators.UnicodeString(if_empty=None)
 
