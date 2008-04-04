@@ -51,6 +51,7 @@
     </table>
     <h2>Player Roster</h2>
     <span py:replace="tg.display(grid, game.entries)">[players]</span>
+    <p><a py:if="game.registration_open and not tg.identity.anonymous and tg.identity.user not in game.players" href="${tg.url('/game/join/' + str(game.game_id))}"><button>Join</button></a></p>
     <h2>Stage</h2>
     <table>
         <tr>
