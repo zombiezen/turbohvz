@@ -25,6 +25,11 @@
         font-weight: bold;
         text-align: right;
     }
+    
+    .check
+    {
+        color: green;
+    }
 </style>
 </py:def>
 
@@ -46,6 +51,37 @@
     </table>
     <h2>Player Roster</h2>
     <span py:replace="tg.display(grid, game.entries)">[players]</span>
+    <h2>Stage</h2>
+    <table>
+        <tr>
+            <td class="check"><py:if test="game.state >= 0">&#x2713;</py:if></td>
+            <td>Game created</td>
+        </tr>
+        <tr>
+            <td class="check"><py:if test="game.state >= 1">&#x2713;</py:if></td>
+            <td>Open registration</td>
+        </tr>
+        <tr>
+            <td class="check"><py:if test="game.state >= 2">&#x2713;</py:if></td>
+            <td>Closed registration</td>
+        </tr>
+        <tr>
+            <td class="check"><py:if test="game.state >= 3">&#x2713;</py:if></td>
+            <td>Choose original zombie</td>
+        </tr>
+        <tr>
+            <td class="check"><py:if test="game.state >= 4">&#x2713;</py:if></td>
+            <td>Start game</td>
+        </tr>
+        <tr>
+            <td class="check"><py:if test="game.state >= 5">&#x2713;</py:if></td>
+            <td>Reveal original zombie</td>
+        </tr>
+        <tr>
+            <td class="check"><py:if test="game.state >= 6">&#x2713;</py:if></td>
+            <td>Game over</td>
+        </tr>
+    </table>
 </py:match>
 
 <xi:include href="../master.html" />
