@@ -365,4 +365,5 @@ class Permission(Entity):
 # Set up all Elixir entities declared above
 
 setup_all()
+random.seed() # make sure we have real randomness
 
