@@ -12,12 +12,14 @@ __all__ = ['abslink',
            'change_params',
            'display',
            'display_date',
+           'game_link',
            'insecurelink',
            'insecureurl',
            'plain2html',
            'securelink',
            'secureurl',
            'str2bool',
+           'user_link',
            'add_template_variables',]
 
 from cgi import escape
@@ -83,6 +85,14 @@ def display_date(date):
     from model import to_local
     return unicode(to_local(date).replace(microsecond=0).isoformat())
 
+def game_link(game, action='view', **params):
+    if isinstance(game, (int, long)):
+        pass
+    else:
+        game = game.game_id
+    base = '/game/%s/%s' % (quote(action, ''), quote(str(game), ''))
+    return _make_app_link(base, params)
+
 def insecurelink(path):
     """Create an insecure URL from a pre-constructed path."""
     baseURL = cherrypy.request.base
@@ -141,8 +151,19 @@ def str2bool(s, *args):
             else:
                 raise ValueError("Invalid bool: %r" % s)
 
+def user_link(user, action='view', **params):
+    if isinstance(user, (int, long)):
+        pass
+    elif hasattr(user, 'player_id'):
+        user = user.player_id
+    else:
+        user = user.user_id
+    base = '/user/%s/%s' % (quote(action, ''), quote(str(user), ''))
+    return _make_app_link(base, params)
+
 def add_template_variables(vars):
-    hvzNamespace = DictObj()
+    hvzNamespace = DictObj(game_link=game_link,
+                           user_link=user_link,)
     lookup = dict(hvz=hvzNamespace,
                   abslink=abslink,
                   absurl=absurl,

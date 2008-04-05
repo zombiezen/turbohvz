@@ -106,7 +106,7 @@ class GameList(CustomDataGrid):
     @staticmethod
     def _get_id_col(row, column):
         link = Element("{http://www.w3.org/1999/xhtml}a",
-                       href=url("/game/view/" + str(row.game_id)))
+                       href=util.game_link(row))
         link.text = row.game_id
         return link
 
@@ -136,7 +136,7 @@ class EntryList(CustomDataGrid):
     def _get_name_col(row, column):
         player = row.player
         link = Element("{http://www.w3.org/1999/xhtml}a",
-                       href=url("/player/view/" + str(player.user_id)))
+                       href=util.user_link(player))
         link.text = player.display_name
         return link
     

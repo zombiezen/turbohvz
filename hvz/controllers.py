@@ -88,8 +88,8 @@ class GameController(turbogears.controllers.Controller):
             killer.kill(victim, kill_date)
             # Log it and return to game
             log.info("OMG, %s killed %s!  Those idiots!", killer, victim)
-            url_fmt = '/game/view/%i#sect_entry_list'
-            raise turbogears.redirect(url_fmt % (game_id))
+            link = util.game_link(game_id, redirect=True) + '#sect_entry_list'
+            raise turbogears.redirect(link)
         else:
             raise ValueError("404")
     
@@ -106,8 +106,8 @@ class GameController(turbogears.controllers.Controller):
                 requested_game.next_state()
             elif btnPrev:
                 requested_game.previous_state()
-            url_fmt = '/game/view/%i#sect_stage'
-            raise turbogears.redirect(url_fmt % (game_id))
+            link = util.game_link(game_id, redirect=True) + '#sect_stage'
+            raise turbogears.redirect(link)
         else:
             raise ValueError("404")
     
@@ -124,8 +124,8 @@ class GameController(turbogears.controllers.Controller):
                 raise ValueError("Registration is closed")
             entry = model.PlayerEntry(requested_game, user)
             entry.original_pool = original_pool
-            url_fmt = '/game/view/%i#sect_entry_list'
-            raise turbogears.redirect(url_fmt % (game_id))
+            link = util.game_link(game_id, redirect=True) + '#sect_entry_list'
+            raise turbogears.redirect(link)
         else:
             raise ValueError("404")
     
@@ -140,8 +140,8 @@ class GameController(turbogears.controllers.Controller):
                 raise ValueError("Registration is closed")
             entry = model.PlayerEntry.by_player(requested_game, user)
             session.delete(entry)
-            url_fmt = '/game/view/%i#sect_entry_list'
-            raise turbogears.redirect(url_fmt % (game_id))
+            link = util.game_link(game_id, redirect=True) + '#sect_entry_list'
+            raise turbogears.redirect(link)
         else:
             raise ValueError("404")
 
