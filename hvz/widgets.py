@@ -34,16 +34,18 @@ def _get_date_col(row, column):
 
 class CustomDataGrid(Widget):
     name = "custom_grid"
-    grid_class = "custom_grid"
+    grid_class = ""
     template = "hvz.templates.widgets.customgrid"
-    params = ['sortable', 'columns', 'grid_class']
+    params = ['sortable', 'columns', 'grid_class', 'no_data_msg']
     params_doc = {'sortable': "Whether to use tg.paginate sorting",
                   'columns': "What columns to display",
-                  'grid_class': "Element's class",}
+                  'grid_class': "Element's class",
+                  'no_data_msg': "Message to display if there is no data",}
     
     column_titles = {'id': _("ID"),}
     default_columns = ['id']
     accessors = {'*': 'default_accessor'}
+    no_data_msg = _("No data")
     
     @staticmethod
     def default_accessor(row, column):
@@ -102,6 +104,7 @@ class GameList(CustomDataGrid):
                  'started': _get_date_col,
                  'ended': _get_date_col,
                  '*': CustomDataGrid.default_accessor,}
+    no_data_msg = _("No games found")
     
     @staticmethod
     def _get_id_col(row, column):
@@ -123,6 +126,7 @@ class EntryList(CustomDataGrid):
                  'affiliation': '_get_affiliation_col',
                  'death_date': _get_date_col,
                  '*': CustomDataGrid.default_accessor,}
+    no_data_msg = _("No players have joined yet")
     
     params = ['show_oz']
     params_doc = {'show_oz': "Whether to reveal the original zombie",}

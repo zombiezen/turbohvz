@@ -138,3 +138,10 @@ span.code {
     color: red;
     font-weight: bold;
 }
+
+.custom_grid .no_data
+{
+    background: #cf9;
+    text-align: center;
+    font-style: italic;
+}
