@@ -48,15 +48,15 @@ function unjoin(evt)
     <table class="game_info">
         <tr>
             <th>Created:</th>
-            <td><span class="date" py:content="game.created">[date]</span></td>
+            <td><span class="date" py:content="tg.display_date(game.created)">[date]</span></td>
         </tr>
         <tr>
             <th>Started:</th>
-            <td><span py:choose="" py:strip=""><span py:when="game.started is None" py:strip="">Not yet started</span><span py:otherwise="" class="date" py:content="game.started">[date]</span></span></td>
+            <td><span py:choose="" py:strip=""><span py:when="game.started is None" py:strip="">Not yet started</span><span py:otherwise="" class="date" py:content="tg.display_date(game.started)">[date]</span></span></td>
         </tr>
         <tr>
             <th>Ended:</th>
-            <td><span py:choose="" py:strip=""><span py:when="game.started is None" py:strip="">Not yet started</span><span py:when="game.ended is None" py:strip="">In progress</span><span py:otherwise="" class="date" py:content="game.ended">[date]</span></span></td>
+            <td><span py:choose="" py:strip=""><span py:when="game.started is None" py:strip="">Not yet started</span><span py:when="game.ended is None" py:strip="">In progress</span><span py:otherwise="" class="date" py:content="tg.display_date(game.ended)">[date]</span></span></td>
         </tr>
     </table>
     <h2 id="sect_entry_list">Player Roster</h2>

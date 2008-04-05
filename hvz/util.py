@@ -11,6 +11,7 @@ __all__ = ['abslink',
            'absurl',
            'change_params',
            'display',
+           'display_date',
            'insecurelink',
            'insecureurl',
            'plain2html',
@@ -73,8 +74,14 @@ def change_params(url=None, d=None, **kw):
         return urlunparse(parse_result)
 
 def display(widget, *args, **kw):
+    """Display a widget in Genshi"""
     data = widget.render(format='html', *args, **kw)
     return genshi.HTML(turbogears.util.to_unicode(data))
+
+def display_date(date):
+    """Format dates uniformly"""
+    from model import to_local
+    return unicode(to_local(date).replace(microsecond=0).isoformat())
 
 def insecurelink(path):
     """Create an insecure URL from a pre-constructed path."""
@@ -141,6 +148,7 @@ def add_template_variables(vars):
                   absurl=absurl,
                   change_params=change_params,
                   display=display,
+                  display_date=display_date,
                   insecurelink=insecurelink,
                   insecureurl=insecureurl,
                   jsencode=jsencode,

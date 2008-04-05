@@ -24,6 +24,14 @@ __all__ = ['CustomDataGrid',
            'JoinFields',
            'join_form',]
 
+def _get_date_col(row, column):
+    from hvz.util import display_date
+    date = getattr(row, column, None)
+    if date is None:
+        return u""
+    else:
+        return display_date(date)
+
 class CustomDataGrid(Widget):
     name = "custom_grid"
     grid_class = "custom_grid"
@@ -90,6 +98,9 @@ class GameList(CustomDataGrid):
                      'player_count': _("Players"),}
     accessors = {'id': '_get_id_col',
                  'player_count': (lambda r, c: len(r.entries)),
+                 'created': _get_date_col,
+                 'started': _get_date_col,
+                 'ended': _get_date_col,
                  '*': CustomDataGrid.default_accessor,}
     
     @staticmethod
@@ -109,7 +120,8 @@ class EntryList(CustomDataGrid):
                      'kills': _("Kills"),
                      'affiliation': _("Affiliation"),}
     accessors = {'name': '_get_name_col',
-                 'affiliation': '_get_affiliation',
+                 'affiliation': '_get_affiliation_col',
+                 'death_date': _get_date_col,
                  '*': CustomDataGrid.default_accessor,}
     
     params = ['show_oz']
@@ -128,8 +140,8 @@ class EntryList(CustomDataGrid):
         link.text = player.display_name
         return link
     
-    def _get_affiliation(self, row, column):
-        from model import PlayerEntry
+    def _get_affiliation_col(self, row, column):
+        from hvz.model import PlayerEntry
         if not self.show_oz and row.state == PlayerEntry.STATE_ORIGINAL_ZOMBIE:
             return row.STATE_NAMES[PlayerEntry.STATE_HUMAN]
         else:
