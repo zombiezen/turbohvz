@@ -22,6 +22,14 @@ __all__ = ['log',
 log = logging.getLogger("hvz.controllers")
 
 class GameController(turbogears.controllers.Controller):
+    @staticmethod
+    def _get_current_entry(game):
+        user = identity.current.user
+        if user is not None:
+            return model.PlayerEntry.by_player(game, user)
+        else:
+            return None
+    
     @expose("hvz.templates.game.index")
     @paginate('games', default_order='-game_id')
     def index(self):
@@ -35,10 +43,12 @@ class GameController(turbogears.controllers.Controller):
         game_id = int(game_id)
         requested_game = model.Game.get(game_id)
         if requested_game is not None:
+            entry = self._get_current_entry(requested_game)
             oz = requested_game.revealed_original_zombie
             grid = widgets.EntryList(show_oz=oz)
             return dict(game=requested_game,
-                        grid=grid,)
+                        grid=grid,
+                        current_entry=entry,)
         else:
             raise ValueError("404")
     
@@ -48,8 +58,10 @@ class GameController(turbogears.controllers.Controller):
         game_id = int(game_id)
         requested_game = model.Game.get(game_id)
         if requested_game is not None:
+            entry = self._get_current_entry(requested_game)
             return dict(game=requested_game,
-                        form=widgets.kill_form,)
+                        form=widgets.kill_form,
+                        current_entry=entry,)
         else:
             raise ValueError("404")
     

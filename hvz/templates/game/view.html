@@ -61,9 +61,10 @@ function unjoin(evt)
     </table>
     <h2 id="sect_entry_list">Player Roster</h2>
     <span py:replace="tg.display(grid, game.entries)">[players]</span>
-    <div>
-        <button py:if="game.registration_open and not tg.identity.anonymous and tg.identity.user in game.players" onclick="unjoin(event);">Unjoin</button>
-        <a py:if="game.registration_open and not tg.identity.anonymous and tg.identity.user not in game.players" href="${tg.hvz.game_link(game, 'join')}"><button>Join</button></a>
+    <div py:if="not tg.identity.anonymous">
+        <button py:if="game.registration_open and current_entry is not None" onclick="unjoin(event);">Unjoin</button>
+        <a py:if="game.registration_open and current_entry is None" href="${tg.hvz.game_link(game, 'join')}"><button>Join</button></a>
+        <a py:if="game.registration_open and current_entry is not None and current_entry.is_undead" href="${tg.hvz.game_link(game, 'reportkill')}"><button>Report Kill</button></a>
     </div>
     <h2 id="sect_stage">Stage</h2>
     <table>

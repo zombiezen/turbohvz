@@ -8,7 +8,13 @@
 <py:def function="head_info"></py:def>
 
 <py:match path="content">
-    <span py:replace="tg.display(form, dict(game_id=game.game_id))">[kill form]</span>
+    <h1>Report Kill</h1>
+    <py:choose>
+        <span py:when="current_entry.is_undead" py:replace="tg.display(form, dict(game_id=game.game_id))">[kill form]</span>
+        <div py:otherwise="" py:strip="">
+            <p>You are <em py:content="current_entry.affiliation">[affiliate]</em>.  Only zombies can kill people!  You can't just go around killing other people!</p>
+        </div>
+    </py:choose>
 </py:match>
 
 <xi:include href="../master.html" />
