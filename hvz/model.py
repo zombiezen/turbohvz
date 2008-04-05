@@ -121,7 +121,9 @@ class PlayerEntry(Entity):
     _death_date = Field(DateTime, colname='death_date', synonym='death_date')
     _feed_date = Field(DateTime, colname='feed_date', synonym='feed_date')
     kills = Field(Integer)
-    killed_by = ManyToOne('User', colname='killed_by')
+    # _killed_by: Yes, it's a foreign key, but SQLAlchemy doesn't seem to like
+    # it, so just making it an integer temporarily.
+    _killed_by = Field(Integer, colname='killed_by', synonym='killed_by')
     original_pool = Field(Boolean)
     _starve_date = Field(DateTime, colname='starve_date', synonym='starve_date')
     
@@ -147,6 +149,7 @@ class PlayerEntry(Entity):
         self.death_date = None
         self.feed_date = None
         self.kills = 0
+        self.killed_by = None
         self.original_pool = False
         self.starve_date = None
     
@@ -174,6 +177,22 @@ class PlayerEntry(Entity):
     
     def __unicode__(self):
         return unicode(self.player)
+    
+    def _get_killed_by(self):
+        value = self._killed_by
+        if value is None:
+            return None
+        else:
+            return User.get(value)
+    
+    def _set_killed_by(self, new_killer):
+        if new_killer is None:
+            self._killed_by = None
+        elif isinstance(new_killer, (int, long)):
+            assert User.get(new_killer) is not None
+            self._killed_by = new_killer
+        else:
+            self._killed_by = new_killer.user_id
     
     death_date = _date_prop('_death_date')
     feed_date = _date_prop('_feed_date')

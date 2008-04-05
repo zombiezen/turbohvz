@@ -19,7 +19,10 @@ __all__ = ['CustomDataGrid',
            'KillSchema',
            'KillFields',
            'kill_form',
-           'StageSchema',]
+           'StageSchema',
+           'JoinSchema',
+           'JoinFields',
+           'join_form',]
 
 class CustomDataGrid(Widget):
     name = "custom_grid"
@@ -138,4 +141,19 @@ class StageSchema(validators.Schema):
     game_id = validators.Int()
     btnPrev = validators.UnicodeString(if_empty=None)
     btnNext = validators.UnicodeString(if_empty=None)
+
+class JoinSchema(validators.Schema):
+    game_id = validators.Int()
+    original_pool = validators.Bool()
+
+class JoinFields(WidgetsList):
+    game_id = widgets.HiddenField()
+    original_pool = widgets.CheckBox(
+        label=_("Consider for Original Zombie"),)
+
+join_form = widgets.TableForm(name='join_form',
+                              fields=JoinFields(),
+                              validator=JoinSchema(),
+                              action=turbogears.url('/game/action.join'),
+                              submit_text=_("Join"),)
 

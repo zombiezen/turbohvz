@@ -52,6 +52,17 @@ class GameController(turbogears.controllers.Controller):
         else:
             raise ValueError("404")
     
+    @expose("hvz.templates.game.join")
+    @identity.require(identity.not_anonymous())
+    def join(self, game_id):
+        game_id = int(game_id)
+        requested_game = model.Game.get(game_id)
+        if requested_game is not None:
+            return dict(game=requested_game,
+                        form=widgets.join_form,)
+        else:
+            raise ValueError("404")
+    
     @expose()
     @identity.require(identity.not_anonymous())
     @error_handler(reportkill)
@@ -92,6 +103,22 @@ class GameController(turbogears.controllers.Controller):
                 requested_game.next_state()
             elif btnPrev:
                 requested_game.previous_state()
+            raise turbogears.redirect('/game/view/' + str(game_id))
+        else:
+            raise ValueError("404")
+    
+    @expose()
+    @identity.require(identity.not_anonymous())
+    @error_handler(join)
+    @validate(widgets.join_form)
+    def action_join(self, game_id, original_pool=False):
+        user = identity.current.user
+        game_id = int(game_id)
+        requested_game = model.Game.get(game_id)
+        if requested_game is not None:
+            #print repr(requested_game), repr(user)
+            entry = model.PlayerEntry(requested_game, user)
+            entry.original_pool = original_pool
             raise turbogears.redirect('/game/view/' + str(game_id))
         else:
             raise ValueError("404")

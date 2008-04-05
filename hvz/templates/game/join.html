@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+
+<py:def function="page_title">Join Game</py:def>
+<py:def function="head_info">
+</py:def>
+
+<py:match path="content">
+    <h1>Join Game</h1>
+    <py:choose>
+        <div py:when="tg.identity.user in game.players" py:strip="">
+            <p>You have already joined this game!</p>
+        </div>
+        <div py:when="not game.registration_open" py:strip="">
+            <p>Sorry, but the game you requested is not open for registration.</p>
+        </div>
+        <div py:otherwise="" py:strip="">
+            <p>You are joining Game #<span py:replace="game.game_id">[#]</span>.  Please fill out the form below to join the game.</p>
+            <span py:replace="tg.display(form, {'game_id': game.game_id,})"></span>
+        </div>
+    </py:choose>
+</py:match>
+
+<xi:include href="../master.html" />
+
+</html>
