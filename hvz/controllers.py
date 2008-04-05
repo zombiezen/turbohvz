@@ -74,9 +74,10 @@ class GameController(turbogears.controllers.Controller):
         game_id = int(game_id)
         requested_game = model.Game.get(game_id)
         if requested_game is not None:
+            if not requested_game.in_progress:
+                raise ValueError("Game has not started")
             # Retrieve killer and victim
-            killer = model.PlayerEntry.query.filter_by(game=requested_game,
-                                                       player=user).first()
+            killer = model.PlayerEntry.by_player(requested_game, user)
             if killer is None:
                 raise ValueError("You are not a part of this game")
             victim = model.PlayerEntry.by_player_gid(requested_game,

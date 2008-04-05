@@ -286,6 +286,10 @@ class Game(Entity):
         return self.state >= self.STATE_REVEAL_ZOMBIE
     
     @property
+    def in_progress(self):
+        return self.STATE_STARTED <= self.state < self.STATE_ENDED
+    
+    @property
     def registration_open(self):
         return self.state == self.STATE_OPEN
     
