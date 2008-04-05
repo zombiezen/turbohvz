@@ -143,6 +143,11 @@ class PlayerEntry(Entity):
         return result
     
     @classmethod
+    def by_player(cls, game, user):
+        """Fetches an entry by game and player."""
+        return cls.query.filter_by(game=game, player=user).first()
+    
+    @classmethod
     def by_player_gid(cls, game, gid):
         """Fetches an entry by game and player_gid."""
         return cls.query.filter_by(game=game, player_gid=gid).first()
@@ -224,7 +229,8 @@ class PlayerEntry(Entity):
     starve_date = _date_prop('_starve_date')
     killed_by = property(_get_killed_by, _set_killed_by)
     
-    using_table_options(UniqueConstraint('game_id', 'player_gid'))
+    using_table_options(UniqueConstraint('game_id', 'player_gid'),
+                        UniqueConstraint('game_id', 'player_id'),)
 
 class Game(Entity):
     """

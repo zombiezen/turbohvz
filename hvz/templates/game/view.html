@@ -7,6 +7,16 @@
 
 <py:def function="page_title">Game <span py:replace="game.game_id">#</span></py:def>
 <py:def function="head_info">
+<script type="text/javascript">
+function unjoin(evt)
+{
+    var unjoin_url = ${tg.jsencode(tg.url('/game/action.unjoin', game_id=str(game.game_id)))};
+    if (confirm("Are you sure you want to unjoin the game?"))
+    {
+        window.location = unjoin_url;
+    }
+}
+</script>
 <style type="text/css">
     .game_info
     {
@@ -51,7 +61,10 @@
     </table>
     <h2 id="sect_entry_list">Player Roster</h2>
     <span py:replace="tg.display(grid, game.entries)">[players]</span>
-    <p><a py:if="game.registration_open and not tg.identity.anonymous and tg.identity.user not in game.players" href="${tg.url('/game/join/' + str(game.game_id))}"><button>Join</button></a></p>
+    <div>
+        <button py:if="game.registration_open and not tg.identity.anonymous and tg.identity.user in game.players" onclick="unjoin(event);">Unjoin</button>
+        <a py:if="game.registration_open and not tg.identity.anonymous and tg.identity.user not in game.players" href="${tg.url('/game/join/' + str(game.game_id))}"><button>Join</button></a>
+    </div>
     <h2 id="sect_stage">Stage</h2>
     <table>
         <tr>

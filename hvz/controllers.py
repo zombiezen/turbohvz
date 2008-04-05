@@ -119,8 +119,26 @@ class GameController(turbogears.controllers.Controller):
         game_id = int(game_id)
         requested_game = model.Game.get(game_id)
         if requested_game is not None:
+            if not requested_game.registration_open:
+                raise ValueError("Registration is closed")
             entry = model.PlayerEntry(requested_game, user)
             entry.original_pool = original_pool
+            url_fmt = '/game/view/%i#sect_entry_list'
+            raise turbogears.redirect(url_fmt % (game_id))
+        else:
+            raise ValueError("404")
+    
+    @expose()
+    @identity.require(identity.not_anonymous())
+    def action_unjoin(self, game_id):
+        user = identity.current.user
+        game_id = int(game_id)
+        requested_game = model.Game.get(game_id)
+        if requested_game is not None:
+            if not requested_game.registration_open:
+                raise ValueError("Registration is closed")
+            entry = model.PlayerEntry.by_player(requested_game, user)
+            session.delete(entry)
             url_fmt = '/game/view/%i#sect_entry_list'
             raise turbogears.redirect(url_fmt % (game_id))
         else:
