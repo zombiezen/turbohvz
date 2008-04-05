@@ -197,6 +197,7 @@ class PlayerEntry(Entity):
     death_date = _date_prop('_death_date')
     feed_date = _date_prop('_feed_date')
     starve_date = _date_prop('_starve_date')
+    killed_by = property(_get_killed_by, _set_killed_by)
     
     using_table_options(UniqueConstraint('game_id', 'player_gid'))
 
