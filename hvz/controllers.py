@@ -64,6 +64,12 @@ class GameController(turbogears.controllers.Controller):
         else:
             raise ValueError("404")
     
+    @expose("hvz.templates.game.create")
+    # TODO: require admin
+    @identity.require(identity.not_anonymous())
+    def create(self):
+        return dict()
+    
     @expose()
     @identity.require(identity.not_anonymous())
     @error_handler(reportkill)
@@ -144,6 +150,14 @@ class GameController(turbogears.controllers.Controller):
             raise turbogears.redirect(link)
         else:
             raise ValueError("404")
+    
+    @expose()
+    # TODO: require admin
+    @identity.require(identity.not_anonymous())
+    def action_create(self):
+        new_game = model.Game()
+        session.flush()
+        raise turbogears.redirect(util.game_link(new_game, redirect=True))
 
 class Root(turbogears.controllers.RootController):
     def __init__(self):
