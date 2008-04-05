@@ -10,7 +10,7 @@
 <script type="text/javascript">
 function unjoin(evt)
 {
-    var unjoin_url = ${tg.jsencode(tg.game_link(game, 'action.unjoin'))};
+    var unjoin_url = ${tg.jsencode(tg.hvz.game_link(game, 'action.unjoin'))};
     if (confirm("Are you sure you want to remove yourself from the game?"))
     {
         window.location = unjoin_url;
