@@ -1,6 +1,6 @@
 <table xmlns="http://www.w3.org/1999/xhtml"
      xmlns:py="http://purl.org/kid/ns#"
-     class="custom_grid ${grid_class}" id="${name}">
+     class="${grid_class}" id="${name}">
     <thead>
         <th py:for="col in columns" py:content="get_column_title(col)">[title]</th>
     </thead>

@@ -34,7 +34,7 @@ def _get_date_col(row, column):
 
 class CustomDataGrid(Widget):
     name = "custom_grid"
-    grid_class = ""
+    grid_class = "custom_grid"
     template = "hvz.templates.widgets.customgrid"
     params = ['sortable', 'columns', 'grid_class', 'no_data_msg']
     params_doc = {'sortable': "Whether to use tg.paginate sorting",
