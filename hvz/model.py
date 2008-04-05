@@ -113,6 +113,15 @@ class PlayerEntry(Entity):
     """
     using_options(tablename='entries')
     
+    STATE_ORIGINAL_ZOMBIE = -2
+    STATE_ZOMBIE = -1
+    STATE_DEAD = 0
+    STATE_HUMAN = 1
+    STATE_NAMES = {STATE_ORIGINAL_ZOMBIE: _("Original zombie"),
+                   STATE_ZOMBIE: _("Zombie"),
+                   STATE_DEAD: _("Dead"),
+                   STATE_HUMAN: _("Human"),}
+    
     entry_id = Field(Integer, primary_key=True)
     player = ManyToOne('User', colname='player_id', inverse='entries')
     game = ManyToOne('Game', colname='game_id', inverse='entries')
@@ -156,8 +165,8 @@ class PlayerEntry(Entity):
     def kill(self, other, date=None):
         if date is None:
             date = as_utc(datetime.utcnow())
-        if self.state < 0:
-            if other.state == 1:
+        if self.is_undead:
+            if other.is_human:
                 self.kills += 1
                 self.feed_date = other.death_date = date
                 other.state = -1
@@ -193,6 +202,22 @@ class PlayerEntry(Entity):
             self._killed_by = new_killer
         else:
             self._killed_by = new_killer.user_id
+    
+    @property
+    def affiliation(self):
+        return self.STATE_NAMES[self.state]
+    
+    @property
+    def is_undead(self):
+        return self.state in (self.STATE_ORIGINAL_ZOMBIE, self.STATE_ZOMBIE)
+    
+    @property
+    def is_human(self):
+        return self.state == self.STATE_HUMAN
+    
+    @property
+    def is_dead(self):
+        return self.state == self.STATE_DEAD
     
     death_date = _date_prop('_death_date')
     feed_date = _date_prop('_feed_date')

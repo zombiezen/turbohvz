@@ -35,7 +35,8 @@ class GameController(turbogears.controllers.Controller):
         game_id = int(game_id)
         requested_game = model.Game.get(game_id)
         if requested_game is not None:
-            grid = widgets.EntryList()
+            oz = requested_game.revealed_original_zombie
+            grid = widgets.EntryList(show_oz=oz)
             return dict(game=requested_game,
                         grid=grid,)
         else:
@@ -86,7 +87,8 @@ class GameController(turbogears.controllers.Controller):
             killer.kill(victim, kill_date)
             # Log it and return to game
             log.info("OMG, %s killed %s!  Those idiots!", killer, victim)
-            raise turbogears.redirect('/game/view/' + str(game_id))
+            url_fmt = '/game/view/%i#sect_entry_list'
+            raise turbogears.redirect(url_fmt % (game_id))
         else:
             raise ValueError("404")
     
@@ -103,7 +105,8 @@ class GameController(turbogears.controllers.Controller):
                 requested_game.next_state()
             elif btnPrev:
                 requested_game.previous_state()
-            raise turbogears.redirect('/game/view/' + str(game_id))
+            url_fmt = '/game/view/%i#sect_stage'
+            raise turbogears.redirect(url_fmt % (game_id))
         else:
             raise ValueError("404")
     
@@ -116,10 +119,10 @@ class GameController(turbogears.controllers.Controller):
         game_id = int(game_id)
         requested_game = model.Game.get(game_id)
         if requested_game is not None:
-            #print repr(requested_game), repr(user)
             entry = model.PlayerEntry(requested_game, user)
             entry.original_pool = original_pool
-            raise turbogears.redirect('/game/view/' + str(game_id))
+            url_fmt = '/game/view/%i#sect_entry_list'
+            raise turbogears.redirect(url_fmt % (game_id))
         else:
             raise ValueError("404")
 

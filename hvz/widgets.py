@@ -102,13 +102,23 @@ class GameList(CustomDataGrid):
 class EntryList(CustomDataGrid):
     name = "player_list"
     grid_class = "player_list"
-    default_columns = ['player_gid', 'name', 'death_date', 'kills']
+    default_columns = ['player_gid', 'name', 'affiliation', 'death_date', 'kills']
     column_titles = {'player_gid': _("Game ID"),
                      'name': _("Player Name"),
                      'death_date': _("Death Date"),
-                     'kills': _("Kills"),}
+                     'kills': _("Kills"),
+                     'affiliation': _("Affiliation"),}
     accessors = {'name': '_get_name_col',
+                 'affiliation': '_get_affiliation',
                  '*': CustomDataGrid.default_accessor,}
+    
+    params = ['show_oz']
+    params_doc = {'show_oz': "Whether to reveal the original zombie",}
+    
+    def __init__(self, *args, **kw):
+        show_oz = kw.pop('show_oz', True)
+        super(EntryList, self).__init__(*args, **kw)
+        self.show_oz = show_oz
     
     @staticmethod
     def _get_name_col(row, column):
@@ -117,6 +127,13 @@ class EntryList(CustomDataGrid):
                        href=url("/player/view/" + str(player.user_id)))
         link.text = player.display_name
         return link
+    
+    def _get_affiliation(self, row, column):
+        from model import PlayerEntry
+        if not self.show_oz and row.state == PlayerEntry.STATE_ORIGINAL_ZOMBIE:
+            return row.STATE_NAMES[PlayerEntry.STATE_HUMAN]
+        else:
+            return row.affiliation
 
 class KillSchema(validators.Schema):
     game_id = validators.Int()
