@@ -11,7 +11,7 @@
 function unjoin(evt)
 {
     var unjoin_url = ${tg.jsencode(tg.url('/game/action.unjoin', game_id=str(game.game_id)))};
-    if (confirm("Are you sure you want to unjoin the game?"))
+    if (confirm("Are you sure you want to remove yourself from the game?"))
     {
         window.location = unjoin_url;
     }
