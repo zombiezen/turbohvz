@@ -73,7 +73,7 @@ html, body
     margin: 0 auto 1em auto;
 }
 
-#pageLogin
+#page_login
 {
     font-size: 10px;
     font-family: verdana;
@@ -189,6 +189,25 @@ h2
 {
     font-size: 150%;
 }
+
+/* RULES */
+
+.rule_name
+{
+    font-weight: bold;
+}
+
+#sect_license
+{
+    text-align: center;
+    font-size: 75%;
+}
+
+.cclicense
+{
+    border: none;
+}
+
 /* CUSTOM ELEMENTS */
 
 .custom_grid .no_data
