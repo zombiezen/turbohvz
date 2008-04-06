@@ -22,4 +22,3 @@ __date__ = 'March 30, 2008'
 __all__ = []
 
 from turbojson.jsonify import jsonify
-

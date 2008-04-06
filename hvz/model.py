@@ -470,4 +470,3 @@ class Permission(Entity):
 
 setup_all()
 random.seed() # make sure we have real randomness
-

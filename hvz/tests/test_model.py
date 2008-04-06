@@ -31,4 +31,3 @@ __all__ = []
 #                       display_name = "Mr Creosote",
 #                       password = "Wafer-thin Mint")
 #         assert obj.display_name == "Mr Creosote"
-

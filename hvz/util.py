@@ -179,4 +179,3 @@ def add_template_variables(vars):
     return vars.update(lookup)
 
 turbogears.view.variable_providers.append(add_template_variables)
-

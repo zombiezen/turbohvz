@@ -302,4 +302,3 @@ register_form = widgets.TableForm(
     validator=RegisterSchema(),
     action=turbogears.url('/user/action.register'),
     submit_text=_("Register"),)
-

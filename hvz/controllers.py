@@ -312,4 +312,3 @@ class Root(turbogears.controllers.RootController):
     def logout(self):
         identity.current.logout()
         raise turbogears.redirect("/")
-

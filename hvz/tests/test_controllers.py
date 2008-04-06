@@ -48,4 +48,3 @@ class TestPages(unittest.TestCase):
         testutil.create_request("/login")
         response = cherrypy.response.body[0].lower()
         assert "<title>login</title>" in response
-
