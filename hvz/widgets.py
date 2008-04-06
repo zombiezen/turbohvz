@@ -13,7 +13,8 @@ from hvz import util
 
 __author__ = "Ross Light"
 __date__ = "March 31, 2008"
-__all__ = ['CustomDataGrid',
+__all__ = ['Pager',
+           'CustomDataGrid',
            'EntryList',
            'GameList',
            'UserList',
@@ -32,6 +33,9 @@ __all__ = ['CustomDataGrid',
            'RegisterFields',
            'register_form',]
 
+class Pager(Widget):
+    template = "hvz.templates.widgets.pager"
+
 def _get_date_col(row, column):
     from hvz.util import display_date
     date = getattr(row, column, None)
@@ -45,13 +49,14 @@ class CustomDataGrid(Widget):
     grid_class = "custom_grid"
     template = "hvz.templates.widgets.customgrid"
     params = ['sortable', 'columns', 'grid_class', 'no_data_msg']
-    params_doc = {'sortable': "Whether to use tg.paginate sorting",
+    params_doc = {'sortable': "Whether to enable tg.paginate sorting",
                   'columns': "What columns to display",
                   'grid_class': "Element's class",
                   'no_data_msg': "Message to display if there is no data",}
     
     column_titles = {'id': _("ID"),}
     default_columns = ['id']
+    exclude_sorting = []
     accessors = {'*': 'default_accessor'}
     no_data_msg = _("No data")
     
@@ -60,7 +65,7 @@ class CustomDataGrid(Widget):
         return getattr(row, column, u"")
     
     def __init__(self, *args, **kw):
-        sortable = kw.pop('sortable', False)
+        sortable = kw.pop('sortable', None)
         columns = kw.pop('columns', self.default_columns)
         grid_class = kw.pop('grid_class', self.grid_class)
         super(CustomDataGrid, self).__init__(*args, **kw)
@@ -72,7 +77,8 @@ class CustomDataGrid(Widget):
         super(CustomDataGrid, self).update_params(d)
         d['get_cell'] = self.get_cell
         d['get_column_title'] = self.get_column_title
-
+        d['exclude_sorting'] = frozenset(self.exclude_sorting)
+    
     def get_cell(self, row, column):
         """
         Retrieves the value for a cell.
@@ -92,21 +98,21 @@ class CustomDataGrid(Widget):
         elif isinstance(accessor, basestring):
             accessor = getattr(self, accessor)
         return accessor(row, column)
-
-    @classmethod
-    def get_column_title(cls, column):
-        return cls.column_titles.get(column, column)
+    
+    def get_column_title(self, column):
+        return self.column_titles.get(column, column)
 
 class GameList(CustomDataGrid):
     name = "game_list"
     grid_class = "game_list"
-    default_columns = ['id', 'created', 'player_count']
-    column_titles = {'id': _("ID"),
+    default_columns = ['game_id', 'created', 'player_count']
+    exclude_sorting = ['player_count']
+    column_titles = {'game_id': _("ID"),
                      'created': _("Created"),
                      'started': _("Started"),
                      'ended': _("Ended"),
                      'player_count': _("Players"),}
-    accessors = {'id': '_get_id_col',
+    accessors = {'game_id': '_get_id_col',
                  'player_count': (lambda r, c: len(r.entries)),
                  'created': _get_date_col,
                  'started': _get_date_col,
@@ -124,7 +130,9 @@ class GameList(CustomDataGrid):
 class EntryList(CustomDataGrid):
     name = "player_list"
     grid_class = "player_list"
-    default_columns = ['player_gid', 'name', 'affiliation', 'death_date', 'kills']
+    default_columns = ['player_gid', 'name', 'affiliation',
+                       'death_date', 'kills']
+    exclude_sorting = ['affiliation']
     column_titles = {'player_gid': _("Game ID"),
                      'name': _("Player Name"),
                      'death_date': _("Death Date"),
@@ -162,12 +170,14 @@ class EntryList(CustomDataGrid):
 class UserList(CustomDataGrid):
     name = "user_list"
     grid_class = "user_list"
-    default_columns = ['display_name']
+    default_columns = ['display_name', 'created']
     column_titles = {'user_id': _("UID"),
                      'user_name': _("Login"),
                      'email_address': _("Email"),
-                     'display_name': _("Name"),}
+                     'display_name': _("Name"),
+                     'created': _("Joined"),}
     accessors = {'display_name': '_get_display_name_col',
+                 'created': _get_date_col,
                  '*': 'default_accessor'}
     no_data_msg = _("No users yet")
     

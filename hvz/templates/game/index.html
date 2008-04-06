@@ -10,6 +10,7 @@
 
 <py:match path="content">
     <h1>Games</h1>
+    <div py:replace="tg.display(pager)"></div>
     <span py:replace="tg.display(grid, games)"></span>
     <!--! TODO: Check for admin -->
     <a py:if="not tg.identity.anonymous" href="${tg.url('/game/create')}"><button>Create</button></a>

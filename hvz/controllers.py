@@ -37,9 +37,11 @@ class GameController(turbogears.controllers.Controller):
     @paginate('games', default_order='-game_id')
     def index(self):
         all_games = session.query(model.Game)
-        grid = widgets.GameList()
+        grid = widgets.GameList(sortable=True)
+        pager = widgets.Pager()
         return dict(games=all_games,
-                    grid=grid,)
+                    grid=grid,
+                    pager=pager,)
     
     @expose("hvz.templates.game.view")
     def view(self, game_id):
@@ -232,16 +234,18 @@ class UserController(turbogears.controllers.Controller):
     @paginate('users', default_order='display_name')
     def index(self):
         all_users = session.query(model.User)
-        grid = widgets.UserList()
+        grid = widgets.UserList(sortable=True)
+        pager = widgets.Pager()
         return dict(users=all_users,
-                    grid=grid,)
+                    grid=grid,
+                    pager=pager,)
     
     @expose("hvz.templates.user.view")
     def view(self, user_id):
         if user_id.isdigit():
             requested_user = model.User.query.get(user_id)
         else:
-            requested_user = model.User.by_username(user_id)
+            requested_user = model.User.by_user_name(user_id)
         if requested_user is not None:
             return dict(user=requested_user,)
         else:

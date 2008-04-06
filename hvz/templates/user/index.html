@@ -10,6 +10,7 @@
 
 <py:match path="content">
     <h1>Users</h1>
+    <span py:replace="tg.display(pager)">[pager]</span>
     <span py:replace="tg.display(grid, users)"></span>
     <a href="${tg.url('/user/register')}"><button>Register</button></a>
 </py:match>
