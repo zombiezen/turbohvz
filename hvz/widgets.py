@@ -22,7 +22,10 @@ __all__ = ['CustomDataGrid',
            'StageSchema',
            'JoinSchema',
            'JoinFields',
-           'join_form',]
+           'join_form',
+           'OriginalZombieSchema',
+           'OriginalZombieFields',
+           'original_zombie_form',]
 
 def _get_date_col(row, column):
     from hvz.util import display_date
@@ -151,6 +154,8 @@ class EntryList(CustomDataGrid):
         else:
             return row.affiliation
 
+## FORMS ##
+
 class KillSchema(validators.Schema):
     game_id = validators.Int()
     victim_id = validators.String(min=1, max=128)
@@ -189,4 +194,22 @@ join_form = widgets.TableForm(name='join_form',
                               validator=JoinSchema(),
                               action=turbogears.url('/game/action.join'),
                               submit_text=_("Join"),)
+
+class OriginalZombieSchema(validators.Schema):
+    game_id = validators.Int()
+    original_zombie = validators.Any(
+        validators.Int(),
+        validators.OneOf(["random"]),)
+
+class OriginalZombieFields(WidgetsList):
+    game_id = widgets.HiddenField()
+    original_zombie = widgets.SingleSelectField(
+        label=_("Original Zombie"),
+        options=[("random", _("Random"))],)
+
+original_zombie_form = widgets.TableForm(name='oz_form',
+                                         fields=OriginalZombieFields(),
+                                         validator=OriginalZombieSchema(),
+                                         action=turbogears.url('/game/action.oz'),
+                                         submit_text=_("Choose"),)
 

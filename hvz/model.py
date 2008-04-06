@@ -305,6 +305,10 @@ class Game(Entity):
     def is_last_state(self):
         return bool(self.state >= self.STATE_ENDED)
     
+    @property
+    def original_zombie_pool(self):
+        return [entry for entry in self.entries if entry.original_pool]
+    
     def previous_state(self):
         # Check if we can do this
         if self.is_first_state:
@@ -316,6 +320,9 @@ class Game(Entity):
             self.started = None
         elif self.state == self.STATE_ENDED - 1:
             self.ended = None
+        elif self.state == self.STATE_CHOOSE_ZOMBIE - 1:
+            for entry in self.entries:
+                entry.state = PlayerEntry.STATE_HUMAN
     
     def next_state(self):
         # Check if we can do this

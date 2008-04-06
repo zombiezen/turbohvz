@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+<py:def function="page_title">Choose Original Zombie</py:def>
+<py:def function="head_info"></py:def>
+
+<py:match path="content">
+    <h1>Choose Original Zombie</h1>
+    <py:choose>
+        <py:when test="game.state == game.STATE_CHOOSE_ZOMBIE - 1">
+            <span py:replace="tg.display(form, {'game_id': game.game_id, 'original_zombie': 'random'}, options={'original_zombie': options})"></span>
+        </py:when>
+        <py:otherwise>
+            <p>The game requested is not choosing an original zombie right now.</p>
+        </py:otherwise>
+    </py:choose>
+</py:match>
+
+<xi:include href="../master.html" />
+
+</html>

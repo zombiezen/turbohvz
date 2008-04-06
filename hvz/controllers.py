@@ -5,6 +5,7 @@
 #
 
 import logging
+import random
 
 import cherrypy
 import turbogears
@@ -82,6 +83,24 @@ class GameController(turbogears.controllers.Controller):
     def create(self):
         return dict()
     
+    @expose("hvz.templates.game.choose_oz")
+    # TODO: require admin
+    @identity.require(identity.not_anonymous())
+    def choose_oz(self, game_id):
+        game_id = int(game_id)
+        requested_game = model.Game.get(game_id)
+        if requested_game is not None:
+            # Build option list
+            pool = requested_game.original_zombie_pool
+            options = [(e.entry_id, e.player.display_name) for e in pool]
+            options.insert(0, ("random", _("Random")))
+            # Pass off to template
+            return dict(game=requested_game,
+                        options=options,
+                        form=widgets.original_zombie_form,)
+        else:
+            raise ValueError("404")
+    
     @expose()
     @identity.require(identity.not_anonymous())
     @error_handler(reportkill)
@@ -121,6 +140,10 @@ class GameController(turbogears.controllers.Controller):
         requested_game = model.Game.get(game_id)
         if requested_game is not None:
             if btnNext:
+                next_state = requested_game.state + 1
+                if next_state == model.Game.STATE_CHOOSE_ZOMBIE:
+                    link = util.game_link(game_id, 'choose_oz')
+                    raise turbogears.redirect(link)
                 requested_game.next_state()
             elif btnPrev:
                 requested_game.previous_state()
@@ -170,6 +193,37 @@ class GameController(turbogears.controllers.Controller):
         new_game = model.Game()
         session.flush()
         raise turbogears.redirect(util.game_link(new_game, redirect=True))
+    
+    @expose()
+    # TODO: require admin
+    @identity.require(identity.not_anonymous())
+    @error_handler(choose_oz)
+    @validate(widgets.original_zombie_form)
+    def action_oz(self, game_id, original_zombie):
+        game_id = int(game_id)
+        requested_game = model.Game.get(game_id)
+        if requested_game is not None:
+            # Check if we're in the right state
+            if (requested_game.state + 1) != model.Game.STATE_CHOOSE_ZOMBIE:
+                raise ValueError("Game is not choosing original zombie")
+            # Determine zombie
+            pool = requested_game.original_zombie_pool
+            if original_zombie == 'random':
+                entry = random.choice(pool)
+            else:
+                entry = model.PlayerEntry.get(original_zombie)
+                if entry not in pool:
+                    raise ValueError("Original zombie is not a valid choice")
+            # Make into zombie
+            entry.state = model.PlayerEntry.STATE_ORIGINAL_ZOMBIE
+            # Advance stage
+            requested_game.next_state()
+            # Go back to game page
+            turbogears.flash(_("Original zombie is %s") % unicode(entry))
+            link = util.game_link(requested_game, redirect=True)
+            raise turbogears.redirect(link)
+        else:
+            raise ValueError("404")
 
 class Root(turbogears.controllers.RootController):
     def __init__(self):
