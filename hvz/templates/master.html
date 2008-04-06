@@ -11,14 +11,6 @@
         <link py:for="js in tg_js_head" py:replace="tg.display(js)" />
         <link rel="stylesheet" type="text/css" media="screen" href="../static/css/style.css" py:attrs="{'href': tg.url('/static/css/style.css')}" />
         <title py:content="page_title()">Your title goes here</title>
-        <style type="text/css" media="screen">
-            #pageLogin
-            {
-                font-size: 10px;
-                font-family: verdana;
-                text-align: right;
-            }
-        </style>
         <meta py:replace="head_info()" />
     </head>
     <body>

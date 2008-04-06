@@ -1,13 +1,26 @@
+#!/usr/bin/env python
+#
+#   test_controllers.py
+#   HvZ
+#
+
+"""Test controller objects"""
+
 import unittest
+
+import cherrypy
 import turbogears
 from turbogears import testutil
+
 from hvz.controllers import Root
-import cherrypy
+
+__author__ = 'Ross Light'
+__date__ = 'March 30, 2008'
+__all__ = ['TestPages']
 
 cherrypy.root = Root()
 
 class TestPages(unittest.TestCase):
-
     def setUp(self):
         turbogears.startup.startTurboGears()
 
@@ -35,3 +48,4 @@ class TestPages(unittest.TestCase):
         testutil.create_request("/login")
         response = cherrypy.response.body[0].lower()
         assert "<title>login</title>" in response
+

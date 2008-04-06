@@ -1,3 +1,11 @@
+#!/usr/bin/env python
+#
+#   test_model.py
+#   HvZ
+#
+
+"""Test model objects and database"""
+
 # If your project uses a database, you can set up database tests
 # similar to what you see below. Be sure to set the db_uri to
 # an appropriate uri for your testing database. sqlite is a good
@@ -6,6 +14,10 @@
 
 from turbogears import testutil, database
 # from hvz.model import YourDataClass, User
+
+__author__ = 'Ross Light'
+__date__ = 'March 30, 2008'
+__all__ = []
 
 # database.set_db_uri("sqlite:///:memory:")
 
