@@ -18,7 +18,7 @@ long_description = "Humans vs. Zombies, created by Brad Sappington and " \
                    "of Humans vs. Zombies."
 author = "Ross Light"
 email = "rlight2@gmail.com"
-copyright = "Copyright (C) 2008 Ross Light"
+copyright = "Copyright (C) 2008 Ross Light, Copyright (C) 2007 Chris Weed"
 
 # if it's open source, you might want to specify these
 # url = "http://yourcool.site/"
