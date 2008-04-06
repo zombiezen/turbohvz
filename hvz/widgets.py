@@ -26,7 +26,11 @@ __all__ = ['CustomDataGrid',
            'join_form',
            'OriginalZombieSchema',
            'OriginalZombieFields',
-           'original_zombie_form',]
+           'original_zombie_form',
+           'UserNameValidator',
+           'RegisterSchema',
+           'RegisterFields',
+           'register_form',]
 
 def _get_date_col(row, column):
     from hvz.util import display_date
@@ -185,6 +189,8 @@ class KillFields(WidgetsList):
     game_id = widgets.HiddenField()
     victim_id = widgets.TextField(
         label=_("Victim"),
+        help_text=_("The Game ID of your victim (located on his or her 3x5 "
+                    "card)"),
         attrs=dict(size=64),)
     kill_date = widgets.CalendarDateTimePicker(
         label=_("Time of Demise"),)
@@ -227,9 +233,63 @@ class OriginalZombieFields(WidgetsList):
         label=_("Original Zombie"),
         options=[("random", _("Random"))],)
 
-original_zombie_form = widgets.TableForm(name='oz_form',
-                                         fields=OriginalZombieFields(),
-                                         validator=OriginalZombieSchema(),
-                                         action=turbogears.url('/game/action.oz'),
-                                         submit_text=_("Choose"),)
+original_zombie_form = widgets.TableForm(
+    name='oz_form',
+    fields=OriginalZombieFields(),
+    validator=OriginalZombieSchema(),
+    action=turbogears.url('/game/action.oz'),
+    submit_text=_("Choose"),)
+
+class UserNameValidator(validators.UnicodeString):
+    messages = {'non_unique': "That user name is already taken",}
+    
+    def validate_python(self, value, state):
+        from hvz.model import User
+        if User.by_user_name(value) is not None:
+            raise validators.Invalid(self.message('non_unique', state),
+                                     value, state)
+        else:
+            super(UserNameValidator, self).validate_python(value, state)
+
+class RegisterSchema(validators.Schema):
+    user_name = UserNameValidator(min=4, max=16)
+    display_name = validators.UnicodeString(min=1, max=255)
+    email_address = validators.Email()
+    password1 = validators.UnicodeString(min=8)
+    password2 = validators.UnicodeString(min=8)
+    profile = validators.UnicodeString(max=1024)
+    chained_validators = [validators.FieldsMatch('password1', 'password2')]
+
+class RegisterFields(WidgetsList):
+    user_name = widgets.TextField(
+        label=_("Internal Name"),
+        help_text=_("This will be the name you type at the login screen.  "
+                    "Must be between 4-16 characters in length."),)
+    display_name = widgets.TextField(
+        label=_("Real Name"),
+        help_text=_("This will be the name everyone else sees."),)
+    email_address = widgets.TextField(
+        label=_("Email Address"),
+        help_text=_("Your email address.  Only the system administrator will "
+                    "see your address and will use it only to send "
+                    "notifications and other game information to you."),)
+    password1 = widgets.PasswordField(
+        label=_("Password"),
+        help_text=_("Must be at least 8 characters in length"),)
+    password2 = widgets.PasswordField(
+        label=_("Confirm Password"),
+        help_text=_("For security purposes, retype your password"),)
+    profile = widgets.TextArea(
+        label=_("Profile"),
+        help_text=_("[Optional] Create a short profile describing yourself.  "
+                    "Must be under 1024 characters in length."),
+        cols=64,
+        rows=20,)
+
+register_form = widgets.TableForm(
+    name='register_form',
+    fields=RegisterFields(),
+    validator=RegisterSchema(),
+    action=turbogears.url('/user/action.register'),
+    submit_text=_("Register"),)
 

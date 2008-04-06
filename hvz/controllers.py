@@ -246,6 +246,24 @@ class UserController(turbogears.controllers.Controller):
             return dict(user=requested_user,)
         else:
             raise ValueError("404")
+    
+    @expose("hvz.templates.user.register")
+    def register(self):
+        return dict(form=widgets.register_form,)
+    
+    @expose()
+    @error_handler(register)
+    @validate(widgets.register_form)
+    def action_register(self, user_name, display_name, email_address,
+                        password1, password2, profile):
+        new_user = model.User(user_name, display_name,
+                              email_address, password1)
+        if profile:
+            new_user.profile = profile
+        session.flush()
+        msg = _("Your account has been created, %s.") % (unicode(new_user))
+        turbogears.flash(msg)
+        raise turbogears.redirect('/')
 
 class Root(turbogears.controllers.RootController):
     def __init__(self):
@@ -256,8 +274,6 @@ class Root(turbogears.controllers.RootController):
     # @identity.require(identity.in_group("admin"))
     def index(self):
         import time
-        # log.debug("Happy TurboGears Controller Responding For Duty")
-        turbogears.flash("Your application is now running")
         return dict(now=time.ctime())
     
     @expose("hvz.templates.rules")
