@@ -404,6 +404,7 @@ class User(Entity):
     _password = Field(Unicode(40), colname='tg_password', synonym='password')
     _created = Field(DateTime, colname='created', synonym='created')
     groups = ManyToMany('Group', tablename='user_group')
+    profile = Field(Unicode(1024))
     
     entries = OneToMany('PlayerEntry', inverse='player')
     
@@ -420,6 +421,7 @@ class User(Entity):
         self.display_name = unicode(display_name)
         self.password = password
         self.created = datetime.utcnow()
+        self.profile = None
     
     def __repr__(self):
         return "<User %s (%s)>" % (self.user_name, self.display_name)
