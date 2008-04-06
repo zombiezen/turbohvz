@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+
+<py:def function="page_title">User "<span py:replace="user">[user]</span>"</py:def>
+<py:def function="head_info"></py:def>
+
+<py:match path="content">
+    <h1 id="sect_game_info">User "<span py:replace="user">[user]</span>"</h1>
+    <h2>Games</h2>
+    <ul>
+        <li py:for="game in (entry.game for entry in user.entries)"><a href="${tg.hvz.game_link(game)}">Game <span py:replace="game.game_id">[#]</span></a></li>
+    </ul>
+    <h2>Statistics</h2>
+    <p style="font-style: italic">Coming Soon!</p>
+</py:match>
+
+<xi:include href="../master.html" />
+
+</html>

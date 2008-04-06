@@ -18,6 +18,8 @@ from hvz import model, util, widgets #, json
 __author__ = 'Ross Light'
 __date__ = 'March 30, 2008'
 __all__ = ['log',
+           'GameController',
+           'UserController',
            'Root',]
 
 log = logging.getLogger("hvz.controllers")
@@ -225,9 +227,30 @@ class GameController(turbogears.controllers.Controller):
         else:
             raise ValueError("404")
 
+class UserController(turbogears.controllers.Controller):
+    @expose("hvz.templates.user.index")
+    @paginate('users', default_order='display_name')
+    def index(self):
+        all_users = session.query(model.User)
+        grid = widgets.UserList()
+        return dict(users=all_users,
+                    grid=grid,)
+    
+    @expose("hvz.templates.user.view")
+    def view(self, user_id):
+        if user_id.isdigit():
+            requested_user = model.User.query.get(user_id)
+        else:
+            requested_user = model.User.by_username(user_id)
+        if requested_user is not None:
+            return dict(user=requested_user,)
+        else:
+            raise ValueError("404")
+
 class Root(turbogears.controllers.RootController):
     def __init__(self):
         self.game = GameController()
+        self.user = UserController()
     
     @expose("hvz.templates.welcome")
     # @identity.require(identity.in_group("admin"))

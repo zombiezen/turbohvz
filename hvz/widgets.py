@@ -16,6 +16,7 @@ __date__ = "March 31, 2008"
 __all__ = ['CustomDataGrid',
            'EntryList',
            'GameList',
+           'UserList',
            'KillSchema',
            'KillFields',
            'kill_form',
@@ -153,6 +154,25 @@ class EntryList(CustomDataGrid):
             return row.STATE_NAMES[PlayerEntry.STATE_HUMAN]
         else:
             return row.affiliation
+
+class UserList(CustomDataGrid):
+    name = "user_list"
+    grid_class = "user_list"
+    default_columns = ['display_name']
+    column_titles = {'user_id': _("UID"),
+                     'user_name': _("Login"),
+                     'email_address': _("Email"),
+                     'display_name': _("Name"),}
+    accessors = {'display_name': '_get_display_name_col',
+                 '*': 'default_accessor'}
+    no_data_msg = _("No users yet")
+    
+    @staticmethod
+    def _get_display_name_col(row, column):
+        link = Element("{http://www.w3.org/1999/xhtml}a",
+                       href=util.user_link(row))
+        link.text = row.display_name
+        return link
 
 ## FORMS ##
 
