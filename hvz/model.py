@@ -4,7 +4,7 @@
 #   HvZ
 #
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import random
 import string
 
@@ -23,6 +23,7 @@ from turbogears import identity, config
 
 __author__ = 'Ross Light'
 __date__ = 'March 30, 2008'
+__docformat__ = 'reStructuredText'
 __all__ = ['as_local',
            'as_utc',
            'to_local',
@@ -49,7 +50,7 @@ def as_local(date, tz=None):
     :Parameters:
         date : datetime.datetime
             The date to interpret
-        tz : tzinfo
+        tz : datetime.tzinfo
             The timezone to interpret as.  If not given, then the timezone is
             read from the ``hvz.timezone`` configuration value.
     :Returns: The timezone-aware date
@@ -79,7 +80,7 @@ def to_local(date, tz=None):
         date : datetime.datetime
             The date to convert.  If this date is naive, then it will be
             interpreted as UTC.
-        tz : tzinfo
+        tz : datetime.tzinfo
             The timezone to convert to.  If not given, then the timezone is
             read from the ``hvz.timezone`` configuration value.
     :Returns: The timezone-aware date
@@ -132,7 +133,7 @@ def _set_date_prop(name, default_tz=pytz.utc):
         name : str
             Attribute name for the column
     :Keywords:
-        default_tz : tzinfo
+        default_tz : datetime.tzinfo
             Default timezone to intepret naive 
     :Returns: A function that can be used as a property setter
     :ReturnType: function
@@ -149,12 +150,93 @@ def _date_prop(name, default_tz=pytz.utc):
     return property(_get_date_prop(name),
                     _set_date_prop(name, default_tz=default_tz))
 
+def _calc_timedelta(datetime1, datetime2, tz=None,
+                    ignore_dates=None, ignore_weekdays=None):
+    """
+    Calculates the delta between two datetimes.
+    
+    Along with subtracting the two dates, this removes time on specific dates
+    and weekdays.
+    
+    :Parameters:
+        datetime1
+            The first date and time
+        datetime2
+            The second date and time
+    :Keywords:
+        tz : datetime.tzinfo
+            The timezone to calculate dates in.  If you get the wrong timezone,
+            your results will possibly be **very incorrect**.  This is because
+            the algorithm should be looking at dates in the players'
+            timezone, which is rarely UTC.
+        ignore_dates : list of datetime.date
+            Days that are removed from the difference
+        ignore_weekdays : list of int
+            Weekdays that are removed from the difference (given as ISO weekday
+            numbers)
+    :Returns: The difference between the two dates
+    :ReturnType: datetime.timedelta
+    """
+    assert datetime1 <= datetime2
+    # Get arguments
+    if tz is None:
+        tz = _get_local_timezone()
+    if ignore_dates is None:
+        ignore_dates = []
+    if ignore_weekdays is None:
+        ignore_weekdays = []
+    datetime1, datetime2 = as_local(datetime1, tz), as_local(datetime2, tz)
+    # Calculate basic difference
+    difference = datetime2 - datetime1
+    # Find date range
+    date1, date2 = (datetime1.date(), datetime2.date())
+    # Loop through all dates in-between date1 and date2
+    accum_date = date1
+    while accum_date <= date2:
+        if accum_date in ignore_dates or \
+           accum_date.isoweekday() in ignore_weekdays:
+            # This date is an ignore day, so let's decide what to do:
+            if accum_date == date1:
+                # This is the first date, so get the amount of time remaining
+                # in the day on datetime1 and subtract it from the difference
+                this_day = datetime1.replace(hour=0, minute=0, second=0,
+                                             microsecond=0)
+                next_day = this_day + timedelta(1)
+                difference -= next_day - datetime1
+            elif accum_date == date2:
+                # This is the last date, so get the amount of time elapsed
+                # in the day on datetime2 and subtract it from the difference
+                this_day = datetime2.replace(hour=0, minute=0, second=0,
+                                             microsecond=0)
+                difference -= datetime2 - this_day
+            else:
+                # Woo-hoo!  This is a full ignore day, so let's do simple math.
+                difference -= timedelta(1)
+        # Okay, let's take up the next day
+        accum_date += timedelta(1)
+    # Ensure that difference >= 0
+    # This prevents the weird case where 
+    difference = max(timedelta(), difference)
+    # Return result
+    return difference
+
 # your data model
 
 class PlayerEntry(Entity):
     """
     Per-game player statistics.
     
+    :CVariables:
+        STATE_ORIGINAL_ZOMBIE : int
+            The constant for the original zombie state
+        STATE_ZOMBIE : int
+            The constant for a non-original zombie state
+        STATE_DEAD : int
+            The constant for a starved zombie state
+        STATE_HUMAN : int
+            The constant for a healthy human state
+        STATE_NAMES : dict of {int: unicode}
+            State-to-human-readable-name lookup table
     :IVariables:
         player : `User`
             The player this is associated with
@@ -305,6 +387,21 @@ class Game(Entity):
     """
     A game played.
     
+    :CVariables:
+        STATE_CREATED : int
+            The initial game state
+        STATE_OPEN : int
+            Open registration
+        STATE_CLOSED : int
+            Closed registration
+        STATE_CHOOSE_ZOMBIE : int
+            Choose original zombie
+        STATE_STARTED : int
+            Game has started
+        STATE_REVEAL_ZOMBIE : int
+            Revealed original zombie
+        STATE_ENDED : int
+            Game is over
     :IVariables:
         created : datetime
         started : datetime
@@ -312,18 +409,8 @@ class Game(Entity):
         revealed_zombie : bool
         registration_open : bool
         state : int
-            The current state of the game.  Stages:
-            =====   =========================
-             No.           Description
-            =====   =========================
-            0       Game created, not open
-            1       Open registration
-            2       Registration closed
-            3       Choose original zombie
-            4       Start game
-            5       Original zombie revealed?
-            6       End game
-            =====   =========================
+            The current state of the game.  See the ``STATE_*`` class
+            constants.
         entries : list of `PlayerEntry` objects
         players : list of `User` objects
     """
