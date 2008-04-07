@@ -110,8 +110,8 @@ function unjoin(evt)
         </tr>
     </table>
     <form py:if="'stage-game' in tg.identity.permissions" action="${tg.url('/game/action.stage')}">
-        <input type="hidden" name="game_id" value="${game.game_id}" />
         <p>
+            <input type="hidden" name="game_id" value="${game.game_id}" />
             <input py:if="not game.is_first_state" type="submit" name="btnPrev" value="Previous Stage" />
             <input py:if="not game.is_last_state" type="submit" name="btnNext" value="Next Stage" />
         </p>
