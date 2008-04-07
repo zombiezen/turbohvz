@@ -16,17 +16,18 @@
     <body>
         <div py:for="js in tg_js_bodytop" py:replace="tg.display(js)"></div>
         <div py:if="tg.config('identity.on') and not defined('logging_in')" id="user_bar" py:choose="">
-            <span py:when="tg.identity.anonymous" py:choose="">
-                <a py:when="tg.config('hvz.secure_login', False)" href="${tg.secureurl('/login')}">Login</a>
-                <a py:otherwise="" href="${tg.url('/login')}">Login</a>
-            </span>
-            <span py:otherwise="">
+            <py:when test="tg.identity.anonymous">
+                <ul id="user_bar_links">
+                    <li py:choose=""><a py:when="tg.config('hvz.secure_login', False)" href="${tg.secureurl('/login')}">Login</a><a py:otherwise="" href="${tg.url('/login')}">Login</a></li>
+                </ul>
+            </py:when>
+            <py:otherwise>
                 Welcome, ${tg.identity.user.display_name}.
                 <ul id="user_bar_links">
                     <li><a href="${tg.hvz.user_link(tg.identity.user)}">User Page</a></li>
                     <li><a href="${tg.url('/logout')}">Logout</a></li>
                 </ul>
-            </span>
+            </py:otherwise>
         </div>
         <a href="${tg.url('/')}"><div id="header">&nbsp;</div></a>
         <div id="main_content">
