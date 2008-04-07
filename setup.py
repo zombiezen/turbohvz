@@ -55,6 +55,8 @@ setup(
     entry_points={
         'console_scripts': [
             'start-hvz = hvz.commands:start',
+            'hvz-create-perms = hvz.commands:create_permissions',
+            'hvz-create-admin = hvz.commands:create_admin',
         ],
     },
     data_files=[('config', ['default.cfg'])],

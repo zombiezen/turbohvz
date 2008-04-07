@@ -19,26 +19,35 @@ import turbogears
 __author__ = 'Ross Light'
 __date__ = 'March 30, 2008'
 __all__ = ['ConfigurationError',
-           'start',]
+           'start',
+           'create_permissions',
+           'create_admin',]
 
 cherrypy.lowercase_api = True
 
 class ConfigurationError(Exception):
     pass
 
-def start():
-    """Start the CherryPy application server."""
+def _load_config(configfile=None):
+    """
+    Tries to load the project configuration.
+    
+    It first looks at the configfile parameter (usually straight from the
+    command line) for a desired config file.  If it doesn't get a configfile,
+    then look for ``setup.py`` in the current directory.  If there, load
+    configuration from a file called ``dev.cfg``.  If it's not there, the
+    project is probably installed and we'll look first for a file called
+    ``prod.cfg`` in the current directory and then for a default config file
+    called ``default.cfg`` packaged in the egg.
+    
+    :Parameters:
+        configfile : str
+            Path to a configuration file
+    """
     setupdir = os.path.dirname(os.path.dirname(__file__))
     curdir = os.getcwd()
-    # First look on the command line for a desired config file,
-    # if it's not on the command line, then look for 'setup.py'
-    # in the current directory. If there, load configuration
-    # from a file called 'dev.cfg'. If it's not there, the project
-    # is probably installed and we'll look first for a file called
-    # 'prod.cfg' in the current directory and then for a default
-    # config file called 'default.cfg' packaged in the egg.
-    if len(sys.argv) > 1:
-        configfile = sys.argv[1]
+    if configfile is not None:
+        pass
     elif os.path.exists(os.path.join(setupdir, "setup.py")):
         configfile = os.path.join(setupdir, "dev.cfg")
     elif os.path.exists(os.path.join(curdir, "prod.cfg")):
@@ -50,7 +59,93 @@ def start():
                 "config/default.cfg")
         except pkg_resources.DistributionNotFound:
             raise ConfigurationError("Could not find default configuration.")
-    turbogears.update_config(configfile=configfile,
-                             modulename="hvz.config")
+    turbogears.update_config(configfile=configfile, modulename="hvz.config")
+
+def start(args=None):
+    """Start the CherryPy application server."""
+    # Read arguments
+    if args is None:
+        args = sys.argv[1:]
+    if len(args) > 0:
+        _load_config(args[0])
+    else:
+        _load_config()
+    # Start the server
     from hvz.controllers import Root
     turbogears.start_server(Root())
+
+def create_permissions(args=None):
+    """Creates default groups and permissions"""
+    # Read arguments
+    if args is None:
+        args = sys.argv[1:]
+    if len(args) > 0:
+        _load_config(args[0])
+    else:
+        _load_config()
+    # Import necessary modules
+    from turbogears.database import session
+    from hvz import model
+    # Create groups
+    player = model.Group(u"player", u"Player")
+    admin = model.Group(u"admin", u"Administrator")
+    # Create permissions
+    perms = {'view-player-gid': model.Permission(u"view-player-gid",
+                                                 u"View Player Game IDs"),
+             'view-original-zombie': model.Permission(u"view-original-zombie",
+                                                      u"View Original Zombie"),
+             'create-game': model.Permission(u"create-game", u"Create Games"),
+             'join-game': model.Permission(u"join-game", u"Join Games"),
+             'stage-game': model.Permission(u"stage-game", u"Stage Games"),}
+    # Set up group permissions
+    player.add_permission(perms['join-game'])
+    for perm in perms.itervalues():
+        admin.add_permission(perm)
+    # Save objects
+    session.save(player)
+    session.save(admin)
+    for perm in perms.itervalues():
+        session.save(perm)
+    session.flush()
+
+def create_admin(args=None):
+    """Creates the administrator account"""
+    # Read arguments
+    if args is None:
+        args = sys.argv[1:]
+    if len(args) > 0:
+        _load_config(args[0])
+    else:
+        _load_config()
+    # Import necessary modules
+    from getpass import getpass
+    from turbogears.database import session
+    from hvz import model
+    # Check for admin group
+    admin = model.Group.by_group_name(u'admin')
+    if admin is None:
+        raise ConfigurationError("No administrator group found")
+    # Get user information
+    if len(args) > 1:
+        user_name = args[1].decode()
+    else:
+        user_name = raw_input("User name: ").decode()
+    if len(args) > 2:
+        display_name = args[2].decode()
+    else:
+        display_name = raw_input("Display name: ").decode()
+    email_address = raw_input("Email Address: ").decode()
+    while True:
+        password1 = getpass("Password:")
+        password2 = getpass("Retype Password:")
+        if password1 == password2:
+            break
+        else:
+            print >> sys.stderr, "Error: Passwords don't match"
+    # Create user
+    new_admin = model.User(user_name, display_name, email_address, password1)
+    admin.add_user(new_admin)
+    # Flush to database
+    session.save(new_admin)
+    session.flush()
+    print "Administrator '%s' created" % new_admin.user_name.encode('utf-8')
