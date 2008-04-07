@@ -10,7 +10,6 @@
 </py:def>
 
 <py:match path="content">
-    <h1>Join Game</h1>
     <py:choose>
         <div py:when="tg.identity.user in game.players" py:strip="">
             <p>You have already joined this game!</p>

@@ -5,11 +5,10 @@
       xmlns:py="http://genshi.edgewall.org/"
       xmlns:xi="http://www.w3.org/2001/XInclude">
 
-<py:def function="page_title">Hosted games</py:def>
+<py:def function="page_title">Hosted Games</py:def>
 <py:def function="head_info"></py:def>
 
 <py:match path="content">
-    <h1>Games</h1>
     <div py:replace="tg.display(pager)"></div>
     <span py:replace="tg.display(grid, games)"></span>
     <!--! TODO: Check for admin -->

@@ -5,11 +5,10 @@
       xmlns:py="http://genshi.edgewall.org/"
       xmlns:xi="http://www.w3.org/2001/XInclude">
 
-<py:def function="page_title">User List</py:def>
+<py:def function="page_title">Users</py:def>
 <py:def function="head_info"></py:def>
 
 <py:match path="content">
-    <h1>Users</h1>
     <span py:replace="tg.display(pager)">[pager]</span>
     <span py:replace="tg.display(grid, users)"></span>
     <a href="${tg.url('/user/register')}"><button>Register</button></a>

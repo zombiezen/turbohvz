@@ -8,7 +8,6 @@
 <py:def function="head_info"></py:def>
 
 <py:match path="content">
-    <h1>Choose Original Zombie</h1>
     <py:choose>
         <py:when test="game.state == game.STATE_CHOOSE_ZOMBIE - 1">
             <span py:replace="tg.display(form, {'game_id': game.game_id, 'original_zombie': 'random'}, options={'original_zombie': options})"></span>

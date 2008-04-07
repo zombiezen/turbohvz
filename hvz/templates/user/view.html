@@ -9,7 +9,6 @@
 <py:def function="head_info"></py:def>
 
 <py:match path="content">
-    <h1 id="sect_user_info">User "<span py:replace="user">[user]</span>"</h1>
     <h2 id="sect_games">Games</h2>
     <ul>
         <li py:for="game in (entry.game for entry in user.entries)"><a href="${tg.hvz.game_link(game)}">Game <span py:replace="game.game_id">[#]</span></a></li>

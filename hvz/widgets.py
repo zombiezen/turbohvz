@@ -104,7 +104,7 @@ class CustomDataGrid(Widget):
 
 class GameList(CustomDataGrid):
     name = "game_list"
-    grid_class = "game_list"
+    grid_class = "custom_grid game_list"
     default_columns = ['game_id', 'created', 'player_count']
     exclude_sorting = ['player_count']
     column_titles = {'game_id': _("ID"),
@@ -129,7 +129,7 @@ class GameList(CustomDataGrid):
 
 class EntryList(CustomDataGrid):
     name = "player_list"
-    grid_class = "player_list"
+    grid_class = "custom_grid player_list"
     default_columns = ['player_gid', 'name', 'affiliation',
                        'death_date', 'kills']
     exclude_sorting = ['affiliation']
@@ -169,7 +169,7 @@ class EntryList(CustomDataGrid):
 
 class UserList(CustomDataGrid):
     name = "user_list"
-    grid_class = "user_list"
+    grid_class = "custom_grid user_list"
     default_columns = ['display_name', 'created']
     column_titles = {'user_id': _("UID"),
                      'user_name': _("Login"),

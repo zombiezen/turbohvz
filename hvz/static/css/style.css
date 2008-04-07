@@ -9,149 +9,130 @@
 
 html, body
 {
-    color: black;
-    background-color: #ddd;
-    font: x-small "Lucida Grande", "Lucida Sans Unicode", geneva, verdana, sans-serif;
+    color: white;
+    background-color: black;
+    font: small Verdana, Kalimati, Helvetica, FreeSans, Arial, sans-serif;
     margin: 0;
     padding: 0;
 }
 
 #header
 {
-    height: 80px;
-    width: 777px;
-    background: blue URL('../images/header_inner.png') no-repeat;
-    border-left: 1px solid #aaa;
-    border-right: 1px solid #aaa;
-    margin: 0 auto 0 auto;
+    width: 728px;
+    height: 90px;
+    margin: 2em auto;
+    background: transparent url('../images/hvz_logo.png') no-repeat;
 }
 
 #main_content
 {
+    width: 85%;
+    margin: 1em auto;
+    padding: 2em;
     color: black;
+    background: #efe;
     font-size: 127%;
-    background-color: white;
-    width: 757px;
-    margin: 0 auto 0 auto;
-    border-left: 1px solid #aaa;
-    border-right: 1px solid #aaa;
-    padding: 10px;
-}
-
-#sidebar
-{
-    border: 1px solid #aaa;
-    background-color: #eee;
-    margin: 0.5em;
-    padding: 1em;
-    float: right;
-    width: 200px;
-    font-size: 88%;
-}
-
-#sidebar h2
-{
-    margin-top: 0;
-}
-
-#sidebar ul
-{
-    margin-left: 1.5em;
-    padding-left: 0;
 }
 
 #footer
 {
-    border: 1px solid #aaa;
-    border-top: 0px none;
-    color: #999;
-    background-color: white;
-    padding: 10px;
+    width: 95%;
+    padding: 1ex 2.5%;
+    margin: 0 auto 1em auto;
+    color: #f33;
     font-size: 80%;
     text-align: center;
-    width: 757px;
-    margin: 0 auto 1em auto;
 }
 
-#page_login
+#user_bar
 {
-    font-size: 10px;
-    font-family: verdana;
+    margin: 0;
+    padding: 0 1ex 0.5ex 0;
+    color: black;
+    background: #ccc;
     text-align: right;
 }
 
-/* TABLES */
-
-td, th
-{
-    padding: 3px;
-    border: none;
-}
-
-tr th
-{
-    text-align: left;
-    background-color: #f0f0f0;
-    color: #333;
-}
-
-tr.odd td
-{
-    background-color: #edf3fe;
-}
-
-tr.even td
-{
-    background-color:#fff;
-}
-
-/* WELCOME PAGE (delete me?) */
-
-#getting_started_steps a
+#user_bar_links :link, #user_bar_links :visited
 {
     text-decoration: none;
 }
 
-#getting_started_steps a:hover
+#user_bar_links
 {
-    text-decoration: underline;
+    display: inline;
+    margin: 0;
+    padding: 0;
 }
 
-#getting_started_steps li
+#user_bar_links li
 {
-    font-size: 80%;
-    margin-bottom: 0.5em;
+    display: inline;
+    margin: 0;
+    margin-left: 1ex;
+    padding: 0;
 }
 
-#getting_started_steps h2
+/* TABLES/GRID VIEW */
+
+/*tr.odd td
 {
-    font-size: 120%;
+    background-color: #cff;
 }
 
-#getting_started_steps p
+tr.even td
 {
-    font: 100% "Lucida Grande", "Lucida Sans Unicode", geneva, verdana, sans-serif;
+    background-color: white;
+}*/
+
+.custom_grid
+{
+    margin-bottom: 1em;
+    border-collapse: collapse;
 }
 
-.code
+.custom_grid .no_data
 {
-    font-family: monospace;
+    background: #cf9;
+    text-align: center;
+    font-style: italic;
+}
+.custom_grid th, .custom_grid td
+{
+    padding: 0.5ex 1em;
+    border: thin solid #999;
 }
 
-span.code
+.custom_grid th
 {
-    font-weight: bold;
-    background: #eee;
+    border-bottom: none;
+    color: #ccc;
+    background: black url('../images/gradient_red_bottom.png') repeat-x bottom;
 }
 
-.notice
+/* sortable column */
+.custom_grid th :link, .custom_grid th :visited
 {
-    margin: 0.5em auto 0.5em auto;
-    padding: 15px 10px 15px 55px;
-    width: 450px;
-    background: #eef URL('../images/info.png') left center no-repeat;
-    border: 1px solid #cce;
+    color: white;
+    text-decoration: none;
 }
+
+.custom_grid th :hover
+{
+    color: red;
+}
+
+.custom_grid tr:first-child td
+{
+    border-top: none;
+}
+
+.custom_grid td
+{
+    background: #ccc;
+}
+
+.custom_grid th 
 
 /* TURBOGEARS ELEMENTS */
 
@@ -159,7 +140,7 @@ span.code
 {
     margin: 0 auto 0.5em auto;
     padding: 15px 10px 15px 55px;
-    background: #cec URL('../images/ok.png') left center no-repeat;
+    background: #cec url('../images/ok.png') left center no-repeat;
     border: 1px solid #9c9;
     width: 450px;
     font-size: 120%;
@@ -179,15 +160,26 @@ a.link, a, a.active
     color: #369;
 }
 
-h1, h2, h3, h4, h5, h6, #getting_started_steps
+h1, h2, h3, h4, h5, h6
 {
-    font-family: "Century Schoolbook L", Georgia, serif;
+    color: #600;
+    font-family: Impact, Arial, FreeSans, sans-serif;
     font-weight: bold;
 }
 
-h2
+h1
+{
+    margin-top: 0;
+}
+
+/*h2
 {
     font-size: 150%;
+}*/
+
+a:link img, a:visited img, a:hover img, a:active img
+{
+    border: none;
 }
 
 /* RULES */
@@ -206,13 +198,4 @@ h2
 .cclicense
 {
     border: none;
-}
-
-/* CUSTOM ELEMENTS */
-
-.custom_grid .no_data
-{
-    background: #cf9;
-    text-align: center;
-    font-style: italic;
 }
