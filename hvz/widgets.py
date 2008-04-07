@@ -130,8 +130,7 @@ class GameList(CustomDataGrid):
 class EntryList(CustomDataGrid):
     name = "player_list"
     grid_class = "custom_grid player_list"
-    default_columns = ['player_gid', 'name', 'affiliation',
-                       'death_date', 'kills']
+    default_columns = ['name', 'affiliation', 'death_date', 'kills']
     exclude_sorting = ['affiliation']
     column_titles = {'player_gid': _("Game ID"),
                      'name': _("Player Name"),

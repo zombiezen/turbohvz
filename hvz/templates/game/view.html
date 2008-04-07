@@ -64,7 +64,7 @@ function unjoin(evt)
         <ul>
             <li>Your ID is <span py:replace="current_entry.player_gid">[gid]</span></li>
             <li>You are <span py:replace="current_entry.affiliation">[affiliation]</span></li>
-            <li py:if="not current_entry.is_human">You were killed by <a href="${tg.hvz.user_link(current_entry.killed_by)}" class="player" py:content="current_entry.killed_by">[user]</a></li>
+            <li py:if="not current_entry.is_human and current_entry.killed_by is not None">You were killed by <a href="${tg.hvz.user_link(current_entry.killed_by)}" class="player" py:content="current_entry.killed_by">[user]</a></li>
             <li py:if="not current_entry.is_human">You have killed <span py:replace="current_entry.kills">[#]</span> <py:choose><py:when test="current_entry.kills == 1">player</py:when><py:otherwise>players</py:otherwise></py:choose></li>
             <li py:if="current_entry.is_dead">You starved on <span py:replace="tg.display_date(current_entry.starve_date)">[date]</span></li>
         </ul>
@@ -76,10 +76,10 @@ function unjoin(evt)
     <span py:replace="tg.display(grid, game.entries)">[players]</span>
     <div py:if="not tg.identity.anonymous">
         <button py:if="game.registration_open and current_entry is not None" onclick="unjoin(event);">Unjoin</button>
-        <a py:if="game.registration_open and current_entry is None" href="${tg.hvz.game_link(game, 'join')}"><button>Join</button></a>
+        <a py:if="'join-game' in tg.identity.permissions and game.registration_open and current_entry is None" href="${tg.hvz.game_link(game, 'join')}"><button>Join</button></a>
     </div>
     <h2 id="sect_stage">Stage</h2>
-    <table>
+    <table id="stage_table">
         <tr>
             <td class="check"><py:if test="game.state >= 0">&#x2713;</py:if></td>
             <td>Game created</td>
@@ -109,8 +109,7 @@ function unjoin(evt)
             <td>Game over</td>
         </tr>
     </table>
-    <!-- TODO: Check for admin -->
-    <form py:if="not tg.identity.anonymous" action="${tg.url('/game/action.stage')}">
+    <form py:if="'stage-game' in tg.identity.permissions" action="${tg.url('/game/action.stage')}">
         <input type="hidden" name="game_id" value="${game.game_id}" />
         <p>
             <input py:if="not game.is_first_state" type="submit" name="btnPrev" value="Previous Stage" />

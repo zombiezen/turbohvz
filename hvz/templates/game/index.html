@@ -11,8 +11,7 @@
 <py:match path="content">
     <div py:replace="tg.display(pager)"></div>
     <span py:replace="tg.display(grid, games)"></span>
-    <!--! TODO: Check for admin -->
-    <a py:if="not tg.identity.anonymous" href="${tg.url('/game/create')}"><button>Create</button></a>
+    <a py:if="'create-game' in tg.identity.permissions" href="${tg.url('/game/create')}"><button>Create</button></a>
 </py:match>
 
 <xi:include href="../master.html" />

@@ -47,10 +47,23 @@ class GameController(turbogears.controllers.Controller):
     def view(self, game_id):
         game_id = int(game_id)
         requested_game = model.Game.get(game_id)
+        perms = identity.current.permissions
         if requested_game is not None:
             entry = self._get_current_entry(requested_game)
+            # Determine which columns to show
+            columns = list(widgets.EntryList.default_columns)
+            if 'view-player-gid' in perms:
+                columns.insert(0, 'player_gid')
+            # Determine whether to show original zombie
             oz = requested_game.revealed_original_zombie
-            grid = widgets.EntryList(show_oz=oz)
+            if entry is not None:
+                is_oz = entry.state == model.PlayerEntry.STATE_ORIGINAL_ZOMBIE
+            else:
+                is_oz = False
+            can_view_oz = bool('view-original-zombie' in perms)
+            # Create widgets
+            grid = widgets.EntryList(columns=columns,
+                                     show_oz=(oz or is_oz or can_view_oz),)
             return dict(game=requested_game,
                         grid=grid,
                         current_entry=entry,)
@@ -71,7 +84,7 @@ class GameController(turbogears.controllers.Controller):
             raise ValueError("404")
     
     @expose("hvz.templates.game.join")
-    @identity.require(identity.not_anonymous())
+    @identity.require(identity.has_permission('join-game'))
     def join(self, game_id):
         game_id = int(game_id)
         requested_game = model.Game.get(game_id)
@@ -82,14 +95,12 @@ class GameController(turbogears.controllers.Controller):
             raise ValueError("404")
     
     @expose("hvz.templates.game.create")
-    # TODO: require admin
-    @identity.require(identity.not_anonymous())
+    @identity.require(identity.has_permission('create-game'))
     def create(self):
         return dict()
     
     @expose("hvz.templates.game.choose_oz")
-    # TODO: require admin
-    @identity.require(identity.not_anonymous())
+    @identity.require(identity.has_permission('stage-game'))
     def choose_oz(self, game_id):
         game_id = int(game_id)
         requested_game = model.Game.get(game_id)
@@ -135,7 +146,7 @@ class GameController(turbogears.controllers.Controller):
             raise ValueError("404")
     
     @expose()
-    @identity.require(identity.not_anonymous()) # TODO: Admin
+    @identity.require(identity.has_permission('stage-game'))
     @error_handler(view)
     @validate(validators=widgets.StageSchema)
     def action_stage(self, game_id, btnPrev=None, btnNext=None):
@@ -157,7 +168,7 @@ class GameController(turbogears.controllers.Controller):
             raise ValueError("404")
     
     @expose()
-    @identity.require(identity.not_anonymous())
+    @identity.require(identity.has_permission('join-game'))
     @error_handler(join)
     @validate(widgets.join_form)
     def action_join(self, game_id, original_pool=False):
@@ -191,16 +202,14 @@ class GameController(turbogears.controllers.Controller):
             raise ValueError("404")
     
     @expose()
-    # TODO: require admin
-    @identity.require(identity.not_anonymous())
+    @identity.require(identity.has_permission('create-game'))
     def action_create(self):
         new_game = model.Game()
         session.flush()
         raise turbogears.redirect(util.game_link(new_game, redirect=True))
     
     @expose()
-    # TODO: require admin
-    @identity.require(identity.not_anonymous())
+    @identity.require(identity.has_permission('stage-game'))
     @error_handler(choose_oz)
     @validate(widgets.original_zombie_form)
     def action_oz(self, game_id, original_zombie):
@@ -293,11 +302,10 @@ class Root(turbogears.controllers.RootController):
         forward_url = None
         previous_url = cherrypy.request.path
         if identity.was_login_attempted():
-            msg = _("The credentials you supplied were not correct or "
-                   "did not grant access to this resource.")
+            msg = _("Your login was not correct or did not grant access to "
+                    "this resource.")
         elif identity.get_identity_errors():
-            msg = _("You must provide your credentials before accessing "
-                   "this resource.")
+            msg = _("You are not currently authorized to view this resource.")
         else:
             msg = _("Please log in.")
             forward_url = cherrypy.request.headers.get("Referer", "/")
