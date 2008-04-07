@@ -501,6 +501,91 @@ class Group(Entity):
         self.display_name = unicode(display_name)
         self.created = datetime.utcnow()
     
+    def add_permission(self, permission):
+        """
+        Adds a permission to the group.
+        
+        :Parameters:
+            permission : `Permission` or unicode
+                The permission to add.  If a unicode object is given, then the
+                permission with the given internal name is fetched and added.
+        :Raises TypeError: If the parameter is not a permission
+        :Raises ValueError: If the permission is not found (a string is given)
+        """
+        if isinstance(permission, Permission):
+            pass
+        elif isinstance(permission, basestring):
+            permission = Permission.by_permission_name(permission)
+            if permission is None:
+                raise ValueError("Cannot find permission %r" % permission)
+        else:
+            raise TypeError("Not a valid permission")
+        self.permissions.append(permission)
+    
+    def remove_permission(self, permission):
+        """
+        Removes a permission from the group.
+        
+        :Parameters:
+            permission : `Permission` or unicode
+                The permission to remove.  If a unicode object is given, then
+                the permission with the given internal name is fetched and
+                removed.
+        :Raises TypeError: If the parameter is not a permission
+        :Raises ValueError: If the permission is not found (a string is given)
+        """
+        if isinstance(permission, Permission):
+            pass
+        elif isinstance(permission, basestring):
+            permission = Permission.by_permission_name(permission)
+            if permission is None:
+                raise ValueError("Cannot find permission %r" % permission)
+        else:
+            raise TypeError("Not a valid permission")
+        self.permissions.remove(permission)
+    
+    def add_user(self, user):
+        """
+        Adds a user to the group.
+        
+        :Parameters:
+            user : `User` or unicode
+                The user to add.  If a unicode object is given, then the user
+                with the given internal name is fetched and added.
+        :Raises TypeError: If the parameter is not a user
+        :Raises ValueError: If the user is not found (a string is given)
+        """
+        if isinstance(user, User):
+            pass
+        elif isinstance(user, basestring):
+            user = User.by_user_name(user)
+            if user is None:
+                raise ValueError("Cannot find user %r" % user)
+        else:
+            raise TypeError("Not a valid user")
+        self.users.append(user)
+    
+    def remove_user(self, user):
+        """
+        Removes a user from the group.
+        
+        :Parameters:
+            permission : `User` or unicode
+                The user to remove.  If a unicode object is given, then the
+                user with the given internal name is fetched and removed.
+        :Raises TypeError: If the parameter is not a user
+        :Raises ValueError: If the user is not found (a string is given)
+        """
+        if isinstance(user, User):
+            pass
+        elif isinstance(user, basestring):
+            user = User.by_user_name(user)
+            if user is None:
+                raise ValueError("Cannot find user %r" % user)
+        else:
+            raise TypeError("Not a valid user")
+        self.users.remove(user)
+    
     created = _date_prop('_created')
 
 class User(Entity):
@@ -628,6 +713,19 @@ class Permission(Entity):
     permission_name = Field(Unicode(16), unique=True)
     description = Field(Unicode(255))
     groups = ManyToMany('Group', tablename='group_permission')
+    
+    @classmethod
+    def by_permission_name(cls, name):
+        """
+        Find a permission by its name.
+        
+        :Parameters:
+            name : unicode
+                The internal name to query
+        :Returns: The requested permission, or ``None`` if not found
+        :ReturnType: `Permission`
+        """
+        return cls.query.filter_by(permission_name=name).first()
     
     def __init__(self, name, description):
         self.permission_name = unicode(name)
