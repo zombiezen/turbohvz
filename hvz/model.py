@@ -501,6 +501,15 @@ class Group(Entity):
         self.display_name = unicode(display_name)
         self.created = datetime.utcnow()
     
+    def __repr__(self):
+        return "<Group %s (%s)>" % (self.group_name, self.display_name)
+    
+    def __str__(self):
+        return unicode(self).encode()
+    
+    def __unicode__(self):
+        return self.display_name
+    
     def add_permission(self, permission):
         """
         Adds a permission to the group.
@@ -730,6 +739,15 @@ class Permission(Entity):
     def __init__(self, name, description):
         self.permission_name = unicode(name)
         self.description = unicode(description)
+    
+    def __repr__(self):
+        return "<Permission %s>" % (self.permission_name)
+    
+    def __str__(self):
+        return unicode(self).encode()
+    
+    def __unicode__(self):
+        return self.description
 
 # Set up all Elixir entities declared above
 
