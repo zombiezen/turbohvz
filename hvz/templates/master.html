@@ -17,7 +17,7 @@
         <div py:for="js in tg_js_bodytop" py:replace="tg.display(js)"></div>
         <div py:if="tg.config('identity.on') and not defined('logging_in')" id="user_bar" py:choose="">
             <span py:when="tg.identity.anonymous" py:choose="">
-                <a py:when="tg.config('gao.secure_login', False)" href="${tg.secureurl('/login')}">Login</a>
+                <a py:when="tg.config('hvz.secure_login', False)" href="${tg.secureurl('/login')}">Login</a>
                 <a py:otherwise="" href="${tg.url('/login')}">Login</a>
             </span>
             <span py:otherwise="">
