@@ -269,11 +269,25 @@ class UserController(turbogears.controllers.Controller):
     @validate(widgets.register_form)
     def action_register(self, user_name, display_name, email_address,
                         password1, password2, profile):
+        # Determine group
+        group_config = turbogears.config.get("hvz.default_group", "player")
+        if group_config is None:
+            groups = []
+        elif isinstance(group_config, basestring):
+            groups = [model.Group.by_group_name(group_config)]
+        elif isinstance(group_config, (list, tuple)):
+            groups = [model.Group.by_group_name(name) for name in group_config]
+        else:
+            raise Value
+        # Create user
         new_user = model.User(user_name, display_name,
                               email_address, password1)
         if profile:
             new_user.profile = profile
+        for group in groups:
+            group.add_user(new_user)
         session.flush()
+        # Handle interface
         msg = _("Your account has been created, %s.") % (unicode(new_user))
         turbogears.flash(msg)
         raise turbogears.redirect('/')
