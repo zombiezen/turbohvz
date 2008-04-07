@@ -43,14 +43,48 @@ def _get_local_timezone():
     return pytz.timezone(config.get('hvz.timezone', 'UTC'))
 
 def as_local(date, tz=None):
+    """
+    Interprets (but does not convert) the date as being in the local timezone.
+    
+    :Parameters:
+        date : datetime.datetime
+            The date to interpret
+        tz : tzinfo
+            The timezone to interpret as.  If not given, then the timezone is
+            read from the ``hvz.timezone`` configuration value.
+    :Returns: The timezone-aware date
+    :ReturnType: datetime.datetime
+    """
     if tz is None:
         tz = _get_local_timezone()
     return tz.localize(date)
 
 def as_utc(date):
+    """
+    Interprets (but does not convert) the date as UTC.
+    
+    :Parameters:
+        date : datetime.datetime
+            The date to interpret
+    :Returns: The timezone-aware date
+    :ReturnType: datetime.datetime
+    """
     return date.replace(tzinfo=pytz.utc)
 
 def to_local(date, tz=None):
+    """
+    Converts the date to the local timezone.
+    
+    :Parameters:
+        date : datetime.datetime
+            The date to convert.  If this date is naive, then it will be
+            interpreted as UTC.
+        tz : tzinfo
+            The timezone to convert to.  If not given, then the timezone is
+            read from the ``hvz.timezone`` configuration value.
+    :Returns: The timezone-aware date
+    :ReturnType: datetime.datetime
+    """
     if tz is None:
         tz = _get_local_timezone()
     if date.tzinfo is None:
@@ -58,11 +92,30 @@ def to_local(date, tz=None):
     return date.astimezone(tz)
 
 def to_utc(date):
+    """
+    Converts the date to UTC.
+    
+    :Parameters:
+        date : datetime.datetime
+            The date to convert.  If this date is naive, then it will be
+            interpreted as UTC.
+    :Returns: The timezone-aware date
+    :ReturnType: datetime.datetime
+    """
     if date.tzinfo is None:
         date = as_utc(date)
     return date.astimezone(pytz.utc)
 
 def _get_date_prop(name):
+    """
+    Retrieves a date from the database, interpreting it as UTC.
+    
+    :Parameters:
+        name : str
+            Attribute name for the column
+    :Returns: A function that can be used as a property getter
+    :ReturnType: function
+    """
     def get_prop(self):
         value = getattr(self, name)
         if value is None:
@@ -71,15 +124,30 @@ def _get_date_prop(name):
             return as_utc(value)
     return get_prop
 
-def _set_date_prop(name):
+def _set_date_prop(name, default_tz=pytz.utc):
+    """
+    Updates a date in the database, converting it to UTC.
+    
+    :Parameters:
+        name : str
+            Attribute name for the column
+    :Keywords:
+        default_tz : tzinfo
+            Default timezone to intepret naive 
+    :Returns: A function that can be used as a property setter
+    :ReturnType: function
+    """
     def set_prop(self, value):
         if value is not None:
+            if value.tzinfo is None:
+                value = as_local(value, default_tz)
             value = to_utc(value)
         setattr(self, name, value)
     return set_prop
 
-def _date_prop(name):
-    return property(_get_date_prop(name), _set_date_prop(name))
+def _date_prop(name, default_tz=pytz.utc):
+    return property(_get_date_prop(name),
+                    _set_date_prop(name, default_tz=default_tz))
 
 # your data model
 
@@ -110,6 +178,7 @@ class PlayerEntry(Entity):
             zombie
         starve_date : datetime
             When the player starved
+    :See: User
     """
     using_options(tablename='entries')
     
@@ -344,24 +413,39 @@ class Game(Entity):
 
 class Visit(Entity):
     """
-    A visit to your site
+    A visit to HvZ
+    
+    :IVariables:
+        visit_key : str
+            The visit name
+        created : datetime
+            When the visit started
+        expiry : datetime
+            When the visit will expire
     """
     using_options(tablename='visit')
 
     visit_key = Field(String(40), primary_key=True)
     _created = Field(DateTime, colname='created', synonym='created',
                      nullable=False, default=datetime.utcnow,)
-    expiry = Field(DateTime)
+    _expiry = Field(DateTime, colname='expiry', synonym='expiry')
     
     @classmethod
     def lookup_visit(cls, visit_key):
         return Visit.get(visit_key)
     
-    created = _date_prop('_created')
+    created = _date_prop('_created', default_tz=None)
+    expiry = _date_prop('_expiry', default_tz=None)
 
 class VisitIdentity(Entity):
     """
-    A Visit that is link to a User object
+    A visit that has identified itself.
+    
+    :IVariables:
+        visit_key : str
+            The visit's identifier
+        user : `User`
+            The user the visit has identified as
     """
     using_options(tablename='visit_identity')
 
@@ -370,7 +454,23 @@ class VisitIdentity(Entity):
 
 class Group(Entity):
     """
-    An ultra-simple group definition.
+    A group of users with the same permissions.
+    
+    Users can be a member of multiple groups.
+    
+    :IVariables:
+        group_id : int
+            The group's basic identification number
+        group_name : unicode
+            The group's unique internal name
+        display_name : unicode
+            The group's human-readable name
+        created : datetime.datetime
+            The time at which the group was created
+        users : list of `User`
+            The members of the group
+        permissions : list of `Permissions`
+            The actions the group can perform
     """
     using_options(tablename='tg_group')
 
@@ -380,6 +480,19 @@ class Group(Entity):
     _created = Field(DateTime, colname='created', synonym='created')
     users = ManyToMany('User', tablename='user_group')
     permissions = ManyToMany('Permission', tablename='group_permission')
+    
+    @classmethod
+    def by_group_name(cls, name):
+        """
+        Find a group by its internal name.
+        
+        :Parameters:
+            name : unicode
+                The internal name to query
+        :Returns: The requested group, or ``None`` if not found
+        :ReturnType: `Group`
+        """
+        return cls.query.filter_by(group_name=name).first()
     
     def __init__(self, name, display_name=None):
         if display_name is None:
@@ -392,15 +505,44 @@ class Group(Entity):
 
 class User(Entity):
     """
-    Reasonably basic User definition.
-    Probably would want additional attributes.
+    An individual user of the HvZ application.
+    
+    A user is not necessarily a player, but every player has a user associated
+    with it.
+    
+    :IVariables:
+        user_id : int
+            The user's basic identification number
+        user_name : unicode
+            The user's unique internal name
+        display_name : unicode
+            The user's human-readable name
+        email_address : unicode
+            The user's email address
+        password : unicode
+            The (encrypted) text of the user's password.  Note that this
+            depends on the configuration setting of password encryption.
+            Using ``user.password = 'random_string'`` will automagically
+            encrypt the password.
+        created : datetime.datetime
+            The time at which the user joined/was created
+        profile : unicode
+            A user-provided text profile
+        entries : list of `PlayerEntry`
+            All the game entries that the user has joined
+        groups : list of `Group`
+            All groups that the user is a member of
+        permissions : set of `Permission`
+            An automatically calculated set of permissions, based on group
+            permissions.
+    :See: PlayerEntry
     """
     using_options(tablename='tg_user')
 
     user_id = Field(Integer, primary_key=True)
     user_name = Field(Unicode(16), unique=True)
-    email_address = Field(Unicode(255))
     display_name = Field(Unicode(255), nullable=False)
+    email_address = Field(Unicode(255))
     _password = Field(Unicode(40), colname='tg_password', synonym='password')
     _created = Field(DateTime, colname='created', synonym='created')
     groups = ManyToMany('Group', tablename='user_group')
@@ -410,7 +552,15 @@ class User(Entity):
     
     @classmethod
     def by_user_name(cls, name):
-        """Find a user by his or her name."""
+        """
+        Find a user by his or her name.
+        
+        :Parameters:
+            name : unicode
+                The internal name to query
+        :Returns: The requested user, or ``None`` if not found
+        :ReturnType: `User`
+        """
         return cls.query.filter_by(user_name=name).first()
     
     def __init__(self, name, display_name=None, email=None, password=''):
@@ -446,6 +596,13 @@ class User(Entity):
         self._password = unicode(identity.encrypt_password(new_password))
     
     def set_raw_password(self, new_password):
+        """
+        Modifies the password column directly.  **Use with extreme caution.**
+        
+        :Parameters:
+            new_password : unicode
+                The new value of the password column
+        """
         self._password = unicode(new_password)
     
     created = _date_prop('_created')
@@ -453,7 +610,17 @@ class User(Entity):
 
 class Permission(Entity):
     """
-    A relationship that determines what each Group can do
+    A name that determines what each `Group` can do.
+    
+    :IVariables:
+        permission_id : int
+            The permission's basic identification number
+        permission_name : unicode
+            The permission's internal name
+        description : unicode
+            A short, human-readable description of what the permission allows
+        groups : list of `Group`
+            The groups that have this permission
     """
     using_options(tablename='permission')
 
