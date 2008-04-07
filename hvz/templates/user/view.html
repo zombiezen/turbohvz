@@ -15,7 +15,7 @@
     </ul>
     <py:if test="user.profile">
         <h2 id="sect_profile">Profile</h2>
-        <div py:replace="tg.plain2html(user.profile)">[profile]</div>
+        <div py:replace="HTML(tg.plain2html(user.profile))">[profile]</div>
     </py:if>
     <h2 id="sect_statistics">Statistics</h2>
     <p style="font-style: italic">Coming Soon!</p>
