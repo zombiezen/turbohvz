@@ -256,7 +256,11 @@ class UserController(turbogears.controllers.Controller):
         else:
             requested_user = model.User.by_user_name(user_id)
         if requested_user is not None:
-            return dict(user=requested_user,)
+            grid = widgets.GameList()
+            games = [entry.game for entry in requested_user.entries]
+            return dict(user=requested_user,
+                        games=games,
+                        game_grid=grid,)
         else:
             raise ValueError("404")
     
