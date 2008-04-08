@@ -17,6 +17,7 @@ __all__ = ['abslink',
            'insecurelink',
            'insecureurl',
            'plain2html',
+           'pluralize',
            'securelink',
            'secureurl',
            'str2bool',
@@ -143,6 +144,25 @@ def plain2html(text):
     text = '<p>' + text + '</p>'
     return text
 
+def pluralize(value, singular, plural):
+    """
+    Pluralize a word correctly.
+    
+    :Parameters:
+        value
+            A numerical value to test for plurality.
+        singular : unicode
+            The singular form of the term
+        plural : unicode
+            The plural form of the term
+    :Returns: The singular or plural, depending on ``value == 1``
+    :ReturnType: unicode
+    """
+    if value == 1:
+        return singular
+    else:
+        return plural
+
 def securelink(path):
     """Create a secure URL from a pre-constructed path."""
     baseURL = cherrypy.request.base
@@ -195,6 +215,7 @@ def add_template_variables(vars):
                   insecureurl=insecureurl,
                   jsencode=jsencode,
                   plain2html=plain2html,
+                  pluralize=pluralize,
                   securelink=securelink,
                   secureurl=secureurl,)
     return vars.update(lookup)
