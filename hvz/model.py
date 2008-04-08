@@ -166,10 +166,11 @@ def _calc_timedelta(datetime1, datetime2, tz=None,
             The second date and time
     :Keywords:
         tz : datetime.tzinfo
-            The timezone to calculate dates in.  If you get the wrong timezone,
-            your results will possibly be **very incorrect**.  This is because
-            the algorithm should be looking at dates in the players'
-            timezone, which is rarely UTC.
+            The timezone to calculate dates in, defaulting to the config value
+            of ``hvz.timezone``.  If you get the wrong timezone, your results
+            will possibly be **very incorrect**.  This is because the algorithm
+            should be looking at dates in the players' timezone, which is
+            rarely UTC.
         ignore_dates : list of datetime.date
             Days that are removed from the difference
         ignore_weekdays : list of int
@@ -543,14 +544,14 @@ class Game(Entity):
         if not self.in_progress:
             return
         # Initialize variables
-        zombie_starve_time = timedelta(seconds=30)
+        zombie_starve_time = timedelta(hours=self.zombie_starve_time)
         now = as_utc(datetime.utcnow())
-        ignore_dates = []
-        ignore_weekdays = [6, 7]
         # Bring out yer dead!
         zombies = (entry for entry in self.entries if entry.is_undead)
         for zombie in zombies:
-            delta = _calc_timedelta(zombie.feed_date, now)
+            delta = _calc_timedelta(zombie.feed_date, now,
+                                    ignore_dates=self.ignore_dates,
+                                    ignore_weekdays=self.ignore_weekdays,)
             if delta >= zombie_starve_time:
                 zombie.die()
     
