@@ -24,6 +24,24 @@ __all__ = ['log',
 
 log = logging.getLogger("hvz.controllers")
 
+def not_found():
+    """
+    Called from a controller method when a resource is not found.
+    
+    It's vitally important that the return value from this function is used as
+    the return value for the controller method.
+    
+    The controller method should do something like this::
+    
+        @expose
+        def foo(self):
+            if cant_find_it:
+                return not_found()
+    """
+    cherrypy.response.status = 404
+    return dict(tg_template="hvz.templates.notfound",
+                requested_uri=cherrypy.request.path,)
+
 class GameController(turbogears.controllers.Controller):
     @staticmethod
     def _get_current_entry(game):
@@ -71,7 +89,7 @@ class GameController(turbogears.controllers.Controller):
                         grid=grid,
                         current_entry=entry,)
         else:
-            raise ValueError("404")
+            return not_found()
     
     @expose("hvz.templates.game.edit")
     @identity.require(identity.has_permission('edit-game'))
@@ -88,7 +106,7 @@ class GameController(turbogears.controllers.Controller):
                         form=forms.game_form,
                         values=values,)
         else:
-            raise ValueError("404")
+            return not_found()
     
     @expose("hvz.templates.game.reportkill")
     @identity.require(identity.not_anonymous())
@@ -101,7 +119,7 @@ class GameController(turbogears.controllers.Controller):
                         form=forms.kill_form,
                         current_entry=entry,)
         else:
-            raise ValueError("404")
+            return not_found()
     
     @expose("hvz.templates.game.join")
     @identity.require(identity.has_permission('join-game'))
@@ -112,7 +130,7 @@ class GameController(turbogears.controllers.Controller):
             return dict(game=requested_game,
                         form=forms.join_form,)
         else:
-            raise ValueError("404")
+            return not_found()
     
     @expose("hvz.templates.game.create")
     @identity.require(identity.has_permission('create-game'))
@@ -134,7 +152,7 @@ class GameController(turbogears.controllers.Controller):
                         options=options,
                         form=forms.original_zombie_form,)
         else:
-            raise ValueError("404")
+            return not_found()
     
     @expose()
     @identity.require(identity.not_anonymous())
@@ -163,7 +181,7 @@ class GameController(turbogears.controllers.Controller):
             link = util.game_link(game_id, redirect=True) + '#sect_entry_list'
             raise turbogears.redirect(link)
         else:
-            raise ValueError("404")
+            return not_found()
     
     @expose()
     @identity.require(identity.has_permission('stage-game'))
@@ -185,7 +203,7 @@ class GameController(turbogears.controllers.Controller):
             link = util.game_link(game_id, redirect=True) + '#sect_stage'
             raise turbogears.redirect(link)
         else:
-            raise ValueError("404")
+            return not_found()
     
     @expose()
     @identity.require(identity.has_permission('join-game'))
@@ -203,7 +221,7 @@ class GameController(turbogears.controllers.Controller):
             link = util.game_link(game_id, redirect=True) + '#sect_entry_list'
             raise turbogears.redirect(link)
         else:
-            raise ValueError("404")
+            return not_found()
     
     @expose()
     @identity.require(identity.not_anonymous())
@@ -219,7 +237,7 @@ class GameController(turbogears.controllers.Controller):
             link = util.game_link(game_id, redirect=True) + '#sect_entry_list'
             raise turbogears.redirect(link)
         else:
-            raise ValueError("404")
+            return not_found()
     
     @expose()
     @identity.require(identity.has_permission('create-game'))
@@ -257,7 +275,7 @@ class GameController(turbogears.controllers.Controller):
             raise turbogears.redirect(util.game_link(requested_game,
                                                      redirect=True))
         else:
-            raise ValueError("404")
+            return not_found()
     
     @expose()
     @identity.require(identity.has_permission('delete-game'))
@@ -270,7 +288,7 @@ class GameController(turbogears.controllers.Controller):
             turbogears.flash(_("Game deleted"))
             raise turbogears.redirect('/game/')
         else:
-            raise ValueError("404")
+            return not_found()
     
     @expose()
     @identity.require(identity.has_permission('stage-game'))
@@ -300,7 +318,7 @@ class GameController(turbogears.controllers.Controller):
             link = util.game_link(requested_game, redirect=True)
             raise turbogears.redirect(link)
         else:
-            raise ValueError("404")
+            return not_found()
 
 class UserController(turbogears.controllers.Controller):
     @expose("hvz.templates.user.index")
@@ -326,7 +344,7 @@ class UserController(turbogears.controllers.Controller):
                         games=games,
                         game_grid=grid,)
         else:
-            raise ValueError("404")
+            return not_found()
     
     @expose("hvz.templates.user.register")
     def register(self):
