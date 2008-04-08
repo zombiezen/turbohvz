@@ -13,7 +13,7 @@ from turbogears import error_handler, expose, url, identity, validate
 from turbogears.database import session
 from turbogears.paginate import paginate
 
-from hvz import model, util, widgets #, json
+from hvz import forms, model, util, widgets #, json
 
 __author__ = 'Ross Light'
 __date__ = 'March 30, 2008'
@@ -81,7 +81,7 @@ class GameController(turbogears.controllers.Controller):
         if requested_game is not None:
             entry = self._get_current_entry(requested_game)
             return dict(game=requested_game,
-                        form=widgets.kill_form,
+                        form=forms.kill_form,
                         current_entry=entry,)
         else:
             raise ValueError("404")
@@ -93,14 +93,14 @@ class GameController(turbogears.controllers.Controller):
         requested_game = model.Game.get(game_id)
         if requested_game is not None:
             return dict(game=requested_game,
-                        form=widgets.join_form,)
+                        form=forms.join_form,)
         else:
             raise ValueError("404")
     
     @expose("hvz.templates.game.create")
     @identity.require(identity.has_permission('create-game'))
     def create(self):
-        return dict(form=widgets.create_game_form,)
+        return dict(form=forms.create_game_form,)
     
     @expose("hvz.templates.game.choose_oz")
     @identity.require(identity.has_permission('stage-game'))
@@ -115,14 +115,14 @@ class GameController(turbogears.controllers.Controller):
             # Pass off to template
             return dict(game=requested_game,
                         options=options,
-                        form=widgets.original_zombie_form,)
+                        form=forms.original_zombie_form,)
         else:
             raise ValueError("404")
     
     @expose()
     @identity.require(identity.not_anonymous())
     @error_handler(reportkill)
-    @validate(widgets.kill_form)
+    @validate(forms.kill_form)
     def action_kill(self, game_id, victim_id, kill_date):
         user = identity.current.user
         kill_date = model.as_local(kill_date)
@@ -151,7 +151,7 @@ class GameController(turbogears.controllers.Controller):
     @expose()
     @identity.require(identity.has_permission('stage-game'))
     @error_handler(view)
-    @validate(validators=widgets.StageSchema)
+    @validate(validators=forms.StageSchema)
     def action_stage(self, game_id, btnPrev=None, btnNext=None):
         user = identity.current.user
         game_id = int(game_id)
@@ -173,7 +173,7 @@ class GameController(turbogears.controllers.Controller):
     @expose()
     @identity.require(identity.has_permission('join-game'))
     @error_handler(join)
-    @validate(widgets.join_form)
+    @validate(forms.join_form)
     def action_join(self, game_id, original_pool=False):
         user = identity.current.user
         game_id = int(game_id)
@@ -207,7 +207,7 @@ class GameController(turbogears.controllers.Controller):
     @expose()
     @identity.require(identity.has_permission('create-game'))
     @error_handler(create)
-    @validate(widgets.create_game_form)
+    @validate(forms.create_game_form)
     def action_create(self, zombie_starve_time,
                       ignore_weekdays,
                       ignore_dates,):
@@ -222,7 +222,7 @@ class GameController(turbogears.controllers.Controller):
     @expose()
     @identity.require(identity.has_permission('stage-game'))
     @error_handler(choose_oz)
-    @validate(widgets.original_zombie_form)
+    @validate(forms.original_zombie_form)
     def action_oz(self, game_id, original_zombie):
         game_id = int(game_id)
         requested_game = model.Game.get(game_id)
@@ -277,11 +277,11 @@ class UserController(turbogears.controllers.Controller):
     
     @expose("hvz.templates.user.register")
     def register(self):
-        return dict(form=widgets.register_form,)
+        return dict(form=forms.register_form,)
     
     @expose()
     @error_handler(register)
-    @validate(widgets.register_form)
+    @validate(forms.register_form)
     def action_register(self, user_name, display_name, email_address,
                         password1, password2, profile):
         # Determine group
