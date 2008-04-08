@@ -22,12 +22,12 @@ __all__ = ['UserNameValidator',
            'JoinSchema',
            'OriginalZombieSchema',
            'RegisterSchema',
-           'CreateGameSchema',
+           'GameSchema',
            'kill_form',
            'join_form',
            'original_zombie_form',
            'register_form',
-           'create_game_form',]
+           'game_form',]
 
 ## VALIDATORS ##
 
@@ -92,16 +92,17 @@ class OriginalZombieSchema(validators.Schema):
         validators.OneOf(["random"]),)
 
 class RegisterSchema(validators.Schema):
-    user_name = UserNameValidator(min=4, max=16)
-    display_name = validators.UnicodeString(min=1, max=255)
+    user_name = UserNameValidator(min=4, max=16, strip=True)
+    display_name = validators.UnicodeString(min=1, max=255, strip=True)
     email_address = validators.Email()
     password1 = validators.UnicodeString(min=8)
     password2 = validators.UnicodeString(min=8)
-    profile = validators.UnicodeString(max=1024)
+    profile = validators.UnicodeString(max=1024, strip=True)
     chained_validators = [validators.FieldsMatch('password1', 'password2')]
 
-class CreateGameSchema(validators.Schema):
-    display_name = validators.UnicodeString(min=4, max=255)
+class GameSchema(validators.Schema):
+    game_id = validators.Int(if_empty=None, not_empty=False)
+    display_name = validators.UnicodeString(min=4, max=255, strip=True)
     zombie_starve_time = validators.Int(min=1)
     ignore_weekdays = validators.ForEach(validators.Int(min=1, max=7),
                                          convert_to_list=True,
@@ -158,7 +159,8 @@ class RegisterFields(WidgetsList):
         cols=64,
         rows=20,)
 
-class CreateGameFields(WidgetsList):
+class GameFields(WidgetsList):
+    game_id = widgets.HiddenField()
     display_name = widgets.TextField(
         label=_("Game name"))
     zombie_starve_time = widgets.TextField(
@@ -213,10 +215,8 @@ register_form = widgets.TableForm(
     action=url('/user/action.register'),
     submit_text=_("Register"),)
 
-create_game_form = widgets.TableForm(
-    name="create_game_form",
-    fields=CreateGameFields(),
-    validator=CreateGameSchema(),
-    action=url('/game/action.create'),
-    submit_text=_("Create"),)
+game_form = widgets.TableForm(
+    name="game_form",
+    fields=GameFields(),
+    validator=GameSchema(),)
     

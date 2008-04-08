@@ -109,7 +109,8 @@ function confirm_action(msg, url)
             </tr>
         </tbody>
     </table>
-    <div py:if="'delete-game' in tg.identity.permissions">
+    <div py:if="'edit-game' in tg.identity.permissions or 'delete-game' in tg.identity.permissions">
+        <button py:if="'edit-game' in tg.identity.permissions" onclick="window.location=${tg.jsencode(tg.hvz.game_link(game, 'edit'))}">Edit</button>
         <button py:if="'delete-game' in tg.identity.permissions" onclick="delete_game(event);">Delete</button>
     </div>
     <py:if test="current_entry is not None">

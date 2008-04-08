@@ -73,6 +73,23 @@ class GameController(turbogears.controllers.Controller):
         else:
             raise ValueError("404")
     
+    @expose("hvz.templates.game.edit")
+    @identity.require(identity.has_permission('edit-game'))
+    def edit(self, game_id):
+        game_id = int(game_id)
+        requested_game = model.Game.get(game_id)
+        if requested_game is not None:
+            values = dict(game_id=requested_game.game_id,
+                          display_name=requested_game.display_name,
+                          zombie_starve_time=requested_game.zombie_starve_time,
+                          ignore_weekdays=requested_game.ignore_weekdays,
+                          ignore_dates=requested_game.ignore_dates,)
+            return dict(game=requested_game,
+                        form=forms.game_form,
+                        values=values,)
+        else:
+            raise ValueError("404")
+    
     @expose("hvz.templates.game.reportkill")
     @identity.require(identity.not_anonymous())
     def reportkill(self, game_id):
@@ -100,7 +117,7 @@ class GameController(turbogears.controllers.Controller):
     @expose("hvz.templates.game.create")
     @identity.require(identity.has_permission('create-game'))
     def create(self):
-        return dict(form=forms.create_game_form,)
+        return dict(form=forms.game_form,)
     
     @expose("hvz.templates.game.choose_oz")
     @identity.require(identity.has_permission('stage-game'))
@@ -207,11 +224,12 @@ class GameController(turbogears.controllers.Controller):
     @expose()
     @identity.require(identity.has_permission('create-game'))
     @error_handler(create)
-    @validate(forms.create_game_form)
-    def action_create(self, display_name,
+    @validate(forms.game_form)
+    def action_create(self, game_id, display_name,
                       zombie_starve_time,
                       ignore_weekdays,
                       ignore_dates,):
+        assert not game_id
         new_game = model.Game(display_name)
         new_game.zombie_starve_time = zombie_starve_time
         new_game.ignore_weekdays = ignore_weekdays
@@ -219,6 +237,27 @@ class GameController(turbogears.controllers.Controller):
         session.flush()
         turbogears.flash(_("Game created"))
         raise turbogears.redirect(util.game_link(new_game, redirect=True))
+    
+    @expose()
+    @identity.require(identity.has_permission('edit-game'))
+    @error_handler(edit)
+    @validate(forms.game_form)
+    def action_edit(self, game_id, display_name,
+                    zombie_starve_time,
+                    ignore_weekdays,
+                    ignore_dates,):
+        requested_game = model.Game.get(game_id)
+        if requested_game is not None:
+            requested_game.display_name = display_name
+            requested_game.zombie_starve_time = zombie_starve_time
+            requested_game.ignore_weekdays = ignore_weekdays
+            requested_game.ignore_dates = ignore_dates
+            session.flush()
+            turbogears.flash(_("Game updated"))
+            raise turbogears.redirect(util.game_link(requested_game,
+                                                     redirect=True))
+        else:
+            raise ValueError("404")
     
     @expose()
     @identity.require(identity.has_permission('delete-game'))
