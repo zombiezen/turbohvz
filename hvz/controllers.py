@@ -100,7 +100,7 @@ class GameController(turbogears.controllers.Controller):
     @expose("hvz.templates.game.create")
     @identity.require(identity.has_permission('create-game'))
     def create(self):
-        return dict()
+        return dict(form=widgets.create_game_form,)
     
     @expose("hvz.templates.game.choose_oz")
     @identity.require(identity.has_permission('stage-game'))
@@ -206,9 +206,17 @@ class GameController(turbogears.controllers.Controller):
     
     @expose()
     @identity.require(identity.has_permission('create-game'))
-    def action_create(self):
+    @error_handler(create)
+    @validate(widgets.create_game_form)
+    def action_create(self, zombie_starve_time,
+                      ignore_weekdays,
+                      ignore_dates,):
         new_game = model.Game()
+        new_game.zombie_starve_time = zombie_starve_time
+        new_game.ignore_weekdays = ignore_weekdays
+        new_game.ignore_dates = ignore_dates
         session.flush()
+        turbogears.flash(_("Game created"))
         raise turbogears.redirect(util.game_link(new_game, redirect=True))
     
     @expose()

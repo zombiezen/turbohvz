@@ -9,11 +9,9 @@
 <py:def function="head_info"></py:def>
 
 <py:match path="content">
-    <p>Are you sure you want to create a game?</p>
-    <div>
-        <a href="${tg.url('/game/index')}"><button>Cancel</button></a>
-        <a href="${tg.url('/game/action.create')}"><button>Create</button></a>
-    </div>
+    <p>Please set up the options for this new game.</p>
+    <div py:replace="tg.display(form)"></div>
+    <a href="${tg.url('/game/index')}">Cancel</a>
 </py:match>
 
 <xi:include href="../master.html" />

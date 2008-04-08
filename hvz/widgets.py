@@ -4,12 +4,14 @@
 #   HvZ
 #
 
+import re
+
 from kid import Element
 import turbogears
 from turbogears import url, validators, widgets
 from turbogears.widgets import Widget, WidgetsList
 
-from hvz import util
+from hvz import model, util
 
 __author__ = "Ross Light"
 __date__ = "March 31, 2008"
@@ -18,6 +20,8 @@ __all__ = ['Pager',
            'EntryList',
            'GameList',
            'UserList',
+           'UserNameValidator',
+           'DateListValidator',
            'KillSchema',
            'KillFields',
            'kill_form',
@@ -28,10 +32,12 @@ __all__ = ['Pager',
            'OriginalZombieSchema',
            'OriginalZombieFields',
            'original_zombie_form',
-           'UserNameValidator',
            'RegisterSchema',
            'RegisterFields',
-           'register_form',]
+           'register_form',
+           'CreateGameSchema',
+           'CreateGameFields',
+           'create_game_form',]
 
 class Pager(Widget):
     template = "hvz.templates.widgets.pager"
@@ -187,6 +193,47 @@ class UserList(CustomDataGrid):
         link.text = row.display_name
         return link
 
+## VALIDATORS ##
+
+class UserNameValidator(validators.UnicodeString):
+    messages = {'non_unique': "That user name is already taken",}
+    
+    def validate_python(self, value, state):
+        from hvz.model import User
+        if User.by_user_name(value) is not None:
+            raise validators.Invalid(self.message('non_unique', state),
+                                     value, state)
+        else:
+            super(UserNameValidator, self).validate_python(value, state)
+
+class DateListValidator(validators.FancyValidator):
+    date_regex = re.compile(r'^(\d{4})-(\d{2})-(\d{2})$')
+    messages = {'invalid_date': "Date must be YYYY-MM-DD",}
+    
+    def _to_python(self, value, state):
+        from datetime import date
+        value = value.strip()
+        result = []
+        for line in value.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            match = self.date_regex.match(line)
+            if match:
+                year, month, day = match.groups()
+                year, month, day = int(year, 10), int(month, 10), int(day, 10)
+                new_date = date(year, month, day)
+                result.append(new_date)
+            else:
+                raise validators.Invalid(self.message('invalid_date', state),
+                                         value, state)
+        return result
+    
+    def _from_python(self, value, state):
+        date_strings = ['%.4i-%.2i-%.2i' % (d.year, d.month, d.day)
+                        for d in value]
+        return '\n'.join(date_strings)
+
 ## FORMS ##
 
 class KillSchema(validators.Schema):
@@ -249,17 +296,6 @@ original_zombie_form = widgets.TableForm(
     action=turbogears.url('/game/action.oz'),
     submit_text=_("Choose"),)
 
-class UserNameValidator(validators.UnicodeString):
-    messages = {'non_unique': "That user name is already taken",}
-    
-    def validate_python(self, value, state):
-        from hvz.model import User
-        if User.by_user_name(value) is not None:
-            raise validators.Invalid(self.message('non_unique', state),
-                                     value, state)
-        else:
-            super(UserNameValidator, self).validate_python(value, state)
-
 class RegisterSchema(validators.Schema):
     user_name = UserNameValidator(min=4, max=16)
     display_name = validators.UnicodeString(min=1, max=255)
@@ -301,3 +337,44 @@ register_form = widgets.TableForm(
     validator=RegisterSchema(),
     action=turbogears.url('/user/action.register'),
     submit_text=_("Register"),)
+
+class CreateGameSchema(validators.Schema):
+    zombie_starve_time = validators.Int(min=1)
+    ignore_weekdays = validators.ForEach(validators.Int(min=1, max=7),
+                                         convert_to_list=True,
+                                         if_empty=[],
+                                         if_missing=[],)
+    ignore_dates = DateListValidator()
+
+class CreateGameFields(WidgetsList):
+    zombie_starve_time = widgets.TextField(
+        label=_("Zombie Starve Time"),
+        help_text=_("The length of time (in hours) that a zombie has to feed "
+                    "before starving."),
+        default=model.Game.DEFAULT_ZOMBIE_STARVE_TIME,)
+    ignore_weekdays = widgets.MultipleSelectField(
+        label=_("Ignore Days"),
+        help_text=_("The days of the week to regularly ignore when "
+                    "considering starve time.  You can choose multiple days."),
+        options=[(1, _("Monday")),
+                 (2, _("Tuesday")),
+                 (3, _("Wednesday")),
+                 (4, _("Thursday")),
+                 (5, _("Friday")),
+                 (6, _("Saturday")),
+                 (7, _("Sunday"))],
+        default=[6, 7],
+        size=7,)
+    ignore_dates = widgets.TextArea(
+        label=_("Ignore Dates"),
+        help_text=_("Individual dates to ignore when considering starve "
+                    "time.  Each date must be put on a separate line in ISO "
+                    "YYYY-MM-DD format."))
+
+create_game_form = widgets.TableForm(
+    name="create_game_form",
+    fields=CreateGameFields(),
+    validator=CreateGameSchema(),
+    action=turbogears.url('/game/action.create'),
+    submit_text=_("Create"),)
+    
