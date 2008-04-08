@@ -49,6 +49,9 @@ class GameController(turbogears.controllers.Controller):
         requested_game = model.Game.get(game_id)
         perms = identity.current.permissions
         if requested_game is not None:
+            # Update game
+            requested_game.update()
+            # Find user's entry, if he/she has one
             entry = self._get_current_entry(requested_game)
             # Determine which columns to show
             columns = list(widgets.EntryList.default_columns)
@@ -228,7 +231,7 @@ class GameController(turbogears.controllers.Controller):
                 if entry not in pool:
                     raise ValueError("Original zombie is not a valid choice")
             # Make into zombie
-            entry.state = model.PlayerEntry.STATE_ORIGINAL_ZOMBIE
+            requested_game.original_zombie = entry
             # Advance stage
             requested_game.next_state()
             # Go back to game page

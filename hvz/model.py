@@ -20,6 +20,7 @@ from elixir import (Entity, Field, OneToMany, ManyToOne, ManyToMany,
 import pytz
 from sqlalchemy import UniqueConstraint
 from turbogears import identity, config
+from turbogears.database import session
 
 __author__ = 'Ross Light'
 __date__ = 'March 30, 2008'
@@ -185,7 +186,7 @@ def _calc_timedelta(datetime1, datetime2, tz=None,
         ignore_dates = []
     if ignore_weekdays is None:
         ignore_weekdays = []
-    datetime1, datetime2 = as_local(datetime1, tz), as_local(datetime2, tz)
+    datetime1, datetime2 = to_local(datetime1, tz), to_local(datetime2, tz)
     # Calculate basic difference
     difference = datetime2 - datetime1
     # Find date range
@@ -285,7 +286,8 @@ class PlayerEntry(Entity):
     # it, so just making it an integer temporarily.
     _killed_by = Field(Integer, colname='killed_by', synonym='killed_by')
     original_pool = Field(Boolean)
-    _starve_date = Field(DateTime, colname='starve_date', synonym='starve_date')
+    _starve_date = Field(DateTime,
+                         colname='starve_date', synonym='starve_date')
     
     @staticmethod
     def _generate_id(id_length):
@@ -310,15 +312,61 @@ class PlayerEntry(Entity):
         self.game = game
         self.player = player
         self.player_gid = self._generate_id(id_length)
-        self.state = 1
+        self.original_pool = False
+        self.reset()
+    
+    def reset(self):
+        """Reset volatile in-game statistics"""
+        self.state = self.STATE_HUMAN
         self.death_date = None
         self.feed_date = None
         self.kills = 0
         self.killed_by = None
-        self.original_pool = False
         self.starve_date = None
     
+    def make_original_zombie(self, date=None):
+        """
+        Turn player into original zombie.
+        
+        If an already-original-zombie player has this called, then the death
+        and feed date is refreshed.
+        
+        :Parameters:
+            date : datetime.datetime
+                The date and time of the infection
+        """
+        if date is None:
+            date = as_utc(datetime.utcnow())
+        if self.is_human:
+            # This is the first time that the player became an OZ, give 'em the
+            # full attribute setup
+            self.state = self.STATE_ORIGINAL_ZOMBIE
+            self.death_date = self.feed_date = date
+        elif self.state == self.STATE_ORIGINAL_ZOMBIE:
+            # Already an OZ?  Refresh death & feed date
+            # WEIRD BUG: SQLAlchemy gets cranky because it tries to compare the
+            #            accessor value to the non-accessor value in an attempt
+            #            to preserve history.  In order to get around this, we
+            #            set the dates to None, flush it, then set it
+            #            correctly.  Don't ask me why I need this.
+            self.death_date = self.feed_date = None
+            session.flush()
+            self.death_date = self.feed_date = date
+        else:
+            raise ValueError("This is a non-human.  Can't make the OZ.")
+    
     def kill(self, other, date=None):
+        """
+        Make the player zombify someone else.
+        
+        This only works for zombies.
+        
+        :Parameters:
+            other : `PlayerEntry`
+                The victim
+            date : datetime.datetime
+                The date and time of the demise
+        """
         if date is None:
             date = as_utc(datetime.utcnow())
         if self.is_undead:
@@ -331,6 +379,24 @@ class PlayerEntry(Entity):
                 raise ValueError("Victim is nonhuman")
         else:
             raise ValueError("Killer is nonzombie")
+    
+    def die(self, date=None):
+        """
+        Make the player die from starvation.
+        
+        This only works for zombies.
+        
+        :Parameters:
+            date : datetime.datetime
+                The date and time of the starvation
+        """
+        if date is None:
+            date = as_utc(datetime.utcnow())
+        if self.is_undead:
+            self.starve_date = date
+            self.state = self.STATE_DEAD
+        else:
+            raise ValueError("It's not this player's time yet!")
     
     def __repr__(self):
         return "<PlayerEntry %i:%s (%s)>" % (self.game.game_id,
@@ -437,6 +503,22 @@ class Game(Entity):
         self.ended = None
         self.state = self.STATE_CREATED
     
+    def update(self):
+        # Hey, we're not playing.  Don't update!
+        if not self.in_progress:
+            return
+        # Initialize variables
+        zombie_starve_time = timedelta(seconds=30)
+        now = as_utc(datetime.utcnow())
+        ignore_dates = []
+        ignore_weekdays = [6, 7]
+        # Bring out yer dead!
+        zombies = (entry for entry in self.entries if entry.is_undead)
+        for zombie in zombies:
+            delta = _calc_timedelta(zombie.feed_date, now)
+            if delta >= zombie_starve_time:
+                zombie.die()
+    
     @property
     def revealed_original_zombie(self):
         return self.state >= self.STATE_REVEAL_ZOMBIE
@@ -465,6 +547,22 @@ class Game(Entity):
     def original_zombie_pool(self):
         return [entry for entry in self.entries if entry.original_pool]
     
+    def _get_oz(self):
+        results = [entry for entry in self.entries
+                   if entry.state == PlayerEntry.STATE_ORIGINAL_ZOMBIE]
+        if len(results) == 0:
+            return None
+        elif len(results) == 1:
+            return results[0]
+        else:
+            raise AssertionError("We have multiple OZs")
+    
+    def _set_oz(self, new_oz):
+        prev_oz = self._get_oz()
+        if prev_oz is not None:
+            prev_oz.reset()
+        new_oz.make_original_zombie()
+    
     def previous_state(self):
         # Check if we can do this
         if self.is_first_state:
@@ -478,7 +576,7 @@ class Game(Entity):
             self.ended = None
         elif self.state == self.STATE_CHOOSE_ZOMBIE - 1:
             for entry in self.entries:
-                entry.state = PlayerEntry.STATE_HUMAN
+                entry.reset()
     
     def next_state(self):
         # Check if we can do this
@@ -488,13 +586,15 @@ class Game(Entity):
         self.state += 1
         # Do state hooks
         if self.state == self.STATE_STARTED:
-            self.started = datetime.utcnow()
+            self.started = as_utc(datetime.utcnow())
+            self.original_zombie.make_original_zombie() # Refresh kill date
         elif self.state == self.STATE_ENDED:
-            self.ended = datetime.utcnow()
+            self.ended = as_utc(datetime.utcnow())
     
     created = _date_prop('_created')
     started = _date_prop('_started')
     ended = _date_prop('_ended')
+    original_zombie = property(_get_oz, _set_oz)
 
 # the identity model
 
