@@ -30,9 +30,9 @@
             </py:otherwise>
         </div>
         <div id="header" onclick="window.location = ${tg.jsencode(tg.url('/'))};">&nbsp;</div>
+        <div id="status_block" class="flash" py:if="value_of('tg_flash', None)" py:content="tg_flash">Flash</div>
         <div id="main_content">
             <h1 py:content="page_title()">[Title]</h1>
-            <div id="status_block" class="flash" py:if="value_of('tg_flash', None)" py:content="tg_flash">Flash</div>
             <!-- Begin content -->
             <content>Content goes here</content>
             <!-- End content -->
