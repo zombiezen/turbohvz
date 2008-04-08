@@ -85,6 +85,13 @@ function confirm_action(msg, url)
                     <span py:replace="tg.pluralize(game.zombie_starve_time, _('hour'), _('hours'))">[hour(s)]</span>
                 </td>
             </tr>
+            <tr>
+                <th>Report Time:</th>
+                <td>
+                    <span py:replace="game.zombie_report_time">[#]</span>
+                    <span py:replace="tg.pluralize(game.zombie_report_time, _('hour'), _('hours'))">[hour(s)]</span>
+                </td>
+            </tr>
             <tr py:if="game.ignore_weekdays"
                 py:with="weekdays = sorted(game.ignore_weekdays)">
                 <th>Ignores weekdays:</th>
@@ -124,8 +131,8 @@ function confirm_action(msg, url)
             </li>
             <li py:if="current_entry.is_dead">You starved on <span py:replace="tg.display_date(current_entry.starve_date)">[date]</span></li>
         </ul>
-        <div py:if="game.in_progress">
-            <button py:if="current_entry.is_undead" onclick="window.location=${tg.jsencode(tg.hvz.game_link(game, 'reportkill'))};">Report Kill</button>
+        <div py:if="current_entry.can_report_kill()">
+            <button onclick="window.location=${tg.jsencode(tg.hvz.game_link(game, 'reportkill'))};">Report Kill</button>
         </div>
     </py:if>
     <h2 id="sect_entry_list">Player Roster</h2>

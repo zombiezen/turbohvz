@@ -104,6 +104,7 @@ class GameSchema(validators.Schema):
     game_id = validators.Int(if_empty=None, not_empty=False)
     display_name = validators.UnicodeString(min=4, max=255, strip=True)
     zombie_starve_time = validators.Int(min=1)
+    zombie_report_time = validators.Int(min=1)
     ignore_weekdays = validators.ForEach(validators.Int(min=1, max=7),
                                          convert_to_list=True,
                                          if_empty=[],
@@ -168,6 +169,11 @@ class GameFields(WidgetsList):
         help_text=_("The length of time (in hours) that a zombie has to feed "
                     "before starving."),
         default=model.Game.DEFAULT_ZOMBIE_STARVE_TIME,)
+    zombie_report_time = widgets.TextField(
+        label=_("Zombie Report Time"),
+        help_text=_("The length of time (in hours) that a zombie has to "
+                    "report a kill."),
+        default=model.Game.DEFAULT_ZOMBIE_REPORT_TIME,)
     ignore_weekdays = widgets.MultipleSelectField(
         label=_("Ignore Days"),
         help_text=_("The days of the week to regularly ignore when "

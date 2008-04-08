@@ -144,6 +144,14 @@ def _set_date_prop(name, default_tz=pytz.utc):
             if value.tzinfo is None:
                 value = as_local(value, default_tz)
             value = to_utc(value)
+            # WEIRD BUG: SQLAlchemy gets cranky because it tries to compare the
+            #            accessor value to the non-accessor value in an attempt
+            #            to preserve history (thus comparing naive to aware).
+            #            In order to get around this, we set the dates to None,
+            #            flush it, then set it correctly.  Don't ask me why I
+            #            need this.
+            setattr(self, name, None)
+            session.flush() 
         setattr(self, name, value)
     return set_prop
 
@@ -290,6 +298,8 @@ class PlayerEntry(Entity):
     _starve_date = Field(DateTime,
                          colname='starve_date', synonym='starve_date')
     
+    ## INITIALIZATION/RETRIEVING ##
+    
     @staticmethod
     def _generate_id(id_length):
         id_chars = string.ascii_uppercase + string.digits
@@ -315,6 +325,21 @@ class PlayerEntry(Entity):
         self.player_gid = self._generate_id(id_length)
         self.original_pool = False
         self.reset()
+    
+    ## STRING REPRESENTATION ##
+    
+    def __repr__(self):
+        return "<PlayerEntry %i:%s (%s)>" % (self.game.game_id,
+                                             self.player_gid,
+                                             self.player.user_name,)
+    
+    def __str__(self):
+        return unicode(self).encode()
+    
+    def __unicode__(self):
+        return unicode(self.player)
+    
+    ## ACTIONS ##
     
     def reset(self):
         """Reset volatile in-game statistics"""
@@ -342,17 +367,9 @@ class PlayerEntry(Entity):
             # This is the first time that the player became an OZ, give 'em the
             # full attribute setup
             self.state = self.STATE_ORIGINAL_ZOMBIE
-            self.death_date = self.feed_date = date
+            self.death_date = date
         elif self.state == self.STATE_ORIGINAL_ZOMBIE:
-            # Already an OZ?  Refresh death & feed date
-            # WEIRD BUG: SQLAlchemy gets cranky because it tries to compare the
-            #            accessor value to the non-accessor value in an attempt
-            #            to preserve history.  In order to get around this, we
-            #            set the dates to None, flush it, then set it
-            #            correctly.  Don't ask me why I need this.
-            self.death_date = self.feed_date = None
-            session.flush()
-            self.death_date = self.feed_date = date
+            self.death_date = date
         else:
             raise ValueError("This is a non-human.  Can't make the OZ.")
     
@@ -368,18 +385,28 @@ class PlayerEntry(Entity):
             date : datetime.datetime
                 The date and time of the demise
         """
+        # Default the date
         if date is None:
             date = as_utc(datetime.utcnow())
-        if self.is_undead:
+        now = as_utc(datetime.utcnow())
+        # Check if the demise is within the report window
+        if now - date > self.game.zombie_report_timedelta:
+            raise ValueError("Not within report window")
+        if not self.is_human:
+            # Ensure the player didn't starve first
+            starve_delta = self.calculate_time_since_last_feeding(date)
+            if starve_delta > self.game.zombie_starve_timedelta:
+                raise ValueError("Killer has already starved")
+            # Ensure that the victim is human
             if other.is_human:
                 self.kills += 1
                 self.feed_date = other.death_date = date
-                other.state = -1
+                other.state = other.STATE_ZOMBIE
                 other.killed_by = self.player
             else:
                 raise ValueError("Victim is nonhuman")
         else:
-            raise ValueError("Killer is nonzombie")
+            raise ValueError("Killer can't be human")
     
     def die(self, date=None):
         """
@@ -399,16 +426,72 @@ class PlayerEntry(Entity):
         else:
             raise ValueError("It's not this player's time yet!")
     
-    def __repr__(self):
-        return "<PlayerEntry %i:%s (%s)>" % (self.game.game_id,
-                                             self.player_gid,
-                                             self.player.user_name,)
+    def calculate_time_since_last_feeding(self, now=None):
+        """
+        Determine how much game time has elapsed since the last feeding.
+        
+        If the player has not fed yet (i.e. this is their first kill since
+        becoming a zombie), then his or her death date is used for the
+        calculation.
+        
+        :Parameters:
+            now : datetime.datetime
+                The date we're comparing to.  This may not actually be *now*.
+                For example, this may be the time of a reported kill.
+        :Returns: The amount of game time elapsed
+        :ReturnType: timedelta
+        """
+        # Default date
+        if now is None:
+            now = as_utc(datetime.utcnow())
+        # Check which date to compare
+        if self.feed_date is None:
+            feed_date = self.death_date
+        else:
+            feed_date = self.feed_date
+        # Return result
+        return self.game.calculate_timedelta(feed_date, now)
     
-    def __str__(self):
-        return unicode(self).encode()
+    def calculate_time_before_starving(self, now=None):
+        """
+        Calculates how much time is left before the player starves.
+        
+        If the player has not fed yet (i.e. this is their first kill since
+        becoming a zombie), then his or her death date is used for the
+        calculation.
+        
+        :Parameters:
+            now : datetime.datetime
+                The date we're comparing to.  This may not actually be *now*.
+                For example, this may be the time of a reported kill.
+        :Returns: The amount of game time until starvation
+        :ReturnType: timedelta
+        """
+        return (self.game.zombie_starve_timedelta -
+                self.calculate_time_since_last_feeding(now))
     
-    def __unicode__(self):
-        return unicode(self.player)
+    def can_report_kill(self, now=None):
+        """
+        Checks whether the player is able to report a kill.
+        
+        :Parameters:
+            now : datetime.datetime
+                The time at which the act of reporting the kill is happening.
+        :Returns: Whether the report is valid
+        :ReturnType: bool
+        """
+        if self.is_human:
+            # Humans can't (read as: shouldn't) kill people
+            return False
+        else:
+            # Regardless of whether the game caught it yet, let's see how much
+            # game time would have elapsed.
+            duration = self.calculate_time_since_last_feeding(now)
+            max_duration = (self.game.zombie_starve_timedelta +
+                            self.game.zombie_report_timedelta)
+            return bool(duration <= max_duration)
+    
+    ## PROPERTIES ##
     
     def _get_killed_by(self):
         value = self._killed_by
@@ -471,6 +554,8 @@ class Game(Entity):
             Game is over
         DEFAULT_ZOMBIE_STARVE_TIME : int
             The default number of hours before a zombie starves
+        DEFAULT_ZOMBIE_REPORT_TIME : int
+            The default number of hours that a zombie has to report a kill
     :IVariables:
         created : datetime.datetime
             The time at which the game was created
@@ -505,7 +590,15 @@ class Game(Entity):
         ignore_weekdays : frozenset of int
             Which weekdays (ISO weekday number) to ignore for this game
         zombie_starve_time : int
-            The number of hours before a zombie starves
+            The number of hours before a zombie starves.  If possible, rely on
+            `zombie_starve_timedelta` (data abstraction and all).
+        zombie_starve_timedelta : datetime.timedelta
+            The duration before a zombie starves
+        zombie_report_time : int
+            The number of hours a zombie has to report a kill.  If possible,
+            rely on `zombie_report_timedelta` (data abstraction and all).
+        zombie_report_timedelta : datetime.timedelta
+            The duration a zombie has to report a kill
     """
     using_options(tablename='game')
     
@@ -517,6 +610,7 @@ class Game(Entity):
     STATE_REVEAL_ZOMBIE = 5
     STATE_ENDED = 6
     DEFAULT_ZOMBIE_STARVE_TIME = 48
+    DEFAULT_ZOMBIE_REPORT_TIME = 3
     
     game_id = Field(Integer, primary_key=True)
     display_name = Field(Unicode(255))
@@ -530,6 +624,9 @@ class Game(Entity):
     _ignore_weekdays = Field(String(16), colname='ignore_weekdays',
                              synonym='ignore_weekdays')
     zombie_starve_time = Field(Integer)
+    zombie_report_time = Field(Integer)
+    
+    ## INITIALIZATION/RETRIEVAL ##
     
     def __init__(self, name):
         self.display_name = name
@@ -540,6 +637,9 @@ class Game(Entity):
         self.ignore_dates = []
         self.ignore_weekdays = []
         self.zombie_starve_time = self.DEFAULT_ZOMBIE_STARVE_TIME
+        self.zombie_report_time = self.DEFAULT_ZOMBIE_REPORT_TIME
+    
+    ## STRING REPRESENTATION ##
     
     def __repr__(self):
         return "<Game %i (%s)>" % (self.game_id, self.display_name.encode())
@@ -550,21 +650,79 @@ class Game(Entity):
     def __unicode__(self):
         return self.display_name
     
+    ## ACTIONS ##
+    
     def update(self):
         # Hey, we're not playing.  Don't update!
         if not self.in_progress:
             return
         # Initialize variables
-        zombie_starve_time = timedelta(hours=self.zombie_starve_time)
         now = as_utc(datetime.utcnow())
         # Bring out yer dead!
         zombies = (entry for entry in self.entries if entry.is_undead)
         for zombie in zombies:
-            delta = _calc_timedelta(zombie.feed_date, now,
-                                    ignore_dates=self.ignore_dates,
-                                    ignore_weekdays=self.ignore_weekdays,)
-            if delta >= zombie_starve_time:
+            delta = zombie.calculate_time_since_last_feeding(now)
+            if delta >= self.zombie_starve_timedelta:
                 zombie.die()
+    
+    def calculate_timedelta(self, datetime1, datetime2):
+        """
+        Calculates the delta between two datetimes.
+        
+        Along with subtracting the two dates, this removes time on ignored
+        dates and weekdays.
+        
+        :Parameters:
+            datetime1
+                The first date and time
+            datetime2
+                The second date and time
+        :Returns: The difference between the two dates
+        :ReturnType: datetime.timedelta
+        """
+        return _calc_timedelta(datetime1, datetime2,
+                               ignore_dates=self.ignore_dates,
+                               ignore_weekdays=self.ignore_weekdays,)
+    
+    def previous_state(self):
+        """Change to the previous state"""
+        # Check if we can do this
+        if self.is_first_state:
+            raise ValueError("The game has not yet begun")
+        # Go previous state
+        self.state -= 1
+        # Do state hooks
+        if self.state == self.STATE_STARTED - 1:
+            self.started = None
+        elif self.state == self.STATE_ENDED - 1:
+            self.ended = None
+        elif self.state == self.STATE_CHOOSE_ZOMBIE - 1:
+            for entry in self.entries:
+                entry.reset()
+    
+    def next_state(self):
+        """Change to the next state"""
+        # Check if we can do this
+        if self.is_last_state:
+            raise ValueError("The game is already over")
+        # Go next state
+        self.state += 1
+        # Do state hooks
+        if self.state == self.STATE_STARTED:
+            self.started = as_utc(datetime.utcnow())
+            self.original_zombie.make_original_zombie() # Refresh kill date
+        elif self.state == self.STATE_ENDED:
+            self.ended = as_utc(datetime.utcnow())
+    
+    ## PROPERTIES ##
+    
+    @property
+    def zombie_starve_timedelta(self):
+        return timedelta(hours=self.zombie_starve_time)
+    
+    @property
+    def zombie_report_timedelta(self):
+        return timedelta(hours=self.zombie_report_time)
     
     @property
     def revealed_original_zombie(self):
@@ -609,36 +767,6 @@ class Game(Entity):
         if prev_oz is not None:
             prev_oz.reset()
         new_oz.make_original_zombie()
-    
-    def previous_state(self):
-        """Change to the previous state"""
-        # Check if we can do this
-        if self.is_first_state:
-            raise ValueError("The game has not yet begun")
-        # Go previous state
-        self.state -= 1
-        # Do state hooks
-        if self.state == self.STATE_STARTED - 1:
-            self.started = None
-        elif self.state == self.STATE_ENDED - 1:
-            self.ended = None
-        elif self.state == self.STATE_CHOOSE_ZOMBIE - 1:
-            for entry in self.entries:
-                entry.reset()
-    
-    def next_state(self):
-        """Change to the next state"""
-        # Check if we can do this
-        if self.is_last_state:
-            raise ValueError("The game is already over")
-        # Go next state
-        self.state += 1
-        # Do state hooks
-        if self.state == self.STATE_STARTED:
-            self.started = as_utc(datetime.utcnow())
-            self.original_zombie.make_original_zombie() # Refresh kill date
-        elif self.state == self.STATE_ENDED:
-            self.ended = as_utc(datetime.utcnow())
     
     def _get_ignore_dates(self):
         from datetime import date
