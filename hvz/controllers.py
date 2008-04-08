@@ -220,6 +220,19 @@ class GameController(turbogears.controllers.Controller):
         raise turbogears.redirect(util.game_link(new_game, redirect=True))
     
     @expose()
+    @identity.require(identity.has_permission('delete-game'))
+    def action_delete(self, game_id):
+        game_id = int(game_id)
+        requested_game = model.Game.get(game_id)
+        if requested_game is not None:
+            session.delete(requested_game)
+            session.flush()
+            turbogears.flash(_("Game deleted"))
+            raise turbogears.redirect('/game/')
+        else:
+            raise ValueError("404")
+    
+    @expose()
     @identity.require(identity.has_permission('stage-game'))
     @error_handler(choose_oz)
     @validate(forms.original_zombie_form)

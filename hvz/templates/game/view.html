@@ -11,9 +11,21 @@
 function unjoin(evt)
 {
     var unjoin_url = ${tg.jsencode(tg.hvz.game_link(game, 'action.unjoin'))};
-    if (confirm("Are you sure you want to remove yourself from the game?"))
+    var msg = ${tg.jsencode(_("Are you sure you want to remove yourself from the game?"))};
+    confirm_action(msg, unjoin_url);
+}
+function delete_game(evt)
+{
+    var delete_url = ${tg.jsencode(tg.hvz.game_link(game, 'action.delete'))};
+    var msg = ${tg.jsencode(_("Are you sure you want to delete the game?"))};
+    confirm_action(msg, delete_url);
+}
+
+function confirm_action(msg, url)
+{
+    if (confirm(msg))
     {
-        window.location = unjoin_url;
+        window.location = url;
     }
 }
 </script>
@@ -89,6 +101,9 @@ function unjoin(evt)
             </td>
         </tr>
     </table>
+    <div py:if="'delete-game' in tg.identity.permissions">
+        <button py:if="'delete-game' in tg.identity.permissions" onclick="delete_game(event);">Delete</button>
+    </div>
     <py:if test="current_entry is not None">
         <h2 id="sect_player_info">Your Info</h2>
         <ul>
@@ -102,15 +117,15 @@ function unjoin(evt)
             </li>
             <li py:if="current_entry.is_dead">You starved on <span py:replace="tg.display_date(current_entry.starve_date)">[date]</span></li>
         </ul>
-        <div>
-            <a py:if="game.registration_open and current_entry.is_undead" href="${tg.hvz.game_link(game, 'reportkill')}"><button>Report Kill</button></a>
+        <div py:if="game.in_progress">
+            <button py:if="current_entry.is_undead" onclick="window.location=${tg.jsencode(tg.hvz.game_link(game, 'reportkill'))};">Report Kill</button>
         </div>
     </py:if>
     <h2 id="sect_entry_list">Player Roster</h2>
     <span py:replace="tg.display(grid, game.entries)">[players]</span>
     <div py:if="not tg.identity.anonymous">
         <button py:if="game.registration_open and current_entry is not None" onclick="unjoin(event);">Unjoin</button>
-        <a py:if="'join-game' in tg.identity.permissions and game.registration_open and current_entry is None" href="${tg.hvz.game_link(game, 'join')}"><button>Join</button></a>
+        <button py:if="'join-game' in tg.identity.permissions and game.registration_open and current_entry is None" onclick="${tg.jsencode(tg.hvz.game_link(game, 'join'))}">Join</button>
     </div>
     <h2 id="sect_stage">Stage</h2>
     <table id="stage_table">

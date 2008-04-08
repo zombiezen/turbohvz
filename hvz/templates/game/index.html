@@ -11,7 +11,7 @@
 <py:match path="content">
     <div py:replace="tg.display(pager)"></div>
     <span py:replace="tg.display(grid, games)"></span>
-    <a py:if="'create-game' in tg.identity.permissions" href="${tg.url('/game/create')}"><button>Create</button></a>
+    <button py:if="'create-game' in tg.identity.permissions" onclick="window.location=${tg.jsencode(tg.url('/game/create'))};">Create</button>
 </py:match>
 
 <xi:include href="../master.html" />

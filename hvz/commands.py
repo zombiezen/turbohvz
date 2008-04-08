@@ -95,6 +95,7 @@ def create_permissions(args=None):
              'view-original-zombie': model.Permission(u"view-original-zombie",
                                                       u"View Original Zombie"),
              'create-game': model.Permission(u"create-game", u"Create Games"),
+             'delete-game': model.Permission(u"delete-game", u"Delete Games"),
              'join-game': model.Permission(u"join-game", u"Join Games"),
              'stage-game': model.Permission(u"stage-game", u"Stage Games"),}
     # Set up group permissions
