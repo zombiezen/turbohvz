@@ -519,6 +519,7 @@ class Game(Entity):
     DEFAULT_ZOMBIE_STARVE_TIME = 48
     
     game_id = Field(Integer, primary_key=True)
+    display_name = Field(Unicode(255))
     _created = Field(DateTime, colname='created', synonym='created')
     _started = Field(DateTime, colname='started', synonym='started')
     _ended = Field(DateTime, colname='ended', synonym='ended')
@@ -530,7 +531,8 @@ class Game(Entity):
                              synonym='ignore_weekdays')
     zombie_starve_time = Field(Integer)
     
-    def __init__(self):
+    def __init__(self, name):
+        self.display_name = name
         self.created = datetime.utcnow()
         self.started = None
         self.ended = None
@@ -538,6 +540,15 @@ class Game(Entity):
         self.ignore_dates = []
         self.ignore_weekdays = []
         self.zombie_starve_time = self.DEFAULT_ZOMBIE_STARVE_TIME
+    
+    def __repr__(self):
+        return "<Game %i (%s)>" % (self.game_id, self.display_name.encode())
+    
+    def __str__(self):
+        return unicode(self).encode()
+    
+    def __unicode__(self):
+        return self.display_name
     
     def update(self):
         # Hey, we're not playing.  Don't update!

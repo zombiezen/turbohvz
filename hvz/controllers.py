@@ -208,10 +208,11 @@ class GameController(turbogears.controllers.Controller):
     @identity.require(identity.has_permission('create-game'))
     @error_handler(create)
     @validate(forms.create_game_form)
-    def action_create(self, zombie_starve_time,
+    def action_create(self, display_name,
+                      zombie_starve_time,
                       ignore_weekdays,
                       ignore_dates,):
-        new_game = model.Game()
+        new_game = model.Game(display_name)
         new_game.zombie_starve_time = zombie_starve_time
         new_game.ignore_weekdays = ignore_weekdays
         new_game.ignore_dates = ignore_dates

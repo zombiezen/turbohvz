@@ -5,7 +5,7 @@
       xmlns:py="http://genshi.edgewall.org/"
       xmlns:xi="http://www.w3.org/2001/XInclude">
 
-<py:def function="page_title">Game <span py:replace="game.game_id">#</span></py:def>
+<py:def function="page_title">Game <span py:replace="game.game_id">#</span> - <span py:replace="game.display_name">[name]</span></py:def>
 <py:def function="head_info">
 <script type="text/javascript">
 function unjoin(evt)

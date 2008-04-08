@@ -101,6 +101,7 @@ class RegisterSchema(validators.Schema):
     chained_validators = [validators.FieldsMatch('password1', 'password2')]
 
 class CreateGameSchema(validators.Schema):
+    display_name = validators.UnicodeString(min=4, max=255)
     zombie_starve_time = validators.Int(min=1)
     ignore_weekdays = validators.ForEach(validators.Int(min=1, max=7),
                                          convert_to_list=True,
@@ -158,6 +159,8 @@ class RegisterFields(WidgetsList):
         rows=20,)
 
 class CreateGameFields(WidgetsList):
+    display_name = widgets.TextField(
+        label=_("Game name"))
     zombie_starve_time = widgets.TextField(
         label=_("Zombie Starve Time"),
         help_text=_("The length of time (in hours) that a zombie has to feed "

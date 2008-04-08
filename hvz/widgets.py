@@ -89,14 +89,16 @@ class CustomDataGrid(Widget):
 class GameList(CustomDataGrid):
     name = "game_list"
     grid_class = "custom_grid game_list"
-    default_columns = ['game_id', 'created', 'player_count']
+    default_columns = ['game_id', 'display_name', 'created', 'player_count']
     exclude_sorting = ['player_count']
     column_titles = {'game_id': _("ID"),
+                     'display_name': _("Name"),
                      'created': _("Created"),
                      'started': _("Started"),
                      'ended': _("Ended"),
                      'player_count': _("Players"),}
-    accessors = {'game_id': '_get_id_col',
+    accessors = {'game_id': '_get_link_col',
+                 'display_name': '_get_link_col',
                  'player_count': (lambda r, c: len(r.entries)),
                  'created': _get_date_col,
                  'started': _get_date_col,
@@ -105,10 +107,10 @@ class GameList(CustomDataGrid):
     no_data_msg = _("No games found")
     
     @staticmethod
-    def _get_id_col(row, column):
+    def _get_link_col(row, column):
         link = Element("{http://www.w3.org/1999/xhtml}a",
                        href=util.game_link(row))
-        link.text = row.game_id
+        link.text = getattr(row, column)
         return link
 
 class EntryList(CustomDataGrid):
