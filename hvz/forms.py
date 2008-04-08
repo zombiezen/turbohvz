@@ -185,7 +185,8 @@ class GameFields(WidgetsList):
         label=_("Ignore Dates"),
         help_text=_("Individual dates to ignore when considering starve "
                     "time.  Each date must be put on a separate line in ISO "
-                    "YYYY-MM-DD format."))
+                    "YYYY-MM-DD format."),
+        validator=DateListValidator()) # This ensures from_python gets called
 
 ## FORMS ##
 
