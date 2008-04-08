@@ -133,8 +133,6 @@ tr.even td
     background: #ccc;
 }
 
-.custom_grid th 
-
 /* TURBOGEARS ELEMENTS */
 
 #status_block
@@ -144,7 +142,6 @@ tr.even td
     background: #cec url('../images/ok.png') left center no-repeat;
     border: 1px solid #9c9;
     width: 450px;
-    font-size: 120%;
     font-weight: bolder;
 }
 
