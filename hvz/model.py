@@ -468,17 +468,43 @@ class Game(Entity):
             Revealed original zombie
         STATE_ENDED : int
             Game is over
+        DEFAULT_ZOMBIE_STARVE_TIME : int
+            The default number of hours before a zombie starves
     :IVariables:
-        created : datetime
-        started : datetime
-        ended : datetime
-        revealed_zombie : bool
+        created : datetime.datetime
+            The time at which the game was created
+        started : datetime.datetime
+            The time at which the game was started
+        ended : datetime.datetime
+            The time at which the game ended
+        revealed_original_zombie : bool
+            Whether the original zombie has been revealed
+        in_progress : bool
+            Whether the game is in-progress (i.e. after `STATE_STARTED` but
+            before `STATE_ENDED`)
         registration_open : bool
+            Whether registration is open
         state : int
             The current state of the game.  See the ``STATE_*`` class
             constants.
-        entries : list of `PlayerEntry` objects
-        players : list of `User` objects
+        is_first_state : bool
+            Whether the current state is the first state
+        is_last_state : bool
+            Whether the current state is the last state
+        entries : list of `PlayerEntry`
+            A list of all the player entries in the game
+        players : list of `User`
+            A list of all the users participating in the game
+        original_zombie_pool : list of `PlayerEntry`
+            The players that want to be considered for the original zombie
+        original_zombie : `PlayerEntry`
+            The player that is acting as the original zombie for this game
+        ignore_dates : frozenset of datetime.date
+            Which dates to ignore for this game
+        ignore_weekdays : frozenset of int
+            Which weekdays (ISO weekday number) to ignore for this game
+        zombie_starve_time : int
+            The number of hours before a zombie starves
     """
     using_options(tablename='game')
     
@@ -489,6 +515,7 @@ class Game(Entity):
     STATE_STARTED = 4
     STATE_REVEAL_ZOMBIE = 5
     STATE_ENDED = 6
+    DEFAULT_ZOMBIE_STARVE_TIME = 48
     
     game_id = Field(Integer, primary_key=True)
     _created = Field(DateTime, colname='created', synonym='created')
@@ -496,12 +523,20 @@ class Game(Entity):
     _ended = Field(DateTime, colname='ended', synonym='ended')
     state = Field(Integer)
     entries = OneToMany('PlayerEntry', inverse='game')
+    _ignore_dates = Field(String(), colname='ignore_dates',
+                          synonym='ignore_dates')
+    _ignore_weekdays = Field(String(16), colname='ignore_weekdays',
+                             synonym='ignore_weekdays')
+    zombie_starve_time = Field(Integer)
     
     def __init__(self):
         self.created = datetime.utcnow()
         self.started = None
         self.ended = None
         self.state = self.STATE_CREATED
+        self.ignore_dates = []
+        self.ignore_weekdays = []
+        self.zombie_starve_time = self.DEFAULT_ZOMBIE_STARVE_TIME
     
     def update(self):
         # Hey, we're not playing.  Don't update!
@@ -564,6 +599,7 @@ class Game(Entity):
         new_oz.make_original_zombie()
     
     def previous_state(self):
+        """Change to the previous state"""
         # Check if we can do this
         if self.is_first_state:
             raise ValueError("The game has not yet begun")
@@ -579,6 +615,7 @@ class Game(Entity):
                 entry.reset()
     
     def next_state(self):
+        """Change to the next state"""
         # Check if we can do this
         if self.is_last_state:
             raise ValueError("The game is already over")
@@ -591,10 +628,53 @@ class Game(Entity):
         elif self.state == self.STATE_ENDED:
             self.ended = as_utc(datetime.utcnow())
     
+    def _get_ignore_dates(self):
+        from datetime import date
+        value = self._ignore_dates
+        if value is None:
+            return frozenset()
+        else:
+            components = value.split(';')
+            result = []
+            for component in components:
+                parts = [int(part, 10) for part in component.split('-')]
+                assert len(parts) == 3
+                new_date = date(parts[0], parts[1], parts[2])
+                result.append(new_date)
+            return frozenset(result)
+    
+    def _set_ignore_dates(self, value):
+        if value is None:
+            self._ignore_dates = None
+        else:
+            date2str = (lambda d: u'%.4i-%.2i-%.2i' % (d.year, d.month, d.day))
+            components = frozenset(date2str(date) for date in value)
+            self._ignore_dates = ';'.join(components)
+    
+    def _get_ignore_weekdays(self):
+        value = self._ignore_weekdays
+        if value is None:
+            return frozenset()
+        else:
+            components = value.split(';')
+            result = [int(component, 10) for component in components]
+            return frozenset(result)
+    
+    def _set_ignore_weekdays(self, value):
+        if value is None:
+            self._ignore_weekdays = None
+        else:
+            value = frozenset(value)
+            if not frozenset(xrange(1, 8)).issuperset(value):
+                raise ValueError("ignore_weekdays only accepts [1,7] ints")
+            self._ignore_weekdays = ';'.join(str(i) for i in value)
+    
     created = _date_prop('_created')
     started = _date_prop('_started')
     ended = _date_prop('_ended')
     original_zombie = property(_get_oz, _set_oz)
+    ignore_dates = property(_get_ignore_dates, _set_ignore_dates)
+    ignore_weekdays = property(_get_ignore_weekdays, _set_ignore_weekdays)
 
 # the identity model
 
