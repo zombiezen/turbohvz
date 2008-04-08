@@ -49,6 +49,12 @@ function confirm_action(msg, url)
         vertical-align: top;
     }
     
+    #game_info td ul, #game_info td ol
+    {
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+    
     .check
     {
         color: green;
@@ -61,45 +67,47 @@ function confirm_action(msg, url)
 <py:match path="content">
     <a id="sect_game_info"></a>
     <table id="game_info">
-        <tr>
-            <th>Created:</th>
-            <td><span class="date" py:content="tg.display_date(game.created)">[date]</span></td>
-        </tr>
-        <tr>
-            <th>Started:</th>
-            <td><span py:choose="" py:strip=""><span py:when="game.started is None" py:strip="">Not yet started</span><span py:otherwise="" class="date" py:content="tg.display_date(game.started)">[date]</span></span></td>
-        </tr>
-        <tr>
-            <th>Ended:</th>
-            <td><span py:choose="" py:strip=""><span py:when="game.started is None" py:strip="">Not yet started</span><span py:when="game.ended is None" py:strip="">In progress</span><span py:otherwise="" class="date" py:content="tg.display_date(game.ended)">[date]</span></span></td>
-        </tr>
-        <tr>
-            <th>Starve Time:</th>
-            <td>
-                <span py:replace="game.zombie_starve_time">[#]</span>
-                <span py:replace="pluralize(game.zombie_starve_time, _('hour'), _('hours'))">[hour(s)]</span>
-            </td>
-        </tr>
-        <tr py:if="game.ignore_weekdays"
-            py:with="weekdays = sorted(game.ignore_weekdays)">
-            <th>Ignores weekdays:</th>
-            <td>
-                <ul>
-                    <li py:for="day in weekdays"
-                        py:content="tg.display_weekday(day)">[day]</li>
-                </ul>
-            </td>
-        </tr>
-        <tr py:if="game.ignore_dates"
-            py:with="dates = sorted(game.ignore_dates)">
-            <th>Holidays:</th>
-            <td>
-                <ul>
-                    <li py:for="date in dates"
-                        py:content="tg.display_date(date)">[date]</li>
-                </ul>
-            </td>
-        </tr>
+        <tbody>
+            <tr>
+                <th>Created:</th>
+                <td><span class="date" py:content="tg.display_date(game.created)">[date]</span></td>
+            </tr>
+            <tr>
+                <th>Started:</th>
+                <td><span py:choose="" py:strip=""><span py:when="game.started is None" py:strip="">Not yet started</span><span py:otherwise="" class="date" py:content="tg.display_date(game.started)">[date]</span></span></td>
+            </tr>
+            <tr>
+                <th>Ended:</th>
+                <td><span py:choose="" py:strip=""><span py:when="game.started is None" py:strip="">Not yet started</span><span py:when="game.ended is None" py:strip="">In progress</span><span py:otherwise="" class="date" py:content="tg.display_date(game.ended)">[date]</span></span></td>
+            </tr>
+            <tr>
+                <th>Starve Time:</th>
+                <td>
+                    <span py:replace="game.zombie_starve_time">[#]</span>
+                    <span py:replace="pluralize(game.zombie_starve_time, _('hour'), _('hours'))">[hour(s)]</span>
+                </td>
+            </tr>
+            <tr py:if="game.ignore_weekdays"
+                py:with="weekdays = sorted(game.ignore_weekdays)">
+                <th>Ignores weekdays:</th>
+                <td>
+                    <ul>
+                        <li py:for="day in weekdays"
+                            py:content="tg.display_weekday(day)">[day]</li>
+                    </ul>
+                </td>
+            </tr>
+            <tr py:if="game.ignore_dates"
+                py:with="dates = sorted(game.ignore_dates)">
+                <th>Holidays:</th>
+                <td>
+                    <ul>
+                        <li py:for="date in dates"
+                            py:content="tg.display_date(date)">[date]</li>
+                    </ul>
+                </td>
+            </tr>
+        </tbody>
     </table>
     <div py:if="'delete-game' in tg.identity.permissions">
         <button py:if="'delete-game' in tg.identity.permissions" onclick="delete_game(event);">Delete</button>
