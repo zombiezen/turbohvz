@@ -12,6 +12,7 @@ __all__ = ['abslink',
            'change_params',
            'display',
            'display_date',
+           'display_weekday',
            'game_link',
            'insecurelink',
            'insecureurl',
@@ -23,6 +24,7 @@ __all__ = ['abslink',
            'add_template_variables',]
 
 from cgi import escape
+import datetime
 import re
 from urllib import quote, quote_plus, unquote, urlencode
 from urlparse import urlparse, urlunparse
@@ -82,8 +84,26 @@ def display(widget, *args, **kw):
 
 def display_date(date):
     """Format dates uniformly"""
-    from model import to_local
-    return unicode(to_local(date).replace(microsecond=0).isoformat())
+    if isinstance(date, datetime.datetime):
+        from model import to_local
+        return unicode(to_local(date).replace(microsecond=0).isoformat())
+    elif isinstance(date, datetime.date):
+        return unicode(date.isoformat())
+    elif isinstance(date, datetime.time):
+        return unicode(date.replace(microsecond=0, tzinfo=None).isoformat())
+    else:
+        raise TypeError("display_date received a non-datetime %r" % date)
+
+def display_weekday(day):
+    """Turn an ISO weekday to a name"""
+    lookup = {1: _("Monday"),
+              2: _("Tuesday"),
+              3: _("Wednesday"),
+              4: _("Thursday"),
+              5: _("Friday"),
+              6: _("Saturday"),
+              7: _("Sunday"),}
+    return lookup[day]
 
 def game_link(game, action='view', **params):
     if isinstance(game, (int, long)):
@@ -170,6 +190,7 @@ def add_template_variables(vars):
                   change_params=change_params,
                   display=display,
                   display_date=display_date,
+                  display_weekday=display_weekday,
                   insecurelink=insecurelink,
                   insecureurl=insecureurl,
                   jsencode=jsencode,
