@@ -34,6 +34,7 @@ function unjoin(evt)
     {
         font-weight: bold;
         text-align: right;
+        vertical-align: top;
     }
     
     .check
@@ -42,6 +43,8 @@ function unjoin(evt)
     }
 </style>
 </py:def>
+
+<py:def function="pluralize(val, single, plural)"><py:choose><py:when test="val == 1">${single}</py:when><py:otherwise>${plural}</py:otherwise></py:choose></py:def>
 
 <py:match path="content">
     <a id="sect_game_info"></a>
@@ -58,6 +61,33 @@ function unjoin(evt)
             <th>Ended:</th>
             <td><span py:choose="" py:strip=""><span py:when="game.started is None" py:strip="">Not yet started</span><span py:when="game.ended is None" py:strip="">In progress</span><span py:otherwise="" class="date" py:content="tg.display_date(game.ended)">[date]</span></span></td>
         </tr>
+        <tr>
+            <th>Starve Time:</th>
+            <td>
+                <span py:replace="game.zombie_starve_time">[#]</span>
+                <span py:replace="pluralize(game.zombie_starve_time, _('hour'), _('hours'))">[hour(s)]</span>
+            </td>
+        </tr>
+        <tr py:if="game.ignore_weekdays"
+            py:with="weekdays = sorted(game.ignore_weekdays)">
+            <th>Ignores weekdays:</th>
+            <td>
+                <ul>
+                    <li py:for="day in weekdays"
+                        py:content="tg.display_weekday(day)">[day]</li>
+                </ul>
+            </td>
+        </tr>
+        <tr py:if="game.ignore_dates"
+            py:with="dates = sorted(game.ignore_dates)">
+            <th>Holidays:</th>
+            <td>
+                <ul>
+                    <li py:for="date in dates"
+                        py:content="tg.display_date(date)">[date]</li>
+                </ul>
+            </td>
+        </tr>
     </table>
     <py:if test="current_entry is not None">
         <h2 id="sect_player_info">Your Info</h2>
@@ -65,7 +95,11 @@ function unjoin(evt)
             <li>Your ID is <span py:replace="current_entry.player_gid">[gid]</span></li>
             <li>You are <span py:replace="current_entry.affiliation">[affiliation]</span></li>
             <li py:if="not current_entry.is_human and current_entry.killed_by is not None">You were killed by <a href="${tg.hvz.user_link(current_entry.killed_by)}" class="player" py:content="current_entry.killed_by">[user]</a></li>
-            <li py:if="not current_entry.is_human">You have killed <span py:replace="current_entry.kills">[#]</span> <py:choose><py:when test="current_entry.kills == 1">player</py:when><py:otherwise>players</py:otherwise></py:choose></li>
+            <li py:if="not current_entry.is_human">
+                You have killed
+                <span py:replace="current_entry.kills">[#]</span>
+                <span py:replace="pluralize(current_entry.kills, _('player'), _('players'))">[player(s)]</span>
+            </li>
             <li py:if="current_entry.is_dead">You starved on <span py:replace="tg.display_date(current_entry.starve_date)">[date]</span></li>
         </ul>
         <div>
