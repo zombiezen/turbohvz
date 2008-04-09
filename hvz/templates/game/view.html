@@ -138,7 +138,7 @@ function confirm_action(msg, url)
     <span py:replace="tg.display(grid, game.entries)">[players]</span>
     <div py:if="not tg.identity.anonymous">
         <button py:if="game.registration_open and current_entry is not None" onclick="unjoin(event);">Unjoin</button>
-        <button py:if="'join-game' in tg.identity.permissions and game.registration_open and current_entry is None" onclick="${tg.jsencode(tg.hvz.game_link(game, 'join'))}">Join</button>
+        <button py:if="'join-game' in tg.identity.permissions and game.registration_open and current_entry is None" onclick="window.location=${tg.jsencode(tg.hvz.game_link(game, 'join'))};">Join</button>
     </div>
     <h2 id="sect_stage">Stage</h2>
     <table id="stage_table">
