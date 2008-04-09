@@ -7,6 +7,7 @@
 """Widgets for the various forms throughout HvZ"""
 
 import re
+import string
 
 from turbogears import url, validators, widgets
 from turbogears.widgets import WidgetsList
@@ -32,11 +33,25 @@ __all__ = ['UserNameValidator',
 ## VALIDATORS ##
 
 class UserNameValidator(validators.UnicodeString):
-    messages = {'non_unique': "That user name is already taken",}
+    messages = {'non_unique': "That user name is already taken",
+                'invalid_chars': "User names can only contain letters, "
+                                 "numbers, periods, underscores, and hyphens."}
     
-    def validate_python(self, value, state):
+    @staticmethod
+    def _has_valid_chars(s):
+        ascii_chars = frozenset(chr(i) for i in xrange(255))
+        nonprintable_chars = ascii_chars - frozenset(string.printable)
+        bad_punctuation = frozenset(string.punctuation) - frozenset('._-')
+        whitespace = frozenset(string.whitespace)
+        invalid_chars = nonprintable_chars | bad_punctuation | whitespace
+        return not frozenset(s) & invalid_chars
+    
+    def validate_python(self, value, state): 
         if model.User.by_user_name(value) is not None:
             raise validators.Invalid(self.message('non_unique', state),
+                                     value, state)
+        elif not self._has_valid_chars(value):
+            raise validators.Invalid(self.message('invalid_chars', state),
                                      value, state)
         else:
             super(UserNameValidator, self).validate_python(value, state)
