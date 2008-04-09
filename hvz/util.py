@@ -92,6 +92,18 @@ def display_date(date):
         return unicode(date.isoformat())
     elif isinstance(date, datetime.time):
         return unicode(date.replace(microsecond=0, tzinfo=None).isoformat())
+    elif isinstance(date, datetime.timedelta):
+        names = [(_("day"), _("days")),
+                 (_("hour"), _("hours")),
+                 (_("minute"), _("minutes")),
+                 (_("second"), _("seconds")),]
+        d, s = date.days, date.seconds
+        h, s = s // (60 * 60), s % (60 * 60)
+        m, s = s // 60, s % 60
+        comps = ["%s %s" % (value, pluralize(value, singular, plural))
+                 for value, (singular, plural) in zip([d, h, m, s], names)
+                 if value]
+        return " ".join(comps)
     else:
         raise TypeError("display_date received a non-datetime %r" % date)
 

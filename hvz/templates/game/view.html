@@ -81,15 +81,13 @@ function confirm_action(msg, url)
             <tr>
                 <th>Starve Time:</th>
                 <td>
-                    <span py:replace="game.zombie_starve_time">[#]</span>
-                    <span py:replace="tg.pluralize(game.zombie_starve_time, _('hour'), _('hours'))">[hour(s)]</span>
+                    <span py:replace="tg.display_date(game.zombie_starve_timedelta)">[# hour(s)]</span>
                 </td>
             </tr>
             <tr>
                 <th>Report Time:</th>
                 <td>
-                    <span py:replace="game.zombie_report_time">[#]</span>
-                    <span py:replace="tg.pluralize(game.zombie_report_time, _('hour'), _('hours'))">[hour(s)]</span>
+                    <span py:replace="tg.display_date(game.zombie_report_timedelta)">[# hour(s)]</span>
                 </td>
             </tr>
             <tr py:if="game.ignore_weekdays"
@@ -130,6 +128,7 @@ function confirm_action(msg, url)
                 <span py:replace="tg.pluralize(current_entry.kills, _('player'), _('players'))">[player(s)]</span>
             </li>
             <li py:if="current_entry.is_dead">You starved on <span py:replace="tg.display_date(current_entry.starve_date)">[date]</span></li>
+            <li py:if="current_entry.is_undead">You have <span py:replace="tg.display_date(current_entry.calculate_time_before_starving())">[time]</span> left before starving</li>
         </ul>
         <div py:if="current_entry.can_report_kill()">
             <button onclick="window.location=${tg.jsencode(tg.hvz.game_link(game, 'reportkill'))};">Report Kill</button>
