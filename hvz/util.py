@@ -204,7 +204,11 @@ def str2bool(s, *args):
                 raise ValueError("Invalid bool: %r" % s)
 
 def user_link(user, action='view', **params):
-    if isinstance(user, (int, long)):
+    from hvz.model import User
+    if isinstance(user, User):
+        base = '/user/%s/%s' % (quote(action, ''), quote(user.user_name, ''))
+        return _make_app_link(base, params)
+    elif isinstance(user, (int, long)):
         pass
     elif hasattr(user, 'player_id'):
         user = user.player_id
