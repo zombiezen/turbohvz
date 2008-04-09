@@ -151,7 +151,7 @@ def _set_date_prop(name, default_tz=pytz.utc):
             #            flush it, then set it correctly.  Don't ask me why I
             #            need this.
             setattr(self, name, None)
-            session.flush() 
+            session.flush()
         setattr(self, name, value)
     return set_prop
 
@@ -833,16 +833,12 @@ class Visit(Entity):
     using_options(tablename='visit')
 
     visit_key = Field(String(40), primary_key=True)
-    _created = Field(DateTime, colname='created', synonym='created',
-                     nullable=False, default=datetime.utcnow,)
-    _expiry = Field(DateTime, colname='expiry', synonym='expiry')
+    created = Field(DateTime, nullable=False, default=datetime.utcnow,)
+    expiry = Field(DateTime)
     
     @classmethod
     def lookup_visit(cls, visit_key):
         return Visit.get(visit_key)
-    
-    created = _date_prop('_created', default_tz=None)
-    expiry = _date_prop('_expiry', default_tz=None)
 
 class VisitIdentity(Entity):
     """
