@@ -118,6 +118,7 @@ class RegisterSchema(validators.Schema):
 class GameSchema(validators.Schema):
     game_id = validators.Int(if_empty=None, not_empty=False)
     display_name = validators.UnicodeString(min=4, max=255, strip=True)
+    gid_length = validators.Int(min=1, max=128)
     zombie_starve_time = validators.Int(min=1)
     zombie_report_time = validators.Int(min=1)
     ignore_weekdays = validators.ForEach(validators.Int(min=1, max=7),
@@ -179,6 +180,12 @@ class GameFields(WidgetsList):
     game_id = widgets.HiddenField()
     display_name = widgets.TextField(
         label=_("Game name"))
+    gid_length = widgets.TextField(
+        label=_("Player GID Length"),
+        help_text=_("The length of each player's game identification number. "
+                    "The default length of 16 should be sufficient for most "
+                    "games."),
+        default=model.Game.DEFAULT_GID_LENGTH,)
     zombie_starve_time = widgets.TextField(
         label=_("Zombie Starve Time"),
         help_text=_("The length of time (in hours) that a zombie has to feed "

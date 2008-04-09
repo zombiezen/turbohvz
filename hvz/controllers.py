@@ -97,12 +97,10 @@ class GameController(BaseController):
         requested_game = model.Game.get(game_id)
         if requested_game is None:
             raise NotFound()
-        values = dict(game_id=requested_game.game_id,
-                      display_name=requested_game.display_name,
-                      zombie_starve_time=requested_game.zombie_starve_time,
-                      zombie_report_time=requested_game.zombie_report_time,
-                      ignore_weekdays=requested_game.ignore_weekdays,
-                      ignore_dates=requested_game.ignore_dates,)
+        values = {}
+        for field in forms.game_form.fields:
+            name = field.name
+            values[name] = getattr(requested_game, name)
         return dict(game=requested_game,
                     form=forms.game_form,
                     values=values,)
@@ -242,12 +240,14 @@ class GameController(BaseController):
     @error_handler(create)
     @validate(forms.game_form)
     def action_create(self, game_id, display_name,
+                      gid_length,
                       zombie_starve_time,
                       zombie_report_time,
                       ignore_weekdays,
                       ignore_dates,):
         assert not game_id
         new_game = model.Game(display_name)
+        new_game.gid_length = gid_length
         new_game.zombie_starve_time = zombie_starve_time
         new_game.zombie_report_time = zombie_report_time
         new_game.ignore_weekdays = ignore_weekdays
@@ -261,6 +261,7 @@ class GameController(BaseController):
     @error_handler(edit)
     @validate(forms.game_form)
     def action_edit(self, game_id, display_name,
+                    gid_length,
                     zombie_starve_time,
                     zombie_report_time,
                     ignore_weekdays,
@@ -269,6 +270,7 @@ class GameController(BaseController):
         if requested_game is None:
             raise NotFound()
         requested_game.display_name = display_name
+        requested_game.gid_length = gid_length
         requested_game.zombie_starve_time = zombie_starve_time
         requested_game.zombie_report_time = zombie_report_time
         requested_game.ignore_weekdays = ignore_weekdays

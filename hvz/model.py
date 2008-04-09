@@ -409,10 +409,9 @@ class PlayerEntry(Entity):
     def __init__(self, game, player):
         assert game is not None
         assert player is not None
-        id_length = int(config.get('hvz.id_length', '16'), 10)
         self.game = game
         self.player = player
-        self.player_gid = self._generate_id(id_length)
+        self.player_gid = self._generate_id(self.game.gid_length)
         self.original_pool = False
         self.reset()
     
@@ -660,6 +659,8 @@ class Game(Entity):
             The default number of hours before a zombie starves
         DEFAULT_ZOMBIE_REPORT_TIME : int
             The default number of hours that a zombie has to report a kill
+        DEFAULT_GID_LENGTH : int
+            The default length of a player GID (see `PlayerEntry.player_gid`)
     :IVariables:
         created : datetime.datetime
             The time at which the game was created
@@ -689,6 +690,8 @@ class Game(Entity):
             The players that want to be considered for the original zombie
         original_zombie : `PlayerEntry`
             The player that is acting as the original zombie for this game
+        gid_length : int
+            The length of each player's GID
         ignore_dates : frozenset of datetime.date
             Which dates to ignore for this game
         ignore_weekdays : frozenset of int
@@ -715,6 +718,7 @@ class Game(Entity):
     STATE_ENDED = 6
     DEFAULT_ZOMBIE_STARVE_TIME = 48
     DEFAULT_ZOMBIE_REPORT_TIME = 3
+    DEFAULT_GID_LENGTH = 16
     
     game_id = Field(Integer, primary_key=True)
     display_name = Field(Unicode(255))
@@ -729,6 +733,7 @@ class Game(Entity):
                              synonym='ignore_weekdays')
     zombie_starve_time = Field(Integer)
     zombie_report_time = Field(Integer)
+    gid_length = Field(Integer)
     
     ## INITIALIZATION/RETRIEVAL ##
     
@@ -742,6 +747,7 @@ class Game(Entity):
         self.ignore_weekdays = []
         self.zombie_starve_time = self.DEFAULT_ZOMBIE_STARVE_TIME
         self.zombie_report_time = self.DEFAULT_ZOMBIE_REPORT_TIME
+        self.gid_length = self.DEFAULT_GID_LENGTH
     
     ## STRING REPRESENTATION ##
     
