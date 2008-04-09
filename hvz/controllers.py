@@ -24,25 +24,25 @@ __all__ = ['log',
 
 log = logging.getLogger("hvz.controllers")
 
-def not_found():
-    """
-    Called from a controller method when a resource is not found.
-    
-    It's vitally important that the return value from this function is used as
-    the return value for the controller method.
-    
-    The controller method should do something like this::
-    
-        @expose
-        def foo(self):
-            if cant_find_it:
-                return not_found()
-    """
-    cherrypy.response.status = 404
-    return dict(tg_template="hvz.templates.notfound",
-                requested_uri=cherrypy.request.path,)
+class NotFound(Exception):
+    """Exception raised when a controller can't find a resource."""
 
-class GameController(turbogears.controllers.Controller):
+class BaseController(turbogears.controllers.Controller):
+    @turbogears.errorhandling.dispatch_error.when(
+        "isinstance(tg_exceptions, model.ModelError)")
+    def handle_model_error(self, tg_source, tg_errors, tg_exception,
+                           *args, **kw):
+        return dict(tg_template="hvz.templates.modelerror",
+                    error=tg_exception,)
+    
+    @turbogears.errorhandling.dispatch_error.when(
+        "isinstance(tg_exceptions, NotFound)")
+    def handle_not_found(self, tg_source, tg_errors, tg_exception,
+                         *args, **kw):
+        return dict(tg_template="hvz.templates.notfound", 
+                    requested_uri=cherrypy.request.path,)
+
+class GameController(BaseController):
     @staticmethod
     def _get_current_entry(game):
         user = identity.current.user
@@ -50,13 +50,6 @@ class GameController(turbogears.controllers.Controller):
             return model.PlayerEntry.by_player(game, user)
         else:
             return None
-    
-    @turbogears.errorhandling.dispatch_error.when(
-        "isinstance(tg_exceptions, model.ModelError)")
-    def handle_model_error(self, tg_source, tg_errors, tg_exception,
-                           *args, **kw):
-        return dict(tg_template="hvz.templates.modelerror",
-                    error=tg_exception,)
     
     @expose("hvz.templates.game.index")
     @paginate('games', default_order='-game_id')
@@ -73,72 +66,68 @@ class GameController(turbogears.controllers.Controller):
         game_id = int(game_id)
         requested_game = model.Game.get(game_id)
         perms = identity.current.permissions
-        if requested_game is not None:
-            # Update game
-            requested_game.update()
-            # Find user's entry, if he/she has one
-            entry = self._get_current_entry(requested_game)
-            # Determine which columns to show
-            columns = list(widgets.EntryList.default_columns)
-            if 'view-player-gid' in perms:
-                columns.insert(0, 'player_gid')
-            # Determine whether to show original zombie
-            oz = requested_game.revealed_original_zombie
-            if entry is not None:
-                is_oz = entry.state == model.PlayerEntry.STATE_ORIGINAL_ZOMBIE
-            else:
-                is_oz = False
-            can_view_oz = bool('view-original-zombie' in perms)
-            # Create widgets
-            grid = widgets.EntryList(columns=columns,
-                                     show_oz=(oz or is_oz or can_view_oz),)
-            return dict(game=requested_game,
-                        grid=grid,
-                        current_entry=entry,)
+        if requested_game is None:
+            raise NotFound()
+        # Update game
+        requested_game.update()
+        # Find user's entry, if he/she has one
+        entry = self._get_current_entry(requested_game)
+        # Determine which columns to show
+        columns = list(widgets.EntryList.default_columns)
+        if 'view-player-gid' in perms:
+            columns.insert(0, 'player_gid')
+        # Determine whether to show original zombie
+        oz = requested_game.revealed_original_zombie
+        if entry is not None:
+            is_oz = entry.state == model.PlayerEntry.STATE_ORIGINAL_ZOMBIE
         else:
-            return not_found()
+            is_oz = False
+        can_view_oz = bool('view-original-zombie' in perms)
+        # Create widgets
+        grid = widgets.EntryList(columns=columns,
+                                 show_oz=(oz or is_oz or can_view_oz),)
+        return dict(game=requested_game,
+                    grid=grid,
+                    current_entry=entry,)
     
     @expose("hvz.templates.game.edit")
     @identity.require(identity.has_permission('edit-game'))
     def edit(self, game_id):
         game_id = int(game_id)
         requested_game = model.Game.get(game_id)
-        if requested_game is not None:
-            values = dict(game_id=requested_game.game_id,
-                          display_name=requested_game.display_name,
-                          zombie_starve_time=requested_game.zombie_starve_time,
-                          zombie_report_time=requested_game.zombie_report_time,
-                          ignore_weekdays=requested_game.ignore_weekdays,
-                          ignore_dates=requested_game.ignore_dates,)
-            return dict(game=requested_game,
-                        form=forms.game_form,
-                        values=values,)
-        else:
-            return not_found()
+        if requested_game is None:
+            raise NotFound()
+        values = dict(game_id=requested_game.game_id,
+                      display_name=requested_game.display_name,
+                      zombie_starve_time=requested_game.zombie_starve_time,
+                      zombie_report_time=requested_game.zombie_report_time,
+                      ignore_weekdays=requested_game.ignore_weekdays,
+                      ignore_dates=requested_game.ignore_dates,)
+        return dict(game=requested_game,
+                    form=forms.game_form,
+                    values=values,)
     
     @expose("hvz.templates.game.reportkill")
     @identity.require(identity.not_anonymous())
     def reportkill(self, game_id):
         game_id = int(game_id)
         requested_game = model.Game.get(game_id)
-        if requested_game is not None:
-            entry = self._get_current_entry(requested_game)
-            return dict(game=requested_game,
-                        form=forms.kill_form,
-                        current_entry=entry,)
-        else:
-            return not_found()
+        if requested_game is None:
+            raise NotFound()
+        entry = self._get_current_entry(requested_game)
+        return dict(game=requested_game,
+                    form=forms.kill_form,
+                    current_entry=entry,)
     
     @expose("hvz.templates.game.join")
     @identity.require(identity.has_permission('join-game'))
     def join(self, game_id):
         game_id = int(game_id)
         requested_game = model.Game.get(game_id)
-        if requested_game is not None:
-            return dict(game=requested_game,
-                        form=forms.join_form,)
-        else:
-            return not_found()
+        if requested_game is None:
+            raise NotFound()
+        return dict(game=requested_game,
+                    form=forms.join_form,)
     
     @expose("hvz.templates.game.create")
     @identity.require(identity.has_permission('create-game'))
@@ -150,17 +139,16 @@ class GameController(turbogears.controllers.Controller):
     def choose_oz(self, game_id):
         game_id = int(game_id)
         requested_game = model.Game.get(game_id)
-        if requested_game is not None:
-            # Build option list
-            pool = requested_game.original_zombie_pool
-            options = [(e.entry_id, e.player.display_name) for e in pool]
-            options.insert(0, ("random", _("Random")))
-            # Pass off to template
-            return dict(game=requested_game,
-                        options=options,
-                        form=forms.original_zombie_form,)
-        else:
-            return not_found()
+        if requested_game is None:
+            raise NotFound()
+        # Build option list
+        pool = requested_game.original_zombie_pool
+        options = [(e.entry_id, e.player.display_name) for e in pool]
+        options.insert(0, ("random", _("Random")))
+        # Pass off to template
+        return dict(game=requested_game,
+                    options=options,
+                    form=forms.original_zombie_form,)
     
     @expose()
     @identity.require(identity.not_anonymous())
@@ -171,25 +159,24 @@ class GameController(turbogears.controllers.Controller):
         kill_date = model.as_local(kill_date)
         game_id = int(game_id)
         requested_game = model.Game.get(game_id)
-        if requested_game is not None:
-            # Retrieve killer and victim
-            killer = model.PlayerEntry.by_player(requested_game, user)
-            if killer is None:
-                msg = _("You are not a part of this game")
-                raise model.PlayerNotFoundError(requested_game, msg)
-            victim = model.PlayerEntry.by_player_gid(requested_game,
-                                                     victim_id)
-            if victim is None:
-                raise model.PlayerNotFoundError(requested_game,
-                                                _("Invalid victim"))
-            # Kill user in question
-            killer.kill(victim, kill_date)
-            # Log it and return to game
-            log.info("OMG, %s killed %s!  Those idiots!", killer, victim)
-            link = util.game_link(game_id, redirect=True) + '#sect_entry_list'
-            raise turbogears.redirect(link)
-        else:
-            return not_found()
+        if requested_game is None:
+            raise NotFound()
+        # Retrieve killer and victim
+        killer = model.PlayerEntry.by_player(requested_game, user)
+        if killer is None:
+            msg = _("You are not a part of this game")
+            raise model.PlayerNotFoundError(requested_game, msg)
+        victim = model.PlayerEntry.by_player_gid(requested_game,
+                                                 victim_id)
+        if victim is None:
+            raise model.PlayerNotFoundError(requested_game,
+                                            _("Invalid victim"))
+        # Kill user in question
+        killer.kill(victim, kill_date)
+        # Log it and return to game
+        log.info("OMG, %s killed %s!  Those idiots!", killer, victim)
+        link = util.game_link(game_id, redirect=True) + '#sect_entry_list'
+        raise turbogears.redirect(link)
     
     @expose()
     @identity.require(identity.has_permission('stage-game'))
@@ -199,19 +186,18 @@ class GameController(turbogears.controllers.Controller):
         user = identity.current.user
         game_id = int(game_id)
         requested_game = model.Game.get(game_id)
-        if requested_game is not None:
-            if btnNext:
-                next_state = requested_game.state + 1
-                if next_state == model.Game.STATE_CHOOSE_ZOMBIE:
-                    link = util.game_link(game_id, 'choose_oz')
-                    raise turbogears.redirect(link)
-                requested_game.next_state()
-            elif btnPrev:
-                requested_game.previous_state()
-            link = util.game_link(game_id, redirect=True) + '#sect_stage'
-            raise turbogears.redirect(link)
-        else:
-            return not_found()
+        if requested_game is None:
+            raise NotFound()
+        if btnNext:
+            next_state = requested_game.state + 1
+            if next_state == model.Game.STATE_CHOOSE_ZOMBIE:
+                link = util.game_link(game_id, 'choose_oz')
+                raise turbogears.redirect(link)
+            requested_game.next_state()
+        elif btnPrev:
+            requested_game.previous_state()
+        link = util.game_link(game_id, redirect=True) + '#sect_stage'
+        raise turbogears.redirect(link)
     
     @expose()
     @identity.require(identity.has_permission('join-game'))
@@ -221,18 +207,17 @@ class GameController(turbogears.controllers.Controller):
         user = identity.current.user
         game_id = int(game_id)
         requested_game = model.Game.get(game_id)
-        if requested_game is not None:
-            if not requested_game.registration_open:
-                raise model.WrongStateError(requested_game,
-                                            requested_game.state,
-                                            model.Game.STATE_OPEN,
-                                            _("Registration is closed"))
-            entry = model.PlayerEntry(requested_game, user)
-            entry.original_pool = original_pool
-            link = util.game_link(game_id, redirect=True) + '#sect_entry_list'
-            raise turbogears.redirect(link)
-        else:
-            return not_found()
+        if requested_game is None:
+            raise NotFound()
+        if not requested_game.registration_open:
+            raise model.WrongStateError(requested_game,
+                                        requested_game.state,
+                                        model.Game.STATE_OPEN,
+                                        _("Registration is closed"))
+        entry = model.PlayerEntry(requested_game, user)
+        entry.original_pool = original_pool
+        link = util.game_link(game_id, redirect=True) + '#sect_entry_list'
+        raise turbogears.redirect(link)
     
     @expose()
     @identity.require(identity.not_anonymous())
@@ -240,18 +225,17 @@ class GameController(turbogears.controllers.Controller):
         user = identity.current.user
         game_id = int(game_id)
         requested_game = model.Game.get(game_id)
-        if requested_game is not None:
-            if not requested_game.registration_open:
-                raise model.WrongStateError(requested_game,
-                                            requested_game.state,
-                                            model.Game.STATE_OPEN,
-                                            _("Registration is closed"))
-            entry = model.PlayerEntry.by_player(requested_game, user)
-            session.delete(entry)
-            link = util.game_link(game_id, redirect=True) + '#sect_entry_list'
-            raise turbogears.redirect(link)
-        else:
-            return not_found()
+        if requested_game is None:
+            raise NotFound()
+        if not requested_game.registration_open:
+            raise model.WrongStateError(requested_game,
+                                        requested_game.state,
+                                        model.Game.STATE_OPEN,
+                                        _("Registration is closed"))
+        entry = model.PlayerEntry.by_player(requested_game, user)
+        session.delete(entry)
+        link = util.game_link(game_id, redirect=True) + '#sect_entry_list'
+        raise turbogears.redirect(link)
     
     @expose()
     @identity.require(identity.has_permission('create-game'))
@@ -282,31 +266,29 @@ class GameController(turbogears.controllers.Controller):
                     ignore_weekdays,
                     ignore_dates,):
         requested_game = model.Game.get(game_id)
-        if requested_game is not None:
-            requested_game.display_name = display_name
-            requested_game.zombie_starve_time = zombie_starve_time
-            requested_game.zombie_report_time = zombie_report_time
-            requested_game.ignore_weekdays = ignore_weekdays
-            requested_game.ignore_dates = ignore_dates
-            session.flush()
-            turbogears.flash(_("Game updated"))
-            raise turbogears.redirect(util.game_link(requested_game,
-                                                     redirect=True))
-        else:
-            return not_found()
+        if requested_game is None:
+            raise NotFound()
+        requested_game.display_name = display_name
+        requested_game.zombie_starve_time = zombie_starve_time
+        requested_game.zombie_report_time = zombie_report_time
+        requested_game.ignore_weekdays = ignore_weekdays
+        requested_game.ignore_dates = ignore_dates
+        session.flush()
+        turbogears.flash(_("Game updated"))
+        raise turbogears.redirect(util.game_link(requested_game,
+                                                 redirect=True))
     
     @expose()
     @identity.require(identity.has_permission('delete-game'))
     def action_delete(self, game_id):
         game_id = int(game_id)
         requested_game = model.Game.get(game_id)
-        if requested_game is not None:
-            session.delete(requested_game)
-            session.flush()
-            turbogears.flash(_("Game deleted"))
-            raise turbogears.redirect('/game/')
-        else:
-            return not_found()
+        if requested_game is None:
+            raise NotFound()
+        session.delete(requested_game)
+        session.flush()
+        turbogears.flash(_("Game deleted"))
+        raise turbogears.redirect('/game/')
     
     @expose()
     @identity.require(identity.has_permission('stage-game'))
@@ -315,35 +297,34 @@ class GameController(turbogears.controllers.Controller):
     def action_oz(self, game_id, original_zombie):
         game_id = int(game_id)
         requested_game = model.Game.get(game_id)
-        if requested_game is not None:
-            # Check if we're in the right state
-            if (requested_game.state + 1) != model.Game.STATE_CHOOSE_ZOMBIE:
-                msg = _("Game is not choosing original zombie")
-                raise model.WrongStateError(requested_game,
-                                            requested_game.state,
-                                            model.Game.STATE_CHOOSE_ZOMBIE - 1,
-                                            msg)
-            # Determine zombie
-            pool = requested_game.original_zombie_pool
-            if original_zombie == 'random':
-                entry = random.choice(pool)
-            else:
-                entry = model.PlayerEntry.get(original_zombie)
-                if entry not in pool:
-                    msg = _("Original zombie is not a valid choice")
-                    raise model.PlayerNotFoundError(requested_game, msg)
-            # Make into zombie
-            requested_game.original_zombie = entry
-            # Advance stage
-            requested_game.next_state()
-            # Go back to game page
-            turbogears.flash(_("Original zombie is %s") % unicode(entry))
-            link = util.game_link(requested_game, redirect=True)
-            raise turbogears.redirect(link)
+        if requested_game is None:
+            raise NotFound()
+        # Check if we're in the right state
+        if (requested_game.state + 1) != model.Game.STATE_CHOOSE_ZOMBIE:
+            msg = _("Game is not choosing original zombie")
+            raise model.WrongStateError(requested_game,
+                                        requested_game.state,
+                                        model.Game.STATE_CHOOSE_ZOMBIE - 1,
+                                        msg)
+        # Determine zombie
+        pool = requested_game.original_zombie_pool
+        if original_zombie == 'random':
+            entry = random.choice(pool)
         else:
-            return not_found()
+            entry = model.PlayerEntry.get(original_zombie)
+            if entry not in pool:
+                msg = _("Original zombie is not a valid choice")
+                raise model.PlayerNotFoundError(requested_game, msg)
+        # Make into zombie
+        requested_game.original_zombie = entry
+        # Advance stage
+        requested_game.next_state()
+        # Go back to game page
+        turbogears.flash(_("Original zombie is %s") % unicode(entry))
+        link = util.game_link(requested_game, redirect=True)
+        raise turbogears.redirect(link)
 
-class UserController(turbogears.controllers.Controller):
+class UserController(BaseController):
     @expose("hvz.templates.user.index")
     @paginate('users', default_order='display_name')
     def index(self):
@@ -360,14 +341,13 @@ class UserController(turbogears.controllers.Controller):
             requested_user = model.User.query.get(user_id)
         else:
             requested_user = model.User.by_user_name(user_id)
-        if requested_user is not None:
-            grid = widgets.GameList()
-            games = [entry.game for entry in requested_user.entries]
-            return dict(user=requested_user,
-                        games=games,
-                        game_grid=grid,)
-        else:
-            return not_found()
+        if requested_user is None:
+            raise NotFound()
+        grid = widgets.GameList()
+        games = [entry.game for entry in requested_user.entries]
+        return dict(user=requested_user,
+                    games=games,
+                    game_grid=grid,)
     
     @expose("hvz.templates.user.register")
     def register(self):
@@ -401,7 +381,7 @@ class UserController(turbogears.controllers.Controller):
         turbogears.flash(msg)
         raise turbogears.redirect('/')
 
-class Root(turbogears.controllers.RootController):
+class Root(turbogears.controllers.RootController, BaseController):
     def __init__(self):
         self.game = GameController()
         self.user = UserController()
