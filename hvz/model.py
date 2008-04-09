@@ -482,7 +482,7 @@ class PlayerEntry(Entity):
             date = as_utc(datetime.utcnow())
         now = as_utc(datetime.utcnow())
         # Check if game is in-progress
-        if not game.in_progress:
+        if not self.game.in_progress:
             raise WrongStateError(game, game.state, game.STATE_STARTED,
                                   _("Game is not in progress"))
         # Check for non-chronological reports
