@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+<py:def function="page_title">Game Engine Error</py:def>
+<py:def function="head_info">
+<style type="text/css">
+#error
+{
+    margin-top: 1em;
+    margin-bottom: 1em;
+    padding: 1em;
+    border: thin solid #999;
+    color: red;
+    background: #fcc;
+    font-family: Monaco, "Courier New", Courier, monospace;
+    font-size: 80%;
+}
+
+#error .error_name
+{
+    font-weight: bolder;
+}
+</style>
+</py:def>
+
+<py:match path="content">
+    <p>The action you have attempted to perform has caused the game engine to report an error.  This usually means you have tried to do something forbidden by the rules.  The error is this:</p>
+    <div id="error">
+        <p class="error_name" py:content="type(error).__name__">[error name]</p>
+        <p py:content="error">[error]</p>
+    </div>
+    <a href="#" onclick="history.back(); return false;">Back</a>
+</py:match>
+
+<xi:include href="master.html" />
+
+</html>

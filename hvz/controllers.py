@@ -51,6 +51,13 @@ class GameController(turbogears.controllers.Controller):
         else:
             return None
     
+    @turbogears.errorhandling.dispatch_error.when(
+        "isinstance(tg_exceptions, model.ModelError)")
+    def handle_model_error(self, tg_source, tg_errors, tg_exception,
+                           *args, **kw):
+        return dict(tg_template="hvz.templates.modelerror",
+                    error=tg_exception,)
+    
     @expose("hvz.templates.game.index")
     @paginate('games', default_order='-game_id')
     def index(self):
@@ -165,16 +172,16 @@ class GameController(turbogears.controllers.Controller):
         game_id = int(game_id)
         requested_game = model.Game.get(game_id)
         if requested_game is not None:
-            if not requested_game.in_progress:
-                raise ValueError("Game has not started")
             # Retrieve killer and victim
             killer = model.PlayerEntry.by_player(requested_game, user)
             if killer is None:
-                raise ValueError("You are not a part of this game")
+                msg = _("You are not a part of this game")
+                raise model.PlayerNotFoundError(requested_game, msg)
             victim = model.PlayerEntry.by_player_gid(requested_game,
                                                      victim_id)
             if victim is None:
-                raise ValueError("Invalid victim")
+                raise model.PlayerNotFoundError(requested_game,
+                                                _("Invalid victim"))
             # Kill user in question
             killer.kill(victim, kill_date)
             # Log it and return to game
@@ -216,7 +223,10 @@ class GameController(turbogears.controllers.Controller):
         requested_game = model.Game.get(game_id)
         if requested_game is not None:
             if not requested_game.registration_open:
-                raise ValueError("Registration is closed")
+                raise model.WrongStateError(requested_game,
+                                            requested_game.state,
+                                            model.Game.STATE_OPEN,
+                                            _("Registration is closed"))
             entry = model.PlayerEntry(requested_game, user)
             entry.original_pool = original_pool
             link = util.game_link(game_id, redirect=True) + '#sect_entry_list'
@@ -232,7 +242,10 @@ class GameController(turbogears.controllers.Controller):
         requested_game = model.Game.get(game_id)
         if requested_game is not None:
             if not requested_game.registration_open:
-                raise ValueError("Registration is closed")
+                raise model.WrongStateError(requested_game,
+                                            requested_game.state,
+                                            model.Game.STATE_OPEN,
+                                            _("Registration is closed"))
             entry = model.PlayerEntry.by_player(requested_game, user)
             session.delete(entry)
             link = util.game_link(game_id, redirect=True) + '#sect_entry_list'
@@ -305,7 +318,11 @@ class GameController(turbogears.controllers.Controller):
         if requested_game is not None:
             # Check if we're in the right state
             if (requested_game.state + 1) != model.Game.STATE_CHOOSE_ZOMBIE:
-                raise ValueError("Game is not choosing original zombie")
+                msg = _("Game is not choosing original zombie")
+                raise model.WrongStateError(requested_game,
+                                            requested_game.state,
+                                            model.Game.STATE_CHOOSE_ZOMBIE - 1,
+                                            msg)
             # Determine zombie
             pool = requested_game.original_zombie_pool
             if original_zombie == 'random':
@@ -313,7 +330,8 @@ class GameController(turbogears.controllers.Controller):
             else:
                 entry = model.PlayerEntry.get(original_zombie)
                 if entry not in pool:
-                    raise ValueError("Original zombie is not a valid choice")
+                    msg = _("Original zombie is not a valid choice")
+                    raise model.PlayerNotFoundError(requested_game, msg)
             # Make into zombie
             requested_game.original_zombie = entry
             # Advance stage
@@ -369,7 +387,7 @@ class UserController(turbogears.controllers.Controller):
         elif isinstance(group_config, (list, tuple)):
             groups = [model.Group.by_group_name(name) for name in group_config]
         else:
-            raise Value
+            raise ValueError("Default group %r not recognized" % group_config)
         # Create user
         new_user = model.User(user_name, display_name,
                               email_address, password1)

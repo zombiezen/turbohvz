@@ -29,6 +29,10 @@ __all__ = ['as_local',
            'as_utc',
            'to_local',
            'to_utc',
+           'ModelError',
+           'WrongStateError',
+           'InvalidTimeError',
+           'PlayerNotFoundError',
            'PlayerEntry',
            'Game',
            'Visit',
@@ -230,7 +234,93 @@ def _calc_timedelta(datetime1, datetime2, tz=None,
     # Return result
     return difference
 
-# your data model
+### GAME LOGIC ERRORS ###
+
+class ModelError(Exception):
+    """
+    Base class for model errors.
+    
+    Model errors usually occur when the players try to cheat, so try to catch
+    these and display a friendly error message.
+    
+    :IVariables:
+        game_object
+            The game object raising the exception
+        message : unicode
+            The exception's message
+    """
+    def __init__(self, game_object, message=None):
+        self.game_object = game_object
+        if message is None:
+            self.message = message
+        else:
+            self.message = unicode(message)
+    
+    def __repr__(self):
+        cls_name = type(self).__name__
+        cls_module = type(self).__module__
+        type_name = cls_module + '.' + cls_name
+        if self.message is None:
+            return "%s(%r)" % (type_name, self.game_object)
+        else:
+            return "%s(%r, %r)" % (type_name, self.game_object, self.message)
+    
+    def __str__(self):
+        return unicode(self).encode()
+    
+    def __unicode__(self):
+        return self.message
+
+class WrongStateError(ModelError):
+    """
+    Raised when an action takes place in the wrong state.
+    
+    :IVariables:
+        current_state : int
+            The state the object is in
+        needed_state : int
+            The state the object must be in to make the action valid
+    """
+    def __init__(self, game_object, current_state, needed_state, *args, **kw):
+        super(WrongStateError, self).__init__(game_object, *args, **kw)
+        self.current_state = current_state
+        self.needed_state = needed_state
+    
+    def __repr__(self):
+        return "hvz.model.WrongStateError(%r, %r, %r)" % (self.game_object,
+                                                          self.current_state,
+                                                          self.needed_state)
+    
+    def __unicode__(self):
+        # Get message or default
+        if self.message is None:
+            msg = _("That action cannot be performed; it must be "
+                    "%(needed_name)s (it is currently %(current_name)s).")
+        else:
+            msg = self.message
+        # Get state names
+        names = getattr(self.game_object, 'STATE_NAMES', {})
+        current_name = names.get(self.current_state,
+                                 unicode(self.current_state))
+        needed_name = names.get(self.needed_state,
+                                unicode(self.needed_state))
+        # Format and return
+        return msg % dict(game_object=self.game_object,
+                          current=self.current_state,
+                          needed=self.needed_state,
+                          current_name=current_name,
+                          needed_name=needed_name,)
+
+class InvalidTimeError(ModelError):
+    """
+    Raised when an action happens at an invalid time (i.e. non-chronological
+    kills).
+    """
+
+class PlayerNotFoundError(ModelError):
+    """Raised when a player can't be found (i.e. an invalid GID is given)."""
+
+### GAME LOGIC MODEL ###
 
 class PlayerEntry(Entity):
     """
@@ -371,7 +461,9 @@ class PlayerEntry(Entity):
         elif self.state == self.STATE_ORIGINAL_ZOMBIE:
             self.death_date = date
         else:
-            raise ValueError("This is a non-human.  Can't make the OZ.")
+            raise WrongStateError(self, self.state, self.STATE_HUMAN,
+                                  _("Player cannot become the original "
+                                    "zombie because player is non-human."))
     
     def kill(self, other, date=None):
         """
@@ -389,18 +481,23 @@ class PlayerEntry(Entity):
         if date is None:
             date = as_utc(datetime.utcnow())
         now = as_utc(datetime.utcnow())
+        # Check if game is in-progress
+        if not game.in_progress:
+            raise WrongStateError(game, game.state, game.STATE_STARTED,
+                                  _("Game is not in progress"))
         # Check for non-chronological reports
         if (self.death_date is not None and date <= self.death_date) or \
            (self.feed_date is not None and date <= self.feed_date):
-            raise ValueError("You must report kills chronologically")
+            raise InvalidTimeError(self,
+                                   _("You must report kills chronologically"))
         # Check if the demise is within the report window
         if now - date > self.game.zombie_report_timedelta:
-            raise ValueError("Not within report window")
+            raise InvalidTimeError(self, _("Kill not within report window"))
         if not self.is_human:
             # Ensure the player didn't starve first
             starve_delta = self.calculate_time_since_last_feeding(date)
             if starve_delta > self.game.zombie_starve_timedelta:
-                raise ValueError("Killer has already starved")
+                raise InvalidTimeError(self, _("Killer has already starved"))
             # Ensure that the victim is human
             if other.is_human:
                 self.kills += 1
@@ -408,11 +505,13 @@ class PlayerEntry(Entity):
                 other.state = other.STATE_ZOMBIE
                 other.killed_by = self.player
             else:
-                raise ValueError("Victim is nonhuman")
+                raise WrongStateError(self, self.state, self.STATE_HUMAN,
+                                      _("Victim is nonhuman"))
         else:
-            raise ValueError("Killer can't be human")
+            raise WrongStateError(self, self.state, self.STATE_ZOMBIE,
+                                  _("Killer can't be human"))
     
-    def die(self, date=None):
+    def starve(self, date=None):
         """
         Make the player die from starvation.
         
@@ -428,7 +527,8 @@ class PlayerEntry(Entity):
             self.starve_date = date
             self.state = self.STATE_DEAD
         else:
-            raise ValueError("It's not this player's time yet!")
+            raise WrongStateError(self, self.state, self.STATE_ZOMBIE,
+                                  _("Humans can't starve"))
     
     def calculate_time_since_last_feeding(self, now=None):
         """
@@ -667,7 +767,7 @@ class Game(Entity):
         for zombie in zombies:
             delta = zombie.calculate_time_since_last_feeding(now)
             if delta >= self.zombie_starve_timedelta:
-                zombie.die()
+                zombie.starve()
     
     def calculate_timedelta(self, datetime1, datetime2):
         """
@@ -692,7 +792,8 @@ class Game(Entity):
         """Change to the previous state"""
         # Check if we can do this
         if self.is_first_state:
-            raise ValueError("The game has not yet begun")
+            raise WrongStateError(self, self.state, self.STATE_CREATED + 1,
+                                  _("Game is already at the first state"))
         # Go previous state
         self.state -= 1
         # Do state hooks
@@ -708,7 +809,8 @@ class Game(Entity):
         """Change to the next state"""
         # Check if we can do this
         if self.is_last_state:
-            raise ValueError("The game is already over")
+            raise WrongStateError(self, self.state, self.STATE_ENDED - 1,
+                                  _("The game is already over"))
         # Go next state
         self.state += 1
         # Do state hooks
@@ -820,7 +922,7 @@ class Game(Entity):
     ignore_dates = property(_get_ignore_dates, _set_ignore_dates)
     ignore_weekdays = property(_get_ignore_weekdays, _set_ignore_weekdays)
 
-# the identity model
+### IDENTITY ###
 
 class Visit(Entity):
     """
