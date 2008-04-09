@@ -389,6 +389,10 @@ class PlayerEntry(Entity):
         if date is None:
             date = as_utc(datetime.utcnow())
         now = as_utc(datetime.utcnow())
+        # Check for non-chronological reports
+        if (self.death_date is not None and date <= self.death_date) or \
+           (self.feed_date is not None and date <= self.feed_date):
+            raise ValueError("You must report kills chronologically")
         # Check if the demise is within the report window
         if now - date > self.game.zombie_report_timedelta:
             raise ValueError("Not within report window")
