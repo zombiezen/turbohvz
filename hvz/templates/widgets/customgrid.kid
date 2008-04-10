@@ -9,17 +9,14 @@
                 if tg.paginate.order == col:
                     reverse_link = not tg.paginate.reversed
                     if tg.paginate.reversed:
-                        sort_img = '/static/images/sort_desc.png'
-                        sort_alt = _("Descending")
+                        sort_class = "sort_desc"
                     else:
-                        sort_img = '/static/images/sort_asc.png'
-                        sort_alt = _("Ascending")
+                        sort_class = "sort_asc"
                 else:
                     reverse_link = False
-                    sort_img = None
+                    sort_class = None
                 ?>
-                <a href="${tg.paginate.get_href(1, col, reverse_link)}" py:content="get_column_title(col)">[title]</a>
-                <img py:if="sort_img is not None" src="${tg.url(sort_img)}" alt="${sort_alt}" />
+                <a class="${sort_class}" href="${tg.paginate.get_href(1, col, reverse_link)}" py:content="get_column_title(col)">[title]</a>
                 </span>
                 <span py:if="not sortable or col in exclude_sorting" py:replace="get_column_title(col)">[title]</span>
             </th>

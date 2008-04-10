@@ -144,6 +144,23 @@ html, body
     color: red;
 }
 
+.custom_grid th .sort_asc, .custom_grid th .sort_desc
+{
+    padding-right: 16px;
+    background-position: right center;
+    background-repeat: no-repeat;
+}
+
+.custom_grid th .sort_asc
+{
+    background-image: url(../images/sort_asc.png);
+}
+
+.custom_grid th .sort_desc
+{
+    background-image: url(../images/sort_desc.png);
+}
+
 .custom_grid tr:first-child td
 {
     border-top: none;
