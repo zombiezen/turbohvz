@@ -1,15 +1,17 @@
 Metadata-Version: 1.0
 Name: HvZ
-Version: 1.0
-Summary: UNKNOWN
+Version: 0.1
+Summary: A web application for the game Humans vs. Zombies
 Home-page: UNKNOWN
-Author: UNKNOWN
-Author-email: UNKNOWN
-License: UNKNOWN
+Author: Ross Light
+Author-email: rlight2@gmail.com
+License: GPLv3
 Description: UNKNOWN
+Keywords: turbogears.app
 Platform: UNKNOWN
 Classifier: Development Status :: 3 - Alpha
 Classifier: Operating System :: OS Independent
 Classifier: Programming Language :: Python
 Classifier: Topic :: Software Development :: Libraries :: Python Modules
 Classifier: Framework :: TurboGears
+Classifier: Framework :: TurboGears :: Applications
