@@ -57,7 +57,10 @@ function confirm_action(msg, url)
     
     .check
     {
-        color: green;
+        width: 1em;
+        height: 1em;
+        max-width: 64px;
+        max-height: 64px;
     }
 </style>
 </py:def>
@@ -142,33 +145,9 @@ function confirm_action(msg, url)
     </div>
     <h2 id="sect_stage">Stage</h2>
     <table id="stage_table">
-        <tr>
-            <td class="check"><py:if test="game.state >= 0">&#x2713;</py:if></td>
-            <td>Game created</td>
-        </tr>
-        <tr>
-            <td class="check"><py:if test="game.state >= 1">&#x2713;</py:if></td>
-            <td>Open registration</td>
-        </tr>
-        <tr>
-            <td class="check"><py:if test="game.state >= 2">&#x2713;</py:if></td>
-            <td>Closed registration</td>
-        </tr>
-        <tr>
-            <td class="check"><py:if test="game.state >= 3">&#x2713;</py:if></td>
-            <td>Choose original zombie</td>
-        </tr>
-        <tr>
-            <td class="check"><py:if test="game.state >= 4">&#x2713;</py:if></td>
-            <td>Start game</td>
-        </tr>
-        <tr>
-            <td class="check"><py:if test="game.state >= 5">&#x2713;</py:if></td>
-            <td>Reveal original zombie</td>
-        </tr>
-        <tr>
-            <td class="check"><py:if test="game.state >= 6">&#x2713;</py:if></td>
-            <td>Game over</td>
+        <tr py:for="value, name in sorted(game.STATE_NAMES.iteritems(), key=(lambda item: item[0]))">
+            <td><img py:if="game.state >= value" class="check" src="${tg.url('/static/images/check.png')}" alt="Check" /></td>
+            <td py:content="name">[state name]</td>
         </tr>
     </table>
     <form py:if="'stage-game' in tg.identity.permissions" action="${tg.url('/game/action.stage')}">

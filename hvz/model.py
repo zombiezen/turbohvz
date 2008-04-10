@@ -655,6 +655,8 @@ class Game(Entity):
             Revealed original zombie
         STATE_ENDED : int
             Game is over
+        STATE_NAMES : dict of {int: unicode}
+            State-to-human-readable-name lookup table
         DEFAULT_ZOMBIE_STARVE_TIME : int
             The default number of hours before a zombie starves
         DEFAULT_ZOMBIE_REPORT_TIME : int
@@ -716,6 +718,13 @@ class Game(Entity):
     STATE_STARTED = 4
     STATE_REVEAL_ZOMBIE = 5
     STATE_ENDED = 6
+    STATE_NAMES = {STATE_CREATED: _("Game created"),
+                   STATE_OPEN: _("Open registration"),
+                   STATE_CLOSED: _("Closed registration"),
+                   STATE_CHOOSE_ZOMBIE: _("Choose original zombie"),
+                   STATE_STARTED: _("Started game"),
+                   STATE_REVEAL_ZOMBIE: _("Revealed original zombie"),
+                   STATE_ENDED: _("Game ended"),}
     DEFAULT_ZOMBIE_STARVE_TIME = 48
     DEFAULT_ZOMBIE_REPORT_TIME = 3
     DEFAULT_GID_LENGTH = 16
