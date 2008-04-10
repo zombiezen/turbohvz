@@ -113,6 +113,7 @@ html, body
 
 #trail .current
 {
+    padding-left: 1ex;
     font-weight: bolder;
 }
 
