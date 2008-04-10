@@ -117,15 +117,24 @@ class EntryList(CustomDataGrid):
     name = "player_list"
     grid_class = "custom_grid player_list"
     default_columns = ['name', 'affiliation', 'death_date', 'kills']
-    exclude_sorting = ['affiliation']
+    exclude_sorting = ['affiliation',
+                       'death_date',
+                       'feed_date',
+                       'starve_date',
+                       'kills',]
     column_titles = {'player_gid': _("Game ID"),
                      'name': _("Player Name"),
                      'death_date': _("Death Date"),
+                     'feed_date': _("Feed Date"),
+                     'starve_date': _("Starve Date"),
                      'kills': _("Kills"),
                      'affiliation': _("Affiliation"),}
     accessors = {'name': '_get_name_col',
                  'affiliation': '_get_affiliation_col',
-                 'death_date': _get_date_col,
+                 'death_date': '_get_oz_date_col',
+                 'feed_date': '_get_oz_date_col',
+                 'starve_date': '_get_oz_date_col',
+                 'kills': '_get_kills_col',
                  '*': CustomDataGrid.default_accessor,}
     no_data_msg = _("No players have joined yet")
     
@@ -151,6 +160,18 @@ class EntryList(CustomDataGrid):
             return row.STATE_NAMES[PlayerEntry.STATE_HUMAN]
         else:
             return row.affiliation
+    
+    def _get_oz_date_col(self, row, column):
+        if not self.show_oz and row.state == PlayerEntry.STATE_ORIGINAL_ZOMBIE:
+            return u""
+        else:
+            return _get_date_col(row, column)
+    
+    def _get_kills_col(self, row, column):
+        if not self.show_oz and row.state == PlayerEntry.STATE_ORIGINAL_ZOMBIE:
+            return 0
+        else:
+            return self.default_accessor(row, column)
 
 class UserList(CustomDataGrid):
     name = "user_list"

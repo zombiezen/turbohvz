@@ -86,9 +86,12 @@ class GameController(BaseController):
         # Create widgets
         grid = widgets.EntryList(columns=columns,
                                  show_oz=(oz or is_oz or can_view_oz),)
+        entries = sorted(requested_game.entries,
+                         key=(lambda e: e.player.display_name))
         return dict(game=requested_game,
                     grid=grid,
-                    current_entry=entry,)
+                    current_entry=entry,
+                    entries=entries,)
     
     @expose("hvz.templates.game.edit")
     @identity.require(identity.has_permission('edit-game'))
@@ -147,6 +150,14 @@ class GameController(BaseController):
         return dict(game=requested_game,
                     options=options,
                     form=forms.original_zombie_form,)
+    
+    @expose("hvz.templates.game.rules")
+    def rules(self, game_id):
+        game_id = int(game_id)
+        requested_game = model.Game.get(game_id)
+        if requested_game is None:
+            raise NotFound()
+        return dict(game=requested_game)
     
     @expose()
     @identity.require(identity.not_anonymous())
@@ -393,10 +404,6 @@ class Root(turbogears.controllers.RootController, BaseController):
     def index(self):
         import time
         return dict(now=time.ctime())
-    
-    @expose("hvz.templates.rules")
-    def rules(self):
-        return dict()
     
     @expose("hvz.templates.login")
     def login(self, forward_url=None, previous_url=None, *args, **kw):

@@ -123,13 +123,13 @@ function confirm_action(msg, url)
         <ul>
             <li>Your ID is <span py:replace="current_entry.player_gid">[gid]</span></li>
             <li>You are <span py:replace="current_entry.affiliation">[affiliation]</span></li>
-            <li py:if="not current_entry.is_human and current_entry.killed_by is not None">You were killed by <a href="${tg.hvz.user_link(current_entry.killed_by)}" class="player" py:content="current_entry.killed_by">[user]</a></li>
+            <li py:if="current_entry.killed_by is not None">You were killed by <a href="${tg.hvz.user_link(current_entry.killed_by)}" class="player" py:content="current_entry.killed_by">[user]</a></li>
             <li py:if="not current_entry.is_human">
                 You have killed
                 <span py:replace="current_entry.kills">[#]</span>
                 <span py:replace="tg.pluralize(current_entry.kills, _('player'), _('players'))">[player(s)]</span>
             </li>
-            <li py:if="current_entry.is_dead">You starved on <span py:replace="tg.display_date(current_entry.starve_date)">[date]</span></li>
+            <li py:if="current_entry.starve_date is not None">You starved on <span py:replace="tg.display_date(current_entry.starve_date)">[date]</span></li>
             <li py:if="current_entry.is_undead">You have <span py:replace="tg.display_date(current_entry.calculate_time_before_starving())">[time]</span> left before starving</li>
         </ul>
         <div py:if="current_entry.can_report_kill()">
@@ -137,7 +137,7 @@ function confirm_action(msg, url)
         </div>
     </py:if>
     <h2 id="sect_entry_list">Player Roster</h2>
-    <span py:replace="tg.display(grid, game.entries)">[players]</span>
+    <span py:replace="tg.display(grid, entries)">[players]</span>
     <div py:if="not tg.identity.anonymous">
         <button py:if="game.registration_open and current_entry is not None" onclick="unjoin(event);">Unjoin</button>
         <button py:if="'join-game' in tg.identity.permissions and game.registration_open and current_entry is None" onclick="window.location=${tg.jsencode(tg.hvz.game_link(game, 'join'))};">Join</button>
