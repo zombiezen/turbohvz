@@ -25,11 +25,42 @@ html, body
     cursor: pointer;
 }
 
+#trail
+{
+    width: 89%;
+    margin: 1ex auto;
+    padding: 1ex 1%;
+    border: thin solid #333;
+    color: black;
+    background: #ccc;
+}
+
+#trail a:link, #trail a:visited
+{
+    padding-left: 1ex;
+    padding-right: 1ex;
+    border-right: 2px solid black;
+    color: #f33;
+    text-decoration: none;
+}
+
+#trail a:hover
+{
+    color: #900;
+    background: #999;
+    text-decoration: underline;
+}
+
+#trail .current
+{
+    font-weight: bolder;
+}
+
 #main_content
 {
     width: 85%;
     margin: 1em auto;
-    padding: 2em;
+    padding: 2em 3%;
     color: black;
     background: #efe;
     font-size: 127%;

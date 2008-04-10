@@ -5,8 +5,11 @@
       xmlns:py="http://genshi.edgewall.org/"
       xmlns:xi="http://www.w3.org/2001/XInclude">
 
-<py:def function="page_title">User "<span py:replace="user">[user]</span>"</py:def>
+<py:def function="page_title"><span py:replace="user">[user]</span></py:def>
 <py:def function="head_info"></py:def>
+<py:def function="page_parents">
+    <a href="${tg.url('/user/index')}">Users</a>
+</py:def>
 
 <py:match path="content">
     <h2 id="sect_games">Games</h2>

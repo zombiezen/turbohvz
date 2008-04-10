@@ -6,7 +6,10 @@
       xmlns:xi="http://www.w3.org/2001/XInclude">
 
 <py:def function="page_title">Join Game</py:def>
-<py:def function="head_info">
+<py:def function="head_info"></py:def>
+<py:def function="page_parents">
+    <a href="${tg.url('/game/index')}">Games</a>
+    <a href="${tg.hvz.game_link(game)}">Game <span py:replace="game.game_id">[#]</span></a>
 </py:def>
 
 <py:match path="content">
