@@ -93,22 +93,20 @@ function confirm_action(msg, url)
                     <span py:replace="tg.display_date(game.zombie_report_timedelta)">[# hour(s)]</span>
                 </td>
             </tr>
-            <tr py:if="game.ignore_weekdays"
-                py:with="weekdays = sorted(game.ignore_weekdays)">
+            <tr py:if="game.ignore_weekdays">
                 <th>Ignores weekdays:</th>
                 <td>
                     <ul>
-                        <li py:for="day in weekdays"
+                        <li py:for="day in sorted(game.ignore_weekdays)"
                             py:content="tg.display_weekday(day)">[day]</li>
                     </ul>
                 </td>
             </tr>
-            <tr py:if="game.ignore_dates"
-                py:with="dates = sorted(game.ignore_dates)">
+            <tr py:if="game.ignore_dates">
                 <th>Holidays:</th>
                 <td>
                     <ul>
-                        <li py:for="date in dates"
+                        <li py:for="date in sorted(game.ignore_dates)"
                             py:content="tg.display_date(date)">[date]</li>
                     </ul>
                 </td>
@@ -119,6 +117,7 @@ function confirm_action(msg, url)
         <button py:if="'edit-game' in tg.identity.permissions" onclick="window.location=${tg.jsencode(tg.hvz.game_link(game, 'edit'))}">Edit</button>
         <button py:if="'delete-game' in tg.identity.permissions" onclick="delete_game(event);">Delete</button>
     </div>
+    <p><a href="${tg.hvz.game_link(game, 'rules')}">Rules</a></p>
     <py:if test="current_entry is not None">
         <h2 id="sect_player_info">Your Info</h2>
         <ul>

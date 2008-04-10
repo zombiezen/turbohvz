@@ -11,7 +11,7 @@
     <p>AOC Rules written by Ross Light and TJ Ferrell<br />
     Based on <a href="http://www.webfeatsdesign.com/hvz/rules.htm">the original by Brad Sappington and Chris Weed</a></p>
     <h2 id="sect_overview">Overview</h2>
-    <p>Humans vs. Zombies is a game of tag. All players begin as humans, and one is randomly chosen to be the “Original Zombie.” The Original Zombie tags human players and turns them into zombies. The zombies must tag and “feed” on a human every 48 hours or he starves to death and is out of the game.</p>
+    <p>Humans vs. Zombies is a game of tag. All players begin as humans, and one is randomly chosen to be the “Original Zombie.” The Original Zombie tags human players and turns them into zombies. The zombies must tag and “feed” on a human every <span py:replace="tg.display_date(game.zombie_starve_timedelta)">[time]</span> or he starves to death and is out of the game.</p>
     <h2>Objectives</h2>
     <p>The Zombies win when all human players have been tagged and turned into zombies. The Humans win by surviving long enough for all of the zombies to starve.</p>
     <h2 id="sect_safety">Safety Rules</h2>
@@ -39,12 +39,26 @@
     <h2 id="sect_human_rules">Human Rules</h2>
     <p><span class="rule_name">ID Number</span> Humans must keep one index card with their unique identification number (player GID) on them at all times</p>
     <p><span class="rule_name">Stunning a Zombie</span> Humans may stun a Zombie for 15 minutes by throwing a sock at them.</p>
-    <p><span class="rule_name">When Tagged By a Zombie</span> When tagged by a Zombie, a Human is required to distribute their ID card. One hour after being tagged, a Human becomes a member of the Zombie team. Switch to the 2nd color armband&#x2014;you are now allowed to tag other Humans.</p>
+    <p><span class="rule_name">When Tagged By a Zombie</span> When tagged by a Zombie, a Human is required to distribute their ID card. One hour after being tagged, a Human becomes a member of the Zombie team. Switch to the second color armband&#x2014;you are now allowed to tag other Humans.</p>
     <p><span class="rule_name">Wearing a Headband</span> Humans must wear a first color headband around an arm or leg to identify them as players of the game.</p>
     <h2 id="sect_zombie_rules">Zombie Rules</h2>
-    <p><span class="rule_name">Feeding</span> Zombies must feed every 48 hours. A zombie feeds by reporting their tags on the website. Time on weekends and holidays does not count toward the time limit.  For example, if a zombie tags someone six hours before a Saturday, then the zombie will have forty-two hours (48 - 6 = 42) from midnight on Monday to tag someone.</p>
+    <p><span class="rule_name">Feeding</span> Zombies must feed every <span py:replace="tg.display_date(game.zombie_starve_timedelta)">[time]</span>. A zombie feeds by <a href="${tg.hvz.game_link(game, 'reportkill')}">reporting their tags on the website</a>. Time on certain days (depends on the game) does not count toward the time limit.  For example, if the game ignores weekends, has 48 hour starve time, and a zombie tags someone six hours before a Saturday, then the zombie will have forty-two hours (48 - 6 = 42) from midnight on Monday to tag someone.</p>
+    <py:if test="game.ignore_weekdays">
+        <p>The days that this game regularly ignores are:</p>
+        <ul>
+            <li py:for="day in sorted(game.ignore_weekdays)"
+                py:content="tg.display_weekday(day)">[day]</li>
+        </ul>
+    </py:if>
+    <py:if test="game.ignore_dates">
+        <p>Specific dates that this game ignores are:</p>
+        <ul>
+            <li py:for="date in sorted(game.ignore_dates)"
+                py:content="tg.display_date(date)">[date]</li>
+        </ul>
+    </py:if>
     <p><span class="rule_name">Wearing your Headband</span> The Zombie team must wear a second color headband around their arms at all times. The Original Zombie must wear a headband, but it does not need to be a second color headband.</p>
-    <p><span class="rule_name">Tagging</span> A tag is a firm touch to any part of a Human. After tagging a Human, the Zombie must collect their ID card. Kills must be reported within three hours.</p>
+    <p><span class="rule_name">Tagging</span> A tag is a firm touch to any part of a Human. After tagging a Human, the Zombie must collect their ID card. Kills must be <a href="${tg.hvz.game_link(game, 'reportkill')}">reported</a> within <span py:replace="tg.display_date(game.zombie_report_timedelta)">[time]</span>.</p>
     <p><span class="rule_name">Getting Hit</span> When hit with a sock, a zombie is stunned for 15 minutes. A stunned zombie may not interact with the game in any way. This includes shielding other zombies from socks or continuing to run toward a human. If hit while stunned, a zombie remains stunned for the next 15 minutes.</p>
     <h2 id="sect_other_rules">Other Rules</h2>
     <ul>
@@ -63,6 +77,6 @@
     </div>
 </py:match>
 
-<xi:include href="master.html" />
+<xi:include href="../master.html" />
 
 </html>
