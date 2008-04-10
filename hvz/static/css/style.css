@@ -21,7 +21,7 @@ html, body
     width: 728px;
     height: 90px;
     margin: 2em auto;
-    background: transparent url('../images/hvz_logo.png') no-repeat;
+    background: transparent url(../images/hvz_logo.png) no-repeat;
     cursor: pointer;
 }
 
@@ -38,16 +38,16 @@ html, body
 #trail a:link, #trail a:visited
 {
     padding-left: 1ex;
-    padding-right: 1ex;
-    border-right: 2px solid black;
+    padding-right: 16px;
     color: #f33;
+    background: transparent url(../images/trail_path.png) no-repeat right center;
     text-decoration: none;
 }
 
 #trail a:hover
 {
     color: #900;
-    background: #999;
+    background: #999 url(../images/trail_path.png) no-repeat right center;
     text-decoration: underline;
 }
 
@@ -107,16 +107,6 @@ html, body
 
 /* TABLES/GRID VIEW */
 
-/*tr.odd td
-{
-    background-color: #cff;
-}
-
-tr.even td
-{
-    background-color: white;
-}*/
-
 .custom_grid
 {
     margin-bottom: 1em;
@@ -139,7 +129,7 @@ tr.even td
 {
     border-bottom: none;
     color: #ccc;
-    background: black url('../images/gradient_red_bottom.png') repeat-x bottom;
+    background: black url(../images/gradient_red_bottom.png) repeat-x bottom;
 }
 
 /* sortable column */
@@ -171,7 +161,7 @@ tr.even td
     width: 45%;
     margin: 0 auto 0.5em;
     padding: 1em 2.5% 16px;
-    background: #900 url('../images/gradient_black_bottom.png') repeat-x bottom;
+    background: #900 url(../images/gradient_black_bottom.png) repeat-x bottom;
     font-weight: bolder;
 }
 
@@ -195,15 +185,10 @@ h1, h2, h3, h4, h5, h6
     font-weight: bold;
 }
 
-h1
+h1#title
 {
     margin-top: 0;
 }
-
-/*h2
-{
-    font-size: 150%;
-}*/
 
 a:link img, a:visited img, a:hover img, a:active img
 {
