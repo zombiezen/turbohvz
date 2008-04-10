@@ -7,62 +7,28 @@
 
 <py:def function="page_title">Game <span py:replace="game.game_id">#</span> - <span py:replace="game.display_name">[name]</span></py:def>
 <py:def function="head_info">
-<script type="text/javascript">
-function unjoin(evt)
-{
-    var unjoin_url = ${tg.jsencode(tg.hvz.game_link(game, 'action.unjoin'))};
-    var msg = ${tg.jsencode(_("Are you sure you want to remove yourself from the game?"))};
-    confirm_action(msg, unjoin_url);
-}
-function delete_game(evt)
-{
-    var delete_url = ${tg.jsencode(tg.hvz.game_link(game, 'action.delete'))};
-    var msg = ${tg.jsencode(_("Are you sure you want to delete the game?"))};
-    confirm_action(msg, delete_url);
-}
+    <script type="text/javascript">
+        function unjoin(evt)
+        {
+            var unjoin_url = ${tg.jsencode(tg.hvz.game_link(game, 'action.unjoin'))};
+            var msg = ${tg.jsencode(_("Are you sure you want to remove yourself from the game?"))};
+            confirm_action(msg, unjoin_url);
+        }
+        function delete_game(evt)
+        {
+            var delete_url = ${tg.jsencode(tg.hvz.game_link(game, 'action.delete'))};
+            var msg = ${tg.jsencode(_("Are you sure you want to delete the game?"))};
+            confirm_action(msg, delete_url);
+        }
 
-function confirm_action(msg, url)
-{
-    if (confirm(msg))
-    {
-        window.location = url;
-    }
-}
-</script>
-<style type="text/css">
-    #game_info
-    {
-        border: none;
-    }
-    
-    #game_info th, .game_info td
-    {
-        color: black;
-        background: none;
-        border: none;
-    }
-    
-    #game_info th
-    {
-        font-weight: bold;
-        text-align: right;
-        vertical-align: top;
-    }
-    
-    #game_info td ul, #game_info td ol
-    {
-        margin-top: 0;
-        margin-bottom: 0;
-    }
-    
-    .check
-    {
-        width: 1em;
-        height: 1em;
-        max-width: 64px;
-        max-height: 64px;
-    }
-</style>
+        function confirm_action(msg, url)
+        {
+            if (confirm(msg))
+            {
+                window.location = url;
+            }
+        }
+    </script>
 </py:def>
 <py:def function="page_parents">
     <a href="${tg.url('/game/index')}">Games</a>

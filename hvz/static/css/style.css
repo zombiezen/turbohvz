@@ -25,11 +25,72 @@ html, body
     cursor: pointer;
 }
 
+#main_content
+{
+    width: 85%;
+    margin: 1ex auto;
+    padding: 2em 3%;
+    border: thin solid #333;
+    color: black;
+    background: #efe;
+    font-size: 127%;
+}
+
+#footer
+{
+    width: 95%;
+    padding: 1ex 2.5%;
+    margin: 0 auto 1em auto;
+    color: #f33;
+    font-size: 80%;
+    text-align: center;
+}
+
+/* USER BAR */
+
+#user_bar
+{
+    margin: 0;
+    padding: 0 1ex 0.5ex 0;
+    border-bottom: thin solid #333;
+    color: black;
+    background: #ccc;
+    text-align: right;
+}
+
+#user_bar_links
+{
+    display: inline;
+    margin: 0;
+    padding: 0;
+}
+
+#user_bar_links li
+{
+    display: inline;
+    margin: 0;
+    margin-left: 1ex;
+    padding: 0;
+}
+
+#user_bar_links a:link, #user_bar_links a:visited
+{
+    color: #369;
+    text-decoration: none;
+}
+
+#user_bar_links a:hover
+{
+    color: #036;
+}
+
+/* PAGE HIERARCHY TRAIL */
+
 #trail
 {
-    width: 89%;
+    width: 91%;
     margin: 1ex auto;
-    padding: 1ex 1%;
+    padding: 0;
     border: thin solid #333;
     color: black;
     background: #ccc;
@@ -48,61 +109,11 @@ html, body
 {
     color: #900;
     background: #999 url(../images/trail_path.png) no-repeat right center;
-    text-decoration: underline;
 }
 
 #trail .current
 {
     font-weight: bolder;
-}
-
-#main_content
-{
-    width: 85%;
-    margin: 1em auto;
-    padding: 2em 3%;
-    color: black;
-    background: #efe;
-    font-size: 127%;
-}
-
-#footer
-{
-    width: 95%;
-    padding: 1ex 2.5%;
-    margin: 0 auto 1em auto;
-    color: #f33;
-    font-size: 80%;
-    text-align: center;
-}
-
-#user_bar
-{
-    margin: 0;
-    padding: 0 1ex 0.5ex 0;
-    color: black;
-    background: #ccc;
-    text-align: right;
-}
-
-#user_bar_links :link, #user_bar_links :visited
-{
-    text-decoration: none;
-}
-
-#user_bar_links
-{
-    display: inline;
-    margin: 0;
-    padding: 0;
-}
-
-#user_bar_links li
-{
-    display: inline;
-    margin: 0;
-    margin-left: 1ex;
-    padding: 0;
 }
 
 /* TABLES/GRID VIEW */
@@ -188,6 +199,41 @@ html, body
     font-weight: bold;
 }
 
+/* GAME VIEW STYLES */
+
+#game_info
+{
+    border: none;
+}
+
+#game_info th, .game_info td
+{
+    color: black;
+    background: none;
+    border: none;
+}
+
+#game_info th
+{
+    font-weight: bold;
+    text-align: right;
+    vertical-align: top;
+}
+
+#game_info td ul, #game_info td ol
+{
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.check
+{
+    width: 1em;
+    height: 1em;
+    max-width: 64px;
+    max-height: 64px;
+}
+
 /* MISC FORMATTING */
 
 a.link, a, a.active
@@ -207,25 +253,17 @@ h1#title
     margin-top: 0;
 }
 
+*:link
+{
+    color: #369;
+}
+
+*:visited
+{
+    color: #636;
+}
+
 a:link img, a:visited img, a:hover img, a:active img
-{
-    border: none;
-}
-
-/* RULES */
-
-.rule_name
-{
-    font-weight: bold;
-}
-
-#sect_license
-{
-    text-align: center;
-    font-size: 75%;
-}
-
-.cclicense
 {
     border: none;
 }

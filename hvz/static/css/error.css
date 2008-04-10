@@ -1,0 +1,23 @@
+/*
+ *  error.css
+ *  HvZ
+ *
+ *  Created by Ross Light on April 10, 2008.
+ */
+
+#error
+{
+    margin-top: 1em;
+    margin-bottom: 1em;
+    padding: 1em;
+    border: thin solid #999;
+    color: red;
+    background: #fcc;
+    font-family: Monaco, "Courier New", Courier, monospace;
+    font-size: 80%;
+}
+
+#error .error_name
+{
+    font-weight: bolder;
+}

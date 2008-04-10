@@ -1,0 +1,22 @@
+/*
+ *  rules.css
+ *  HvZ
+ *
+ *  Created by Ross Light on April 10, 2008.
+ */
+
+.rule_name
+{
+    font-weight: bold;
+}
+
+#sect_license
+{
+    text-align: center;
+    font-size: 75%;
+}
+
+.cclicense
+{
+    border: none;
+}

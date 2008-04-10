@@ -5,7 +5,9 @@
       xmlns:py="http://genshi.edgewall.org/"
       xmlns:xi="http://www.w3.org/2001/XInclude">
 <py:def function="page_title">404 Not Found</py:def>
-<py:def function="head_info"></py:def>
+<py:def function="head_info">
+    <link rel="stylesheet" type="text/css" href="${tg.url('/static/css/error.css')}" />
+</py:def>
 <py:def function="page_parents"></py:def>
 
 <py:match path="content">
