@@ -82,7 +82,7 @@ class GameController(BaseController):
             is_oz = entry.state == model.PlayerEntry.STATE_ORIGINAL_ZOMBIE
         else:
             is_oz = False
-        can_view_oz = bool('view-original-zombie' in perms)
+        can_view_oz = bool('view-oz' in perms)
         # Create widgets
         grid = widgets.EntryList(columns=columns,
                                  show_oz=(oz or is_oz or can_view_oz),)

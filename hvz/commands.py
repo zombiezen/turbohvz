@@ -92,8 +92,8 @@ def create_permissions(args=None):
     # Create permissions
     perms = {'view-player-gid': model.Permission(u"view-player-gid",
                                                  u"View Player Game IDs"),
-             'view-original-zombie': model.Permission(u"view-original-zombie",
-                                                      u"View Original Zombie"),
+             'view-oz': model.Permission(u"view-oz",
+                                         u"View Original Zombie"),
              'create-game': model.Permission(u"create-game", u"Create Games"),
              'delete-game': model.Permission(u"delete-game", u"Delete Games"),
              'edit-game': model.Permission(u"edit-game", u"Edit Games"),
