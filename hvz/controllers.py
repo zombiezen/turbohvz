@@ -24,6 +24,22 @@ __all__ = ['log',
 
 log = logging.getLogger("hvz.controllers")
 
+def manual_login(user):
+    # Log in user
+    identity_object = identity.current_provider.authenticated_identity(user)
+    key = turbogears.visit.current().key
+    identity_object.visit_key = key
+    identity.set_current_identity(identity_object)
+    # Associate with session
+    visit_link = model.VisitIdentity.get(key)
+    if visit_link is None:
+        visit_link = model.VisitIdentity()
+        visit_link.visit_key = key
+        visit_link.user = user
+        session.save(visit_link)
+    else:
+        visit_link.user = user
+
 class NotFound(Exception):
     """Exception raised when a controller can't find a resource."""
 
@@ -350,12 +366,14 @@ class UserController(BaseController):
     
     @expose("hvz.templates.user.view")
     def view(self, user_id):
+        # Retrieve user
         if user_id.isdigit():
             requested_user = model.User.query.get(user_id)
         else:
             requested_user = model.User.by_user_name(user_id)
         if requested_user is None:
             raise NotFound()
+        # Get template variables
         grid = widgets.GameList()
         games = [entry.game for entry in requested_user.entries]
         return dict(user=requested_user,
@@ -389,6 +407,16 @@ class UserController(BaseController):
     def register(self):
         return dict(form=forms.register_form,)
     
+    @expose("hvz.templates.user.thankyou")
+    def thankyou(self, user_id):
+        if user_id.isdigit():
+            requested_user = model.User.query.get(user_id)
+        else:
+            requested_user = model.User.by_user_name(user_id)
+        if requested_user is None:
+            raise NotFound()
+        return dict(user=requested_user)
+    
     @expose()
     @error_handler(register)
     @validate(forms.register_form)
@@ -415,7 +443,8 @@ class UserController(BaseController):
         # Handle interface
         msg = _("Your account has been created, %s.") % (unicode(new_user))
         turbogears.flash(msg)
-        raise turbogears.redirect('/')
+        manual_login(new_user)
+        raise turbogears.redirect(util.user_link(new_user, 'thankyou'))
     
     @expose()
     @error_handler(edit)
@@ -444,10 +473,8 @@ class Root(turbogears.controllers.RootController, BaseController):
         self.user = UserController()
     
     @expose("hvz.templates.welcome")
-    # @identity.require(identity.in_group("admin"))
     def index(self):
-        import time
-        return dict(now=time.ctime())
+        return dict()
     
     @expose("hvz.templates.login")
     def login(self, forward_url=None, previous_url=None, *args, **kw):
