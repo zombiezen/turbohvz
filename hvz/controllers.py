@@ -362,6 +362,29 @@ class UserController(BaseController):
                     games=games,
                     game_grid=grid,)
     
+    @expose("hvz.templates.user.edit")
+    def edit(self, user_id):
+        # Retrieve user
+        if user_id.isdigit():
+            requested_user = model.User.query.get(user_id)
+        else:
+            requested_user = model.User.by_user_name(user_id)
+        if requested_user is None:
+            raise NotFound()
+        # Check for permission
+        if not (identity.has_permission(u'edit-user') or
+                identity.current.user == requested_user):
+            raise identity.IdentityFailure("Current user cannot edit "
+                                           "others' accounts.")
+        # Compile template values
+        values = {}
+        for field in forms.edit_user_form.fields:
+            name = field.name
+            values[name] = getattr(requested_user, name)
+        return dict(user=requested_user,
+                    form=forms.edit_user_form,
+                    values=values,)
+    
     @expose("hvz.templates.user.register")
     def register(self):
         return dict(form=forms.register_form,)
@@ -393,6 +416,27 @@ class UserController(BaseController):
         msg = _("Your account has been created, %s.") % (unicode(new_user))
         turbogears.flash(msg)
         raise turbogears.redirect('/')
+    
+    @expose()
+    @error_handler(edit)
+    @validate(forms.edit_user_form)
+    def action_edit(self, user_id, display_name, email_address, profile):
+        # Query user
+        requested_user = model.User.get(user_id)
+        if requested_user is None:
+            raise NotFound()
+        # Check for permission
+        if not (identity.has_permission(u'edit-user') or
+                identity.current.user == requested_user):
+            raise identity.IdentityFailure("Current user cannot edit "
+                                           "others' accounts.")
+        # Make necessary changes
+        requested_user.display_name = display_name
+        requested_user.email_address = email_address
+        requested_user.profile = profile
+        # Go to user's page
+        turbogears.flash(_("Your changes have been saved."))
+        raise turbogears.redirect(util.user_link(requested_user))
 
 class Root(turbogears.controllers.RootController, BaseController):
     def __init__(self):

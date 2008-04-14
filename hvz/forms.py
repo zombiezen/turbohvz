@@ -23,11 +23,13 @@ __all__ = ['UserNameValidator',
            'JoinSchema',
            'OriginalZombieSchema',
            'RegisterSchema',
+           'EditUserSchema',
            'GameSchema',
            'kill_form',
            'join_form',
            'original_zombie_form',
            'register_form',
+           'edit_user_form',
            'game_form',]
 
 ## VALIDATORS ##
@@ -115,6 +117,12 @@ class RegisterSchema(validators.Schema):
     profile = validators.UnicodeString(max=4096, strip=True)
     chained_validators = [validators.FieldsMatch('password1', 'password2')]
 
+class EditUserSchema(validators.Schema):
+    user_id = validators.Int()
+    display_name = validators.UnicodeString(min=1, max=255, strip=True)
+    email_address = validators.Email()
+    profile = validators.UnicodeString(max=4096, strip=True)
+
 class GameSchema(validators.Schema):
     game_id = validators.Int(if_empty=None, not_empty=False)
     display_name = validators.UnicodeString(min=4, max=255, strip=True)
@@ -169,6 +177,23 @@ class RegisterFields(WidgetsList):
     password2 = widgets.PasswordField(
         label=_("Confirm Password"),
         help_text=_("For security purposes, retype your password"),)
+    profile = widgets.TextArea(
+        label=_("Profile"),
+        help_text=_("[Optional] Create a short profile describing yourself.  "
+                    "Must be under 4096 characters in length."),
+        cols=64,
+        rows=20,)
+
+class EditUserFields(WidgetsList):
+    user_id = widgets.HiddenField()
+    display_name = widgets.TextField(
+        label=_("Real Name"),
+        help_text=_("This will be the name everyone else sees."),)
+    email_address = widgets.TextField(
+        label=_("Email Address"),
+        help_text=_("Your email address.  Only the system administrator will "
+                    "see your address and will use it only to send "
+                    "notifications and other game information to you."),)
     profile = widgets.TextArea(
         label=_("Profile"),
         help_text=_("[Optional] Create a short profile describing yourself.  "
@@ -243,6 +268,13 @@ register_form = widgets.TableForm(
     validator=RegisterSchema(),
     action=url('/user/action.register'),
     submit_text=_("Register"),)
+
+edit_user_form = widgets.TableForm(
+    name='edit_user_form',
+    fields=EditUserFields(),
+    validator=EditUserSchema(),
+    action=url('/user/action.edit'),
+    submit_text=_("Edit"),)
 
 game_form = widgets.TableForm(
     name="game_form",
