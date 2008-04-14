@@ -21,6 +21,6 @@ email = "rlight2@gmail.com"
 copyright = "Copyright (C) 2008 Ross Light, Copyright (C) 2007 Chris Weed"
 
 # if it's open source, you might want to specify these
-# url = "http://yourcool.site/"
-# download_url = "http://yourcool.site/download"
+url = "http://turbohvz.googlecode.com/"
+download_url = "http://code.google.com/p/turbohvz/downloads/list"
 license = "GPLv3"
