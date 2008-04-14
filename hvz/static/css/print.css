@@ -28,6 +28,11 @@ html, body
     color: black;
 }
 
+#status_block
+{
+    display: none;
+}
+
 /* USER BAR */
 
 #user_bar

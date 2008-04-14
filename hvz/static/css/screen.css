@@ -17,9 +17,7 @@ html, body
 
 #header
 {
-    width: 728px;
-    height: 90px;
-    background: transparent url(../images/hvz_logo.png) no-repeat;
+    margin: 2em auto;
     cursor: pointer;
 }
 
@@ -38,6 +36,13 @@ html, body
     width: 95%;
     padding: 1ex 2.5%;
     margin: 0 auto 1em auto;
+}
+
+#status_block
+{
+    width: 45%;
+    margin: 0 auto 0.5em;
+    padding: 1em 2.5% 16px;
 }
 
 /* USER BAR */
