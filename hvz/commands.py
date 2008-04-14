@@ -20,6 +20,7 @@ __author__ = 'Ross Light'
 __date__ = 'March 30, 2008'
 __all__ = ['ConfigurationError',
            'start',
+           'start_wsgi',
            'create_permissions',
            'create_admin',]
 
@@ -73,6 +74,22 @@ def start(args=None):
     # Start the server
     from hvz.controllers import Root
     turbogears.start_server(Root())
+
+def start_wsgi(args=None):
+    """Start the CherryPy application server as an WSGI application."""
+    # Read arguments
+    if args is None:
+        args = sys.argv[1:]
+    if len(args) > 0:
+        _load_config(args[0])
+    else:
+        _load_config()
+    # Start the server
+    from hvz.controllers import Root
+    cherrypy.root = Root()
+    # These two parameters ensure that this does not block, so WSGI hooks can
+    # work properly and not hang.
+    cherrypy.server.start(init_only=True, server_class=None)
 
 def create_permissions(args=None):
     """Creates default groups and permissions"""
