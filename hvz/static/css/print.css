@@ -1,0 +1,51 @@
+/*
+ *  print.css
+ *  HvZ
+ *
+ *  Created by Ross Light on April 14, 2008.
+ */
+
+/* MAIN CONTENT AREAS */
+
+html, body
+{
+    font: small Verdana, Kalimati, Helvetica, FreeSans, Arial, sans-serif;
+}
+
+#header
+{
+    display: none;
+}
+
+#main_content
+{
+    width: 100%;
+}
+
+#footer
+{
+    width: 100%;
+    color: black;
+}
+
+/* USER BAR */
+
+#user_bar
+{
+    display: none;
+}
+
+/* PAGE HIERARCHY TRAIL */
+
+#trail
+{
+    display: none;
+}
+
+/* MISC FORMATTING */
+
+*:link, *:visited
+{
+    color: #369;
+    text-decoration: underline;
+}

@@ -9,38 +9,21 @@
 
 html, body
 {
-    color: white;
-    background-color: black;
     font: small Verdana, Kalimati, Helvetica, FreeSans, Arial, sans-serif;
-    margin: 0;
-    padding: 0;
 }
 
 #header
 {
-    width: 728px;
-    height: 90px;
     margin: 2em auto;
-    background: transparent url(../images/hvz_logo.png) no-repeat;
-    cursor: pointer;
 }
 
 #main_content
 {
-    width: 85%;
-    margin: 1ex auto;
-    padding: 2em 3%;
-    border: thin solid #333;
-    color: black;
-    background: #efe;
     font-size: 127%;
 }
 
 #footer
 {
-    width: 95%;
-    padding: 1ex 2.5%;
-    margin: 0 auto 1em auto;
     color: #f33;
     font-size: 80%;
     text-align: center;
@@ -50,11 +33,6 @@ html, body
 
 #user_bar
 {
-    margin: 0;
-    padding: 0 1ex 0.5ex 0;
-    border-bottom: thin solid #333;
-    color: black;
-    background: #ccc;
     text-align: right;
 }
 
@@ -88,12 +66,6 @@ html, body
 
 #trail
 {
-    width: 91%;
-    margin: 1ex auto;
-    padding: 0;
-    border: thin solid #333;
-    color: black;
-    background: #ccc;
 }
 
 #trail a:link, #trail a:visited
