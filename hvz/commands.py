@@ -111,8 +111,6 @@ def create_permissions(args=None):
                                                  u"View Player Game IDs"),
              'view-oz': model.Permission(u"view-oz",
                                          u"View Original Zombie"),
-             'edit-user': model.Permission(u"edit-user",
-                                           u"Edit Any User"),
              'create-game': model.Permission(u"create-game", u"Create Games"),
              'delete-game': model.Permission(u"delete-game", u"Delete Games"),
              'edit-game': model.Permission(u"edit-game", u"Edit Games"),

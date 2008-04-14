@@ -9,23 +9,38 @@
 
 html, body
 {
+    color: white;
+    background-color: black;
     font: small Verdana, Kalimati, Helvetica, FreeSans, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
 }
 
 #header
 {
     width: 728px;
     height: 90px;
-    background: transparent url(../images/hvz-logo.png) no-repeat;
+    margin: 2em auto;
+    background: transparent url(../images/hvz_logo.png) no-repeat;
+    cursor: pointer;
 }
 
 #main_content
 {
+    width: 85%;
+    margin: 1ex auto;
+    padding: 2em 3%;
+    border: thin solid #333;
+    color: black;
+    background: #efe;
     font-size: 127%;
 }
 
 #footer
 {
+    width: 95%;
+    padding: 1ex 2.5%;
+    margin: 0 auto 1em auto;
     color: #f33;
     font-size: 80%;
     text-align: center;
@@ -35,6 +50,11 @@ html, body
 
 #user_bar
 {
+    margin: 0;
+    padding: 0 1ex 0.5ex 0;
+    border-bottom: thin solid #333;
+    color: black;
+    background: #ccc;
     text-align: right;
 }
 
@@ -68,6 +88,12 @@ html, body
 
 #trail
 {
+    width: 91%;
+    margin: 1ex auto;
+    padding: 0;
+    border: thin solid #333;
+    color: black;
+    background: #ccc;
 }
 
 #trail a:link, #trail a:visited
@@ -75,14 +101,14 @@ html, body
     padding-left: 1ex;
     padding-right: 16px;
     color: #f33;
-    background: transparent url(../images/trail-path.png) no-repeat right center;
+    background: transparent url(../images/trail_path.png) no-repeat right center;
     text-decoration: none;
 }
 
 #trail a:hover
 {
     color: #900;
-    background: #999 url(../images/trail-path.png) no-repeat right center;
+    background: #999 url(../images/trail_path.png) no-repeat right center;
 }
 
 #trail .current
@@ -115,7 +141,7 @@ html, body
 {
     border-bottom: none;
     color: #ccc;
-    background: black url(../images/gradient-red-bottom.png) repeat-x bottom;
+    background: black url(../images/gradient_red_bottom.png) repeat-x bottom;
 }
 
 /* sortable column */
@@ -139,12 +165,12 @@ html, body
 
 .custom_grid th .sort_asc
 {
-    background-image: url(../images/sort-asc.png);
+    background-image: url(../images/sort_asc.png);
 }
 
 .custom_grid th .sort_desc
 {
-    background-image: url(../images/sort-desc.png);
+    background-image: url(../images/sort_desc.png);
 }
 
 .custom_grid tr:first-child td
@@ -161,7 +187,10 @@ html, body
 
 #status_block
 {
-    background: #900 url(../images/gradient-black-bottom.png) repeat-x bottom;
+    width: 45%;
+    margin: 0 auto 0.5em;
+    padding: 1em 2.5% 16px;
+    background: #900 url(../images/gradient_black_bottom.png) repeat-x bottom;
     font-weight: bolder;
 }
 

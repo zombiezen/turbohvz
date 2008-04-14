@@ -22,13 +22,13 @@ if os.path.isdir('locales'):
                                           only_in_packages=False))
 
 setup(
-    name="TurboHvZ",
+    name="HvZ",
     version=version,
     description=description,
     author=author,
     author_email=email,
-    url=url,
-    download_url=download_url,
+    #url=url,
+    #download_url=download_url,
     license=license,
     install_requires=[
         "TurboGears >= 1.0.4.4",
@@ -54,9 +54,9 @@ setup(
     test_suite='nose.collector',
     entry_points={
         'console_scripts': [
-            'start-turbohvz = hvz.commands:start',
-            'turbohvz-create-perms = hvz.commands:create_permissions',
-            'turbohvz-create-admin = hvz.commands:create_admin',
+            'start-hvz = hvz.commands:start',
+            'hvz-create-perms = hvz.commands:create_permissions',
+            'hvz-create-admin = hvz.commands:create_admin',
         ],
     },
     data_files=[('config', ['default.cfg'])],

@@ -24,22 +24,6 @@ __all__ = ['log',
 
 log = logging.getLogger("hvz.controllers")
 
-def manual_login(user):
-    # Log in user
-    identity_object = identity.current_provider.authenticated_identity(user)
-    key = turbogears.visit.current().key
-    identity_object.visit_key = key
-    identity.set_current_identity(identity_object)
-    # Associate with session
-    visit_link = model.VisitIdentity.get(key)
-    if visit_link is None:
-        visit_link = model.VisitIdentity()
-        visit_link.visit_key = key
-        visit_link.user = user
-        session.save(visit_link)
-    else:
-        visit_link.user = user
-
 class NotFound(Exception):
     """Exception raised when a controller can't find a resource."""
 
@@ -366,56 +350,21 @@ class UserController(BaseController):
     
     @expose("hvz.templates.user.view")
     def view(self, user_id):
-        # Retrieve user
         if user_id.isdigit():
             requested_user = model.User.query.get(user_id)
         else:
             requested_user = model.User.by_user_name(user_id)
         if requested_user is None:
             raise NotFound()
-        # Get template variables
         grid = widgets.GameList()
         games = [entry.game for entry in requested_user.entries]
         return dict(user=requested_user,
                     games=games,
                     game_grid=grid,)
     
-    @expose("hvz.templates.user.edit")
-    def edit(self, user_id):
-        # Retrieve user
-        if user_id.isdigit():
-            requested_user = model.User.query.get(user_id)
-        else:
-            requested_user = model.User.by_user_name(user_id)
-        if requested_user is None:
-            raise NotFound()
-        # Check for permission
-        if not (identity.has_permission(u'edit-user') or
-                identity.current.user == requested_user):
-            raise identity.IdentityFailure("Current user cannot edit "
-                                           "others' accounts.")
-        # Compile template values
-        values = {}
-        for field in forms.edit_user_form.fields:
-            name = field.name
-            values[name] = getattr(requested_user, name)
-        return dict(user=requested_user,
-                    form=forms.edit_user_form,
-                    values=values,)
-    
     @expose("hvz.templates.user.register")
     def register(self):
         return dict(form=forms.register_form,)
-    
-    @expose("hvz.templates.user.thankyou")
-    def thankyou(self, user_id):
-        if user_id.isdigit():
-            requested_user = model.User.query.get(user_id)
-        else:
-            requested_user = model.User.by_user_name(user_id)
-        if requested_user is None:
-            raise NotFound()
-        return dict(user=requested_user)
     
     @expose()
     @error_handler(register)
@@ -443,29 +392,7 @@ class UserController(BaseController):
         # Handle interface
         msg = _("Your account has been created, %s.") % (unicode(new_user))
         turbogears.flash(msg)
-        manual_login(new_user)
-        raise turbogears.redirect(util.user_link(new_user, 'thankyou'))
-    
-    @expose()
-    @error_handler(edit)
-    @validate(forms.edit_user_form)
-    def action_edit(self, user_id, display_name, email_address, profile):
-        # Query user
-        requested_user = model.User.get(user_id)
-        if requested_user is None:
-            raise NotFound()
-        # Check for permission
-        if not (identity.has_permission(u'edit-user') or
-                identity.current.user == requested_user):
-            raise identity.IdentityFailure("Current user cannot edit "
-                                           "others' accounts.")
-        # Make necessary changes
-        requested_user.display_name = display_name
-        requested_user.email_address = email_address
-        requested_user.profile = profile
-        # Go to user's page
-        turbogears.flash(_("Your changes have been saved."))
-        raise turbogears.redirect(util.user_link(requested_user))
+        raise turbogears.redirect('/')
 
 class Root(turbogears.controllers.RootController, BaseController):
     def __init__(self):
@@ -473,8 +400,10 @@ class Root(turbogears.controllers.RootController, BaseController):
         self.user = UserController()
     
     @expose("hvz.templates.welcome")
+    # @identity.require(identity.in_group("admin"))
     def index(self):
-        return dict()
+        import time
+        return dict(now=time.ctime())
     
     @expose("hvz.templates.login")
     def login(self, forward_url=None, previous_url=None, *args, **kw):

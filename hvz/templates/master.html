@@ -10,9 +10,7 @@
         <link py:for="css in tg_css" py:replace="tg.display(css)" />
         <link py:for="js in tg_js_head" py:replace="tg.display(js)" />
         <link rel="shortcut icon" type="image/vnd.microsoft.icon" href="../static/images/favicon.ico" py:attrs="{'href': tg.url('/static/images/favicon.ico')}" />
-        <link rel="stylesheet" type="text/css" href="../static/css/style.css" py:attrs="{'href': tg.url('/static/css/style.css')}" />
-        <link rel="stylesheet" type="text/css" media="screen" href="../static/css/screen.css" py:attrs="{'href': tg.url('/static/css/screen.css')}" />
-        <link rel="stylesheet" type="text/css" media="print" href="../static/css/print.css" py:attrs="{'href': tg.url('/static/css/print.css')}" />
+        <link rel="stylesheet" type="text/css" media="screen" href="../static/css/style.css" py:attrs="{'href': tg.url('/static/css/style.css')}" />
         <title py:content="page_title()">[Title]</title>
         <meta py:replace="head_info()" />
     </head>

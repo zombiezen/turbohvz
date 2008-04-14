@@ -12,7 +12,6 @@
 </py:def>
 
 <py:match path="content">
-    <button py:if="'edit-user' in tg.identity.permissions or tg.identity.user == user" onclick="window.location=${tg.jsencode(tg.hvz.user_link(user, 'edit'))};">Edit</button>
     <h2 id="sect_games">Games</h2>
     <div py:replace="tg.display(game_grid, games)">[Games]</div>
     <py:if test="user.profile">

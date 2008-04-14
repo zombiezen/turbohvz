@@ -6,7 +6,7 @@
 
 """Release information about HvZ"""
 
-version = "0.1"
+version = "0.1.1"
 
 description = "A web application for the game Humans vs. Zombies"
 long_description = "Humans vs. Zombies, created by Brad Sappington and " \
@@ -21,6 +21,6 @@ email = "rlight2@gmail.com"
 copyright = "Copyright (C) 2008 Ross Light, Copyright (C) 2007 Chris Weed"
 
 # if it's open source, you might want to specify these
-url = "http://turbohvz.googlecode.com/"
-download_url = "http://code.google.com/p/turbohvz/downloads/list"
+# url = "http://yourcool.site/"
+# download_url = "http://yourcool.site/download"
 license = "GPLv3"
