@@ -1192,7 +1192,9 @@ class User(Entity):
         self.profile = None
     
     def __repr__(self):
-        return "<User %s (%s)>" % (self.user_name, self.display_name)
+        return "<User %i %s (%s)>" % (self.user_id,
+                                      self.user_name,
+                                      self.display_name)
     
     def __str__(self):
         return unicode(self).encode()
