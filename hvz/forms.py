@@ -112,7 +112,7 @@ class RegisterSchema(validators.Schema):
     email_address = validators.Email()
     password1 = validators.UnicodeString(min=8)
     password2 = validators.UnicodeString(min=8)
-    profile = validators.UnicodeString(max=1024, strip=True)
+    profile = validators.UnicodeString(max=4096, strip=True)
     chained_validators = [validators.FieldsMatch('password1', 'password2')]
 
 class GameSchema(validators.Schema):
@@ -172,7 +172,7 @@ class RegisterFields(WidgetsList):
     profile = widgets.TextArea(
         label=_("Profile"),
         help_text=_("[Optional] Create a short profile describing yourself.  "
-                    "Must be under 1024 characters in length."),
+                    "Must be under 4096 characters in length."),
         cols=64,
         rows=20,)
 
