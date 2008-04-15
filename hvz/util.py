@@ -35,6 +35,7 @@ __all__ = ['abslink',
            'insecureurl',
            'plain2html',
            'pluralize',
+           'login_link',
            'securelink',
            'secureurl',
            'str2bool',
@@ -154,6 +155,15 @@ def insecureurl(*args, **kw):
     """Create an insecure URL with the same signature as tg.url."""
     return insecurelink(turbogears.url(*args, **kw))
 
+def login_link():
+    """Returns the correct URL to the login page."""
+    if turbogears.config.get('hvz.secure_login', False):
+        # Secure login
+        return secureurl('/login')
+    else:
+        # Insecure login
+        return turbogears.url('/login')
+
 def plain2html(text):
     """
     Converts plain text into basic HTML markup.
@@ -236,6 +246,7 @@ def user_link(user, action='view', **params):
 
 def add_template_variables(vars):
     hvzNamespace = DictObj(game_link=game_link,
+                           login_link=login_link,
                            user_link=user_link,)
     lookup = dict(hvz=hvzNamespace,
                   abslink=abslink,

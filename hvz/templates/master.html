@@ -21,7 +21,7 @@
         <div py:if="tg.config('identity.on') and not defined('logging_in')" id="user_bar" py:choose="">
             <py:when test="tg.identity.anonymous">
                 <ul id="user_bar_links">
-                    <li py:choose=""><a py:when="tg.config('hvz.secure_login', False)" href="${tg.secureurl('/login')}">Login</a><a py:otherwise="" href="${tg.url('/login')}">Login</a></li>
+                    <li><a href="${tg.hvz.login_link()}">Login</a></li>
                 </ul>
             </py:when>
             <py:otherwise>

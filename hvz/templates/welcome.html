@@ -12,7 +12,7 @@
 <py:match path="content">
     <p>Humans vs. Zombies is a game of moderated tag commonly played on college campuses. A group of human players attempts to survive a "zombie outbreak" by not being tagged by a growing group of zombie players.</p>
     <ul>
-        <li py:if="tg.identity.anonymous"><a href="${tg.url('/login')}">Login</a></li>
+        <li py:if="tg.identity.anonymous"><a href="${tg.hvz.login_link()}">Login</a></li>
         <li><a href="${tg.url('/game/')}">Games</a></li>
         <li><a href="${tg.url('/user/')}">Users</a></li>
         <li><a href="${tg.url('/user/register')}">Register</a></li>
