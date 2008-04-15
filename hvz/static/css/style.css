@@ -171,6 +171,22 @@ html, body
     font-weight: bold;
 }
 
+.fieldhelp
+{
+    display: block;
+    margin-top: 1ex;
+    margin-bottom: 1ex;
+    color: #333;
+    font-size: smaller;
+    font-style: italic;
+}
+
+.tableform th
+{
+    vertical-align: top;
+    text-align: right;
+}
+
 /* GAME VIEW STYLES */
 
 #game_info
