@@ -40,7 +40,8 @@ from turbogears.database import session
 __author__ = 'Ross Light'
 __date__ = 'March 30, 2008'
 __docformat__ = 'reStructuredText'
-__all__ = ['as_local',
+__all__ = ['now',
+           'as_local',
            'as_utc',
            'to_local',
            'to_utc',
@@ -62,6 +63,15 @@ options_defaults['autosetup'] = False
 
 def _get_local_timezone():
     return pytz.timezone(config.get('hvz.timezone', 'UTC'))
+
+def now():
+    """
+    Creates a timezone-aware representation of now.
+    
+    :Returns: The UTC now
+    :ReturnType: datetime.datetime
+    """
+    return as_utc(datetime.utcnow())
 
 def as_local(date, tz=None):
     """
@@ -466,7 +476,7 @@ class PlayerEntry(Entity):
                 The date and time of the infection
         """
         if date is None:
-            date = as_utc(datetime.utcnow())
+            date = now()
         if self.is_human:
             # This is the first time that the player became an OZ, give 'em the
             # full attribute setup
@@ -493,8 +503,8 @@ class PlayerEntry(Entity):
         """
         # Default the date
         if date is None:
-            date = as_utc(datetime.utcnow())
-        now = as_utc(datetime.utcnow())
+            date = now()
+        report_time = now()
         # Check if game is in-progress
         if not self.game.in_progress:
             raise WrongStateError(game, game.state, game.STATE_STARTED,
@@ -505,7 +515,7 @@ class PlayerEntry(Entity):
             raise InvalidTimeError(self,
                                    _("You must report kills chronologically"))
         # Check if the demise is within the report window
-        if now - date > self.game.zombie_report_timedelta:
+        if report_time - date > self.game.zombie_report_timedelta:
             raise InvalidTimeError(self, _("Kill not within report window"))
         if not self.is_human:
             # Ensure the player didn't starve first
@@ -536,7 +546,7 @@ class PlayerEntry(Entity):
                 The date and time of the starvation
         """
         if date is None:
-            date = as_utc(datetime.utcnow())
+            date = now()
         if self.is_undead:
             self.starve_date = date
             self.state = self.STATE_DEAD
@@ -544,7 +554,7 @@ class PlayerEntry(Entity):
             raise WrongStateError(self, self.state, self.STATE_ZOMBIE,
                                   _("Humans can't starve"))
     
-    def calculate_time_since_last_feeding(self, now=None):
+    def calculate_time_since_last_feeding(self, time=None):
         """
         Determine how much game time has elapsed since the last feeding.
         
@@ -553,24 +563,24 @@ class PlayerEntry(Entity):
         calculation.
         
         :Parameters:
-            now : datetime.datetime
+            time : datetime.datetime
                 The date we're comparing to.  This may not actually be *now*.
                 For example, this may be the time of a reported kill.
         :Returns: The amount of game time elapsed
         :ReturnType: timedelta
         """
         # Default date
-        if now is None:
-            now = as_utc(datetime.utcnow())
+        if time is None:
+            time = now()
         # Check which date to compare
         if self.feed_date is None:
             feed_date = self.death_date
         else:
             feed_date = self.feed_date
         # Return result
-        return self.game.calculate_timedelta(feed_date, now)
+        return self.game.calculate_timedelta(feed_date, time)
     
-    def calculate_time_before_starving(self, now=None):
+    def calculate_time_before_starving(self, time=None):
         """
         Calculates how much time is left before the player starves.
         
@@ -579,32 +589,34 @@ class PlayerEntry(Entity):
         calculation.
         
         :Parameters:
-            now : datetime.datetime
+            time : datetime.datetime
                 The date we're comparing to.  This may not actually be *now*.
                 For example, this may be the time of a reported kill.
         :Returns: The amount of game time until starvation
         :ReturnType: timedelta
         """
         return (self.game.zombie_starve_timedelta -
-                self.calculate_time_since_last_feeding(now))
+                self.calculate_time_since_last_feeding(time))
     
-    def can_report_kill(self, now=None):
+    def can_report_kill(self, time=None):
         """
         Checks whether the player is able to report a kill.
         
         :Parameters:
-            now : datetime.datetime
+            time : datetime.datetime
                 The time at which the act of reporting the kill is happening.
         :Returns: Whether the report is valid
         :ReturnType: bool
         """
+        if time is None:
+            time = now()
         if self.is_human:
             # Humans can't (read as: shouldn't) kill people
             return False
         else:
             # Regardless of whether the game caught it yet, let's see how much
             # game time would have elapsed.
-            duration = self.calculate_time_since_last_feeding(now)
+            duration = self.calculate_time_since_last_feeding(time)
             max_duration = (self.game.zombie_starve_timedelta +
                             self.game.zombie_report_timedelta)
             return bool(duration <= max_duration)
@@ -763,7 +775,7 @@ class Game(Entity):
     
     def __init__(self, name):
         self.display_name = name
-        self.created = datetime.utcnow()
+        self.created = now()
         self.started = None
         self.ended = None
         self.state = self.STATE_CREATED
@@ -791,11 +803,11 @@ class Game(Entity):
         if not self.in_progress:
             return
         # Initialize variables
-        now = as_utc(datetime.utcnow())
+        update_time = now()
         # Bring out yer dead!
         zombies = (entry for entry in self.entries if entry.is_undead)
         for zombie in zombies:
-            delta = zombie.calculate_time_since_last_feeding(now)
+            delta = zombie.calculate_time_since_last_feeding(update_time)
             if delta >= self.zombie_starve_timedelta:
                 zombie.starve()
     
@@ -845,10 +857,10 @@ class Game(Entity):
         self.state += 1
         # Do state hooks
         if self.state == self.STATE_STARTED:
-            self.started = as_utc(datetime.utcnow())
+            self.started = now()
             self.original_zombie.make_original_zombie() # Refresh kill date
         elif self.state == self.STATE_ENDED:
-            self.ended = as_utc(datetime.utcnow())
+            self.ended = now()
     
     ## PROPERTIES ##
     
@@ -1038,7 +1050,7 @@ class Group(Entity):
             display_name = name
         self.group_name = unicode(name)
         self.display_name = unicode(display_name)
-        self.created = datetime.utcnow()
+        self.created = now()
     
     def __repr__(self):
         return "<Group %s (%s)>" % (self.group_name, self.display_name)
@@ -1203,7 +1215,7 @@ class User(Entity):
         self.email_address = unicode(email) if email is not None else None
         self.display_name = unicode(display_name)
         self.password = password
-        self.created = datetime.utcnow()
+        self.created = now()
         self.profile = None
     
     def __repr__(self):
