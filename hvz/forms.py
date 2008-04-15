@@ -160,7 +160,8 @@ class KillFields(WidgetsList):
                     "card)"),
         attrs=dict(size=64),)
     kill_date = widgets.CalendarDateTimePicker(
-        label=_("Time of Demise"),)
+        label=_("Time of Demise"),
+        help_text=_("The time at which the victim was tagged"),)
 
 class JoinFields(WidgetsList):
     game_id = widgets.HiddenField()
