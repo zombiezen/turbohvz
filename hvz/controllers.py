@@ -231,7 +231,7 @@ class GameController(BaseController):
         if btnNext:
             next_state = requested_game.state + 1
             if next_state == model.Game.STATE_CHOOSE_ZOMBIE:
-                link = util.game_link(game_id, 'choose_oz')
+                link = util.game_link(game_id, 'choose_oz', redirect=True)
                 raise turbogears.redirect(link)
             requested_game.next_state()
         elif btnPrev:
@@ -332,7 +332,7 @@ class GameController(BaseController):
         session.delete(requested_game)
         session.flush()
         turbogears.flash(_("Game deleted"))
-        raise turbogears.redirect('/game/')
+        raise turbogears.redirect('/game/index')
     
     @expose()
     @identity.require(identity.has_permission('stage-game'))
@@ -459,7 +459,8 @@ class UserController(BaseController):
         msg = _("Your account has been created, %s.") % (unicode(new_user))
         turbogears.flash(msg)
         manual_login(new_user)
-        raise turbogears.redirect(util.user_link(new_user, 'thankyou'))
+        link = util.user_link(new_user, 'thankyou', redirect=True)
+        raise turbogears.redirect(link)
     
     @expose()
     @error_handler(edit)
@@ -480,7 +481,7 @@ class UserController(BaseController):
         requested_user.profile = profile
         # Go to user's page
         turbogears.flash(_("Your changes have been saved."))
-        raise turbogears.redirect(util.user_link(requested_user))
+        raise turbogears.redirect(util.user_link(requested_user, redirect=True))
 
 class Root(turbogears.controllers.RootController, BaseController):
     def __init__(self):
@@ -496,7 +497,8 @@ class Root(turbogears.controllers.RootController, BaseController):
         if not identity.current.anonymous and \
            identity.was_login_attempted() and \
            not identity.get_identity_errors():
-            raise turbogears.redirect(url(forward_url or previous_url or '/', kw))
+            path = (forward_url or previous_url or '/')
+            raise turbogears.redirect(path, kw)
         forward_url = None
         previous_url = cherrypy.request.path
         if identity.was_login_attempted():
@@ -517,4 +519,4 @@ class Root(turbogears.controllers.RootController, BaseController):
     @expose()
     def logout(self):
         identity.current.logout()
-        raise turbogears.redirect("/")
+        raise turbogears.redirect('/')
