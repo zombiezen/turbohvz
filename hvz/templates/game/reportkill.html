@@ -13,9 +13,9 @@
 
 <py:match path="content">
     <py:choose>
-        <py:when test="current_entry.is_undead">
+        <py:when test="current_entry.can_report_kill()">
             <p>Please enter in the required information below.  <strong>Kills must be reported in chronological order, or they will not be counted.</strong></p>
-            <div py:replace="tg.display(form, dict(game_id=game.game_id))">[kill form]</div>
+            <div py:replace="tg.display(form, dict(game_id=game.game_id, kill_date=default_time))">[kill form]</div>
         </py:when>
         <py:otherwise>
             <p>You are <em py:content="current_entry.affiliation">[affiliate]</em>.  Only zombies can kill people!  You can't just go around killing other people!</p>

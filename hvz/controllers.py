@@ -147,9 +147,11 @@ class GameController(BaseController):
         if requested_game is None:
             raise NotFound()
         entry = self._get_current_entry(requested_game)
+        default_time = model.to_local(model.now())
         return dict(game=requested_game,
                     form=forms.kill_form,
-                    current_entry=entry,)
+                    current_entry=entry,
+                    default_time=default_time,)
     
     @expose("hvz.templates.game.join")
     @identity.require(identity.has_permission('join-game'))
