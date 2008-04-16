@@ -32,6 +32,7 @@ from hvz import model
 __author__ = "Ross Light"
 __date__ = "April 8, 2008"
 __all__ = ['UserNameValidator',
+           'ZoneListConverter',
            'DateListValidator',
            'KillSchema',
            'StageSchema',
@@ -73,13 +74,26 @@ class UserNameValidator(validators.UnicodeString):
         else:
             super(UserNameValidator, self).validate_python(value, state)
 
+class ZoneListConverter(validators.FancyValidator):
+    def _to_python(self, value, state):
+        result = []
+        for line in value.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            result.append(line)
+        return result
+    
+    def _from_python(self, value, state):
+        # We convert all to unicode in case we get lazytext defaults
+        return '\n'.join(unicode(zone) for zone in value)
+
 class DateListValidator(validators.FancyValidator):
     date_regex = re.compile(r'^(\d{4})-(\d{2})-(\d{2})$')
     messages = {'invalid_date': "Date must be YYYY-MM-DD",}
     
     def _to_python(self, value, state):
         from datetime import date
-        value = value.strip()
         result = []
         for line in value.splitlines():
             line = line.strip()
@@ -149,6 +163,9 @@ class GameSchema(validators.Schema):
                                          if_empty=[],
                                          if_missing=[],)
     ignore_dates = DateListValidator()
+    safe_zones = validators.All(ZoneListConverter(),
+                                validators.UnicodeString(max=2048))
+    rules_notes = validators.UnicodeString(max=4096)
 
 ## FIELDS ##
 
@@ -256,6 +273,15 @@ class GameFields(WidgetsList):
                     "time.  Each date must be put on a separate line in ISO "
                     "YYYY-MM-DD format."),
         validator=DateListValidator()) # This ensures from_python gets called
+    safe_zones = widgets.TextArea(
+        label=_("Safe Zones"),
+        help_text=_("The safe zones to include in the rules.  Each zone must "
+                    "be put on a separate line."),
+        default=model.Game.DEFAULT_SAFE_ZONES,
+        validator=ZoneListConverter())
+    rules_notes = widgets.TextArea(
+        label=_("Rules Notes"),
+        help_text=_("Any additional notes to add to the end of the rules."))
 
 ## FORMS ##
 

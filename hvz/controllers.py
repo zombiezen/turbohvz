@@ -33,6 +33,9 @@ from hvz import forms, model, util, widgets #, json
 __author__ = 'Ross Light'
 __date__ = 'March 30, 2008'
 __all__ = ['log',
+           'manual_login',
+           'NotFound',
+           'BaseController',
            'GameController',
            'UserController',
            'Root',]
@@ -304,7 +307,9 @@ class GameController(BaseController):
                       zombie_starve_time,
                       zombie_report_time,
                       ignore_weekdays,
-                      ignore_dates,):
+                      ignore_dates,
+                      safe_zones,
+                      rules_notes,):
         assert not game_id
         new_game = model.Game(display_name)
         new_game.gid_length = gid_length
@@ -312,6 +317,8 @@ class GameController(BaseController):
         new_game.zombie_report_time = zombie_report_time
         new_game.ignore_weekdays = ignore_weekdays
         new_game.ignore_dates = ignore_dates
+        new_game.safe_zones = safe_zones
+        new_game.rules_notes = rules_notes
         session.flush()
         turbogears.flash(_("Game created"))
         raise turbogears.redirect(util.game_link(new_game, redirect=True))
@@ -325,7 +332,9 @@ class GameController(BaseController):
                     zombie_starve_time,
                     zombie_report_time,
                     ignore_weekdays,
-                    ignore_dates,):
+                    ignore_dates,
+                    safe_zones,
+                    rules_notes,):
         requested_game = model.Game.get(game_id)
         if requested_game is None:
             raise NotFound()
@@ -335,6 +344,8 @@ class GameController(BaseController):
         requested_game.zombie_report_time = zombie_report_time
         requested_game.ignore_weekdays = ignore_weekdays
         requested_game.ignore_dates = ignore_dates
+        requested_game.safe_zones = safe_zones
+        requested_game.rules_notes = rules_notes
         session.flush()
         turbogears.flash(_("Game updated"))
         raise turbogears.redirect(util.game_link(requested_game,
@@ -537,4 +548,18 @@ class Root(turbogears.controllers.RootController, BaseController):
     @expose()
     def logout(self):
         identity.current.logout()
+        raise turbogears.redirect('/')
+    
+    @expose("hvz.templates.sudo")
+    @identity.require(identity.has_permission('sudo-login'))
+    def sudo(self):
+        return dict()
+    
+    @expose()
+    @identity.require(identity.has_permission('sudo-login'))
+    def action_sudo(self, user_name):
+        requested_user = model.User.by_user_name(user_name)
+        if requested_user is None:
+            raise NotFound()
+        manual_login(requested_user)
         raise turbogears.redirect('/')

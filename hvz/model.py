@@ -690,6 +690,8 @@ class Game(Entity):
             The default number of hours that a zombie has to report a kill
         DEFAULT_GID_LENGTH : int
             The default length of a player GID (see `PlayerEntry.player_gid`)
+        DEFAULT_SAFE_ZONES : list of unicode
+            The default safe zones
     :IVariables:
         created : datetime.datetime
             The time at which the game was created
@@ -735,6 +737,10 @@ class Game(Entity):
             rely on `zombie_report_timedelta` (data abstraction and all).
         zombie_report_timedelta : datetime.timedelta
             The duration a zombie has to report a kill
+        safe_zones : list of unicode
+            Safe zones
+        rules_notes : unicode
+            Extra notes for the rules
     """
     using_options(tablename='game')
     
@@ -755,6 +761,12 @@ class Game(Entity):
     DEFAULT_ZOMBIE_STARVE_TIME = 48
     DEFAULT_ZOMBIE_REPORT_TIME = 3
     DEFAULT_GID_LENGTH = 16
+    DEFAULT_SAFE_ZONES = [_("Bathrooms"),
+                          _("Academic buildings"),
+                          _("Library"),
+                          _("Student center"),
+                          _("Health center"),
+                          _("Dining halls"),]
     
     game_id = Field(Integer, primary_key=True)
     display_name = Field(Unicode(255))
@@ -770,6 +782,9 @@ class Game(Entity):
     zombie_starve_time = Field(Integer)
     zombie_report_time = Field(Integer)
     gid_length = Field(Integer)
+    _safe_zones = Field(Unicode(2048), 
+                        colname='safe_zones', synonym='safe_zones')
+    rules_notes = Field(Unicode(4096))
     
     ## INITIALIZATION/RETRIEVAL ##
     
@@ -784,6 +799,8 @@ class Game(Entity):
         self.zombie_starve_time = self.DEFAULT_ZOMBIE_STARVE_TIME
         self.zombie_report_time = self.DEFAULT_ZOMBIE_REPORT_TIME
         self.gid_length = self.DEFAULT_GID_LENGTH
+        self.safe_zones = [unicode(zone) for zone in self.DEFAULT_SAFE_ZONES]
+        self.rules_notes = None
     
     ## STRING REPRESENTATION ##
     
@@ -957,12 +974,28 @@ class Game(Entity):
                 raise ValueError("ignore_weekdays only accepts [1,7] ints")
             self._ignore_weekdays = ';'.join(str(i) for i in value)
     
+    def _get_safe_zones(self):
+        value = self._safe_zones
+        if value is None:
+            return []
+        else:
+            lines = value.splitlines()
+            return [line.strip() for line in lines]
+    
+    def _set_safe_zones(self, value):
+        if value is None:
+            self._safe_zones = None
+        else:
+            self._safe_zones = '\n'.join(unicode(zone).strip()
+                                         for zone in value)
+    
     created = _date_prop('_created')
     started = _date_prop('_started')
     ended = _date_prop('_ended')
     original_zombie = property(_get_oz, _set_oz)
     ignore_dates = property(_get_ignore_dates, _set_ignore_dates)
     ignore_weekdays = property(_get_ignore_weekdays, _set_ignore_weekdays)
+    safe_zones = property(_get_safe_zones, _set_safe_zones)
 
 ### IDENTITY ###
 

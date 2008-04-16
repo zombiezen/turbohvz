@@ -35,12 +35,7 @@
     </ul>
     <h2 id="sect_safe_zones">Safe Zones</h2>
     <ul>
-        <li>Bathrooms</li>
-        <li>Academic buildings</li>
-        <li>Library</li>
-        <li>Student center</li>
-        <li>Health center</li>
-        <li>Dining halls</li>
+        <li py:for="zone in game.safe_zones" py:content="zone">[zone]</li>
     </ul>
     <h2 id="sect_human_rules">Human Rules</h2>
     <p><span class="rule_name">ID Number</span> Humans must keep one index card with their unique identification number (player GID) on them at all times</p>
@@ -75,6 +70,10 @@
         <li>Similarly, students at required academic events are safe for the duration of the event (even if this event is in a free-play zone), but they are not safe on the way to or from the event.</li>
         <li>Humans can't stun zombies from inside of a safe-zone.</li>
     </ul>
+    <py:if test="game.rules_notes">
+        <h2 id="sect_notes">Notes</h2>
+        <div py:replace="HTML(tg.plain2html(game.rules_notes))">[notes]</div>
+    </py:if>
     
     <div id="sect_license">
         <p>
