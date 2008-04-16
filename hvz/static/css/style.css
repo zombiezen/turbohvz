@@ -157,6 +157,32 @@ html, body
     background: #ccc;
 }
 
+.info_table
+{
+    border: none;
+    margin-bottom: 1em;
+}
+
+.info_table th, .info_table td
+{
+    color: black;
+    background: none;
+    border: none;
+}
+
+.info_table th
+{
+    font-weight: bold;
+    text-align: right;
+    vertical-align: top;
+}
+
+.info_table td ul, .info_table td ol
+{
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
 /* TURBOGEARS ELEMENTS */
 
 #status_block
@@ -189,37 +215,20 @@ html, body
 
 /* GAME VIEW STYLES */
 
-#game_info
-{
-    border: none;
-}
-
-#game_info th, .game_info td
-{
-    color: black;
-    background: none;
-    border: none;
-}
-
-#game_info th
-{
-    font-weight: bold;
-    text-align: right;
-    vertical-align: top;
-}
-
-#game_info td ul, #game_info td ol
-{
-    margin-top: 0;
-    margin-bottom: 0;
-}
-
 .check
 {
     width: 1em;
     height: 1em;
     max-width: 64px;
     max-height: 64px;
+}
+
+/* USER VIEW STYLES */
+
+.no_profile
+{
+    color: #333;
+    font-style: italic;
 }
 
 /* MISC FORMATTING */

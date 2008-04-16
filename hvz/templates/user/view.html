@@ -12,13 +12,28 @@
 </py:def>
 
 <py:match path="content">
-    <button py:if="'edit-user' in tg.identity.permissions or tg.identity.user == user" id="edit_button">Edit</button>
+    <table id="user_info" class="info_table">
+        <tbody>
+            <tr>
+                <th>Joined:</th>
+                <td><span class="date" py:content="tg.display_date(user.created)">[date]</span></td>
+            </tr>
+            <tr py:if="'view-user-email' in tg.identity.permissions">
+                <th>Email:</th>
+                <td><a href="mailto:${user.email_address}" py:content="user.email_address">[email]</a></td>
+            </tr>
+        </tbody>
+    </table>
+    <div py:if="'edit-user' in tg.identity.permissions or tg.identity.user == user">
+        <button id="edit_button">Edit</button>
+    </div>
+    <h2 id="sect_profile">Profile</h2>
+    <py:choose>
+        <div py:when="user.profile" py:replace="HTML(tg.plain2html(user.profile))">[profile]</div>
+        <p py:otherwise="" class="no_profile">This user has not written a profile.</p>
+    </py:choose>
     <h2 id="sect_games">Games</h2>
     <div py:replace="tg.display(game_grid, games)">[Games]</div>
-    <py:if test="user.profile">
-        <h2 id="sect_profile">Profile</h2>
-        <div py:replace="HTML(tg.plain2html(user.profile))">[profile]</div>
-    </py:if>
     <h2 id="sect_statistics">Statistics</h2>
     <p style="font-style: italic">Coming Soon!</p>
     <script type="text/javascript">

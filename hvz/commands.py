@@ -128,6 +128,8 @@ def create_permissions(args=None):
                                          u"View Original Zombie"),
              'edit-user': model.Permission(u"edit-user",
                                            u"Edit Any User"),
+             'view-user-email': model.Permission(u"view-user-email",
+                                                 u"View users' email addresses"),
              'create-game': model.Permission(u"create-game", u"Create Games"),
              'delete-game': model.Permission(u"delete-game", u"Delete Games"),
              'edit-game': model.Permission(u"edit-game", u"Edit Games"),
