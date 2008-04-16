@@ -12,7 +12,15 @@
 <py:match path="content">
     <span py:replace="tg.display(pager)">[pager]</span>
     <span py:replace="tg.display(grid, users)"></span>
-    <button onclick="window.location=${tg.jsencode(tg.url('/user/register'))};">Register</button>
+    <button id="register_button">Register</button>
+    <script type="text/javascript">
+        // EVENTS //
+        safe_connect('register_button', 'onclick',
+            function()
+            {
+                redirect(${tg.jsencode(tg.url('/user/register'))});
+            });
+    </script>
 </py:match>
 
 <xi:include href="../master.html" />

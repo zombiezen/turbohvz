@@ -16,7 +16,16 @@
         <p class="error_name" py:content="type(error).__name__">[error name]</p>
         <p py:content="error">[error]</p>
     </div>
-    <a href="#" onclick="history.back(); return false;">Back</a>
+    <a id="back_link" href="#">Back</a>
+    <script type="text/javascript">
+        // EVENTS //
+        safe_connect('back_link', 'onclick',
+            function(event)
+            {
+                history.back();
+                event.stop();
+            });
+    </script>
 </py:match>
 
 <xi:include href="master.html" />

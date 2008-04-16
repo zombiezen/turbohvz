@@ -12,7 +12,16 @@
 
 <py:match path="content">
     <p>The URI you were looking for (<code py:content="requested_uri">[uri]</code>) was not found on this server.  Please check your spelling, or contact the provider of the link.</p>
-    <a href="#" onclick="history.back(); return false;">Back</a>
+    <a id="back_link" href="#">Back</a>
+    <script type="text/javascript">
+        // EVENTS //
+        safe_connect('back_link', 'onclick',
+            function(event)
+            {
+                history.back();
+                event.stop();
+            });
+    </script>
 </py:match>
 
 <xi:include href="master.html" />

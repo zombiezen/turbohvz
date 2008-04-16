@@ -12,7 +12,7 @@
 </py:def>
 
 <py:match path="content">
-    <button py:if="'edit-user' in tg.identity.permissions or tg.identity.user == user" onclick="window.location=${tg.jsencode(tg.hvz.user_link(user, 'edit'))};">Edit</button>
+    <button py:if="'edit-user' in tg.identity.permissions or tg.identity.user == user" id="edit_button">Edit</button>
     <h2 id="sect_games">Games</h2>
     <div py:replace="tg.display(game_grid, games)">[Games]</div>
     <py:if test="user.profile">
@@ -21,6 +21,14 @@
     </py:if>
     <h2 id="sect_statistics">Statistics</h2>
     <p style="font-style: italic">Coming Soon!</p>
+    <script type="text/javascript">
+        // EVENTS //
+        safe_connect('edit_button', 'onclick',
+            function()
+            {
+                redirect(${tg.jsencode(tg.hvz.user_link(user, 'edit'))});
+            });
+    </script>
 </py:match>
 
 <xi:include href="../master.html" />

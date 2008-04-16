@@ -12,7 +12,15 @@
 <py:match path="content">
     <div py:replace="tg.display(pager)"></div>
     <span py:replace="tg.display(grid, games)"></span>
-    <button py:if="'create-game' in tg.identity.permissions" onclick="window.location=${tg.jsencode(tg.url('/game/create'))};">Create</button>
+    <button py:if="'create-game' in tg.identity.permissions" id="create_button">Create</button>
+    <script type="text/javascript">
+        // EVENTS //
+        safe_connect('create_button', 'onclick',
+            function()
+            {
+                redirect(${tg.jsencode(tg.url('/game/create'))});
+            });
+    </script>
 </py:match>
 
 <xi:include href="../master.html" />

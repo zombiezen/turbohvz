@@ -8,27 +8,6 @@
 <py:def function="page_title">Game <span py:replace="game.game_id">#</span> - <span py:replace="game.display_name">[name]</span></py:def>
 <py:def function="head_info">
     <script type="text/javascript">
-        function unjoin(evt)
-        {
-            var unjoin_url = ${tg.jsencode(tg.hvz.game_link(game, 'action.unjoin'))};
-            var msg = ${tg.jsencode(_("Are you sure you want to remove yourself from the game?"))};
-            confirm_action(msg, unjoin_url);
-        }
-        function delete_game(evt)
-        {
-            var delete_url = ${tg.jsencode(tg.hvz.game_link(game, 'action.delete'))};
-            var msg = ${tg.jsencode(_("Are you sure you want to delete the game?"))};
-            confirm_action(msg, delete_url);
-        }
-
-        function confirm_action(msg, url)
-        {
-            if (confirm(msg))
-            {
-                window.location = url;
-            }
-        }
-        
         function update_server_clock()
         {
             var tzSign = ${tg.jsencode(tz_sign)};
@@ -106,8 +85,8 @@
         </tbody>
     </table>
     <div py:if="'edit-game' in tg.identity.permissions or 'delete-game' in tg.identity.permissions">
-        <button py:if="'edit-game' in tg.identity.permissions" onclick="window.location=${tg.jsencode(tg.hvz.game_link(game, 'edit'))}">Edit</button>
-        <button py:if="'delete-game' in tg.identity.permissions" onclick="delete_game(event);">Delete</button>
+        <button py:if="'edit-game' in tg.identity.permissions" id="edit_button">Edit</button>
+        <button py:if="'delete-game' in tg.identity.permissions" id="delete_button">Delete</button>
     </div>
     <p><a href="${tg.hvz.game_link(game, 'rules')}">Rules</a></p>
     <py:if test="current_entry is not None">
@@ -125,14 +104,14 @@
             <li py:if="current_entry.is_undead">You have <span py:replace="tg.display_date(current_entry.calculate_time_before_starving())">[time]</span> left before starving</li>
         </ul>
         <div py:if="current_entry.can_report_kill()">
-            <button onclick="window.location=${tg.jsencode(tg.hvz.game_link(game, 'reportkill'))};">Report Kill</button>
+            <button id="report_kill_button">Report Kill</button>
         </div>
     </py:if>
     <h2 id="sect_entry_list">Player Roster</h2>
     <span py:replace="tg.display(grid, entries)">[players]</span>
     <div py:if="not tg.identity.anonymous">
-        <button py:if="game.registration_open and current_entry is not None" onclick="unjoin(event);">Unjoin</button>
-        <button py:if="'join-game' in tg.identity.permissions and game.registration_open and current_entry is None" onclick="window.location=${tg.jsencode(tg.hvz.game_link(game, 'join'))};">Join</button>
+        <button py:if="game.registration_open and current_entry is not None" id="unjoin_button">Unjoin</button>
+        <button py:if="'join-game' in tg.identity.permissions and game.registration_open and current_entry is None" id="join_button">Join</button>
     </div>
     <h2 id="sect_stage">Stage</h2>
     <table id="stage_table">
@@ -148,8 +127,38 @@
             <input py:if="not game.is_last_state" type="submit" name="btnNext" value="Next Stage" />
         </p>
     </form>
-    
     <script type="text/javascript">
+        // EVENTS //
+        safe_connect('edit_button', 'onclick',
+            function()
+            {
+                redirect(${tg.jsencode(tg.hvz.game_link(game, 'edit'))});
+            });
+        safe_connect('delete_button', 'onclick',
+            function()
+            {
+                var delete_url = ${tg.jsencode(tg.hvz.game_link(game, 'action.delete'))};
+                var msg = ${tg.jsencode(_("Are you sure you want to delete the game?"))};
+                confirm_action(msg, delete_url);
+            });
+        safe_connect('report_kill_button', 'onclick',
+            function()
+            {
+                redirect(${tg.jsencode(tg.hvz.game_link(game, 'reportkill'))});
+            });
+        safe_connect('unjoin_button', 'onclick',
+            function()
+            {
+                var unjoin_url = ${tg.jsencode(tg.hvz.game_link(game, 'action.unjoin'))};
+                var msg = ${tg.jsencode(_("Are you sure you want to remove yourself from the game?"))};
+                confirm_action(msg, unjoin_url);
+            });
+        safe_connect('join_button', 'onclick',
+            function()
+            {
+                redirect(${tg.jsencode(tg.hvz.game_link(game, 'join'))});
+            });
+        // CLOCK //
         callLater(1, update_server_clock);
     </script>
 </py:match>
