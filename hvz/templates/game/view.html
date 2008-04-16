@@ -28,6 +28,25 @@
                 window.location = url;
             }
         }
+        
+        function update_server_clock()
+        {
+            var tzSign = ${tg.jsencode(tz_sign)};
+            var tzHours = ${tg.jsencode(tz_hours)};
+            var tzMinutes = ${tg.jsencode(tz_minutes)};
+            
+            var timeElem = $('current_server_time');
+            var currentTime = isoTimestamp(scrapeText(timeElem));
+            var currentTimeString = null;
+            // Increment seconds
+            currentTime.setUTCSeconds(currentTime.getUTCSeconds() + 1);
+            // Format string
+            currentTimeString = toISODate(currentTime) + "T" + toISOTime(currentTime) + tzSign + ((tzHours &lt; 10) ? "0" + tzHours : tzHours) + ":" + ((tzMinutes &lt; 10) ? "0" + tzMinutes : tzMinutes);
+            // Change the element
+            replaceChildNodes(timeElem, currentTimeString);
+            // Thank you, call again! :)
+            callLater(1, update_server_clock);
+        }
     </script>
 </py:def>
 <py:def function="page_parents">
@@ -38,6 +57,10 @@
     <a id="sect_game_info"></a>
     <table id="game_info">
         <tbody>
+            <tr>
+                <th>Current time:</th>
+                <td><span id="current_server_time" class="date" py:content="tg.display_date(current_time)">[time]</span></td>
+            </tr>
             <tr>
                 <th>Created:</th>
                 <td><span class="date" py:content="tg.display_date(game.created)">[date]</span></td>
@@ -125,6 +148,10 @@
             <input py:if="not game.is_last_state" type="submit" name="btnNext" value="Next Stage" />
         </p>
     </form>
+    
+    <script type="text/javascript">
+        callLater(1, update_server_clock);
+    </script>
 </py:match>
 
 <xi:include href="../master.html" />

@@ -119,10 +119,26 @@ class GameController(BaseController):
                                  show_oz=(oz or is_oz or can_view_oz),)
         entries = sorted(requested_game.entries,
                          key=(lambda e: e.player.display_name))
+        # Calculate server time and timezone
+        current_time = model.now()
+        offset = model.to_local(current_time).utcoffset()
+        days, seconds = offset.days, offset.seconds
+        if days < 0:
+            tz_sign = "-"
+        else:
+            tz_sign = "+"
+        total_offset = abs(days * (60 * 60 * 24) + seconds)
+        tz_hours, extra_offset = divmod(total_offset, 60 * 60)
+        tz_minutes = extra_offset // 60
+        # Return template variables
         return dict(game=requested_game,
                     grid=grid,
                     current_entry=entry,
-                    entries=entries,)
+                    entries=entries,
+                    current_time=model.now(),
+                    tz_sign=tz_sign,
+                    tz_hours=tz_hours,
+                    tz_minutes=tz_minutes,)
     
     @expose("hvz.templates.game.edit")
     @identity.require(identity.has_permission('edit-game'))
