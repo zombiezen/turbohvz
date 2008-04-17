@@ -14,10 +14,10 @@ html, body
 
 #header
 {
-    width: 728px;
-    height: 90px;
+    width: 733px;
+    height: 189px;
     margin: 2em auto;
-    background: transparent url(../images/hvz-logo.png) no-repeat;
+    background: transparent url(../images/hvz-logo.jpg) no-repeat;
 }
 
 #main_content
