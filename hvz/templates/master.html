@@ -38,11 +38,11 @@
             </py:otherwise>
         </div>
         <div id="header">&nbsp;</div>
-        <div id="status_block" class="flash" py:if="value_of('tg_flash', None)" py:content="tg_flash">Flash</div>
         <div id="trail">
             <a href="#" class="parent" py:replace="page_parents()">Parents</a>
             <span class="current" py:content="page_title()">Page</span>
         </div>
+        <div id="status_block" class="flash" py:if="value_of('tg_flash', None)" py:content="tg_flash">Flash</div>
         <div id="main_content">
             <h1 id="title" py:content="page_title()">[Title]</h1>
             <!-- Begin content -->
