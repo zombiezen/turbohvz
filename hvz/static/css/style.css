@@ -16,6 +16,7 @@ html, body
 {
     width: 728px;
     height: 90px;
+    margin: 2em auto;
     background: transparent url(../images/hvz-logo.png) no-repeat;
 }
 
