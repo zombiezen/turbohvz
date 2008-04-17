@@ -103,6 +103,7 @@ html, body
 {
     margin-bottom: 1em;
     border-collapse: collapse;
+    font-size: 75%;
 }
 
 .custom_grid .no_data

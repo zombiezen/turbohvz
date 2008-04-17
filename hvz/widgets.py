@@ -131,7 +131,8 @@ class GameList(CustomDataGrid):
 class EntryList(CustomDataGrid):
     name = "player_list"
     grid_class = "custom_grid player_list"
-    default_columns = ['name', 'affiliation', 'death_date', 'kills']
+    default_columns = ['name', 'affiliation', 'death_date',
+                       'feed_date', 'kills']
     exclude_sorting = ['affiliation',
                        'death_date',
                        'feed_date',
