@@ -144,10 +144,6 @@ def create_permissions(args=None):
     for perm in perms.itervalues():
         admin.add_permission(perm)
     # Save objects
-    session.save(player)
-    session.save(admin)
-    for perm in perms.itervalues():
-        session.save(perm)
     session.flush()
 
 def create_admin(args=None):
@@ -188,6 +184,5 @@ def create_admin(args=None):
     new_admin = model.User(user_name, display_name, email_address, password1)
     admin.add_user(new_admin)
     # Flush to database
-    session.save(new_admin)
     session.flush()
     print "Administrator '%s' created" % new_admin.user_name.encode('utf-8')
