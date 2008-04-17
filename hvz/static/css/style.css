@@ -16,7 +16,7 @@ html, body
 {
     width: 733px;
     height: 189px;
-    margin: 2em auto;
+    margin: 2em auto 0;
     background: transparent url(../images/hvz-logo.jpg) no-repeat;
 }
 
@@ -69,6 +69,11 @@ html, body
 
 #trail
 {
+    margin: 0 auto 1ex;
+    padding: 0;
+    border: thin solid #333;
+    color: black;
+    background: #ccc;
 }
 
 #trail a:link, #trail a:visited

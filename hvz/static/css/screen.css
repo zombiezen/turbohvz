@@ -60,9 +60,4 @@ html, body
 #trail
 {
     width: 91%;
-    margin: 1ex auto;
-    padding: 0;
-    border: thin solid #333;
-    color: black;
-    background: #ccc;
 }
