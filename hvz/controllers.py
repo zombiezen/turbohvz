@@ -393,7 +393,7 @@ class GameController(BaseController):
         # Advance stage
         requested_game.next_state()
         # Go back to game page
-        turbogears.flash(_("Original zombie is %s") % unicode(entry))
+        turbogears.flash(_("Original zombie chosen"))
         link = util.game_link(requested_game, redirect=True)
         raise turbogears.redirect(link)
 
