@@ -18,7 +18,7 @@
         safe_connect('register_button', 'onclick',
             function()
             {
-                redirect(${tg.jsencode(tg.url('/user/register'))});
+                redirect(${tg.jsencode(tg.hvz.register_link())});
             });
     </script>
 </py:match>

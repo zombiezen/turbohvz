@@ -33,9 +33,10 @@ __all__ = ['abslink',
            'game_link',
            'insecurelink',
            'insecureurl',
+           'login_link',
            'plain2html',
            'pluralize',
-           'login_link',
+           'register_link',
            'securelink',
            'secureurl',
            'str2bool',
@@ -156,7 +157,7 @@ def insecureurl(*args, **kw):
     return insecurelink(turbogears.url(*args, **kw))
 
 def login_link():
-    """Returns the correct URL to the login page."""
+    """Returns the proper URL to the login page."""
     if turbogears.config.get('hvz.secure_login', False):
         # Secure login
         return secureurl('/login')
@@ -201,6 +202,15 @@ def pluralize(value, singular, plural):
         return singular
     else:
         return plural
+
+def register_link():
+    """Returns the proper URL to the register page."""
+    if turbogears.config.get('hvz.secure_login', False):
+        # Secure login
+        return secureurl('/user/register')
+    else:
+        # Insecure login
+        return turbogears.url('/user/register')
 
 def securelink(path):
     """Create a secure URL from a pre-constructed path."""
@@ -247,6 +257,7 @@ def user_link(user, action='view', **params):
 def add_template_variables(vars):
     hvzNamespace = DictObj(game_link=game_link,
                            login_link=login_link,
+                           register_link=register_link,
                            user_link=user_link,)
     lookup = dict(hvz=hvzNamespace,
                   abslink=abslink,
