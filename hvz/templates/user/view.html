@@ -33,6 +33,10 @@
         <button py:if="'sudo-login' in tg.identity.permissions" id="sudo_button">Sudo</button>
     </div>
     <h2 id="sect_profile">Profile</h2>
+    <div py:if="tg.config('hvz.show_legendary', False) and user.is_legendary" id="legendary" title="This user was a participant in the server's first game.">
+        <img src="${tg.url('/static/images/star.png')}" alt="star" />
+        Legendary
+    </div>
     <py:choose>
         <div py:when="user.profile" py:replace="HTML(tg.plain2html(user.profile))">[profile]</div>
         <p py:otherwise="" class="no_profile">This user has not written a profile.</p>

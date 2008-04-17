@@ -1213,6 +1213,8 @@ class User(Entity):
         permissions : set of `Permission`
             An automatically calculated set of permissions, based on group
             permissions.
+        is_legendary : bool
+            Whether the player was part of the first game on the server
     :See: PlayerEntry
     """
     using_options(tablename='tg_user')
@@ -1284,6 +1286,14 @@ class User(Entity):
                 The new value of the password column
         """
         self._password = unicode(new_password)
+    
+    @property
+    def is_legendary(self):
+        game = session.query(Game).order_by(Game.c.created).first()
+        if game is None:
+            return False
+        else:
+            return bool(PlayerEntry.by_player(game, self) is not None)
     
     created = _date_prop('_created')
     password = property(_get_password, _set_password)

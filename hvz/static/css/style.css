@@ -232,6 +232,17 @@ html, body
     font-style: italic;
 }
 
+#legendary
+{
+    font-weight: bold;
+}
+
+#legendary img
+{
+    width: 32px;
+    height: 32px;
+}
+
 /* MISC FORMATTING */
 
 a.link, a, a.active
