@@ -1,6 +1,6 @@
 TurboHvZ
 Copyright (C) 2008 Ross Light
-Concept Copyright (C) 2008 Chris Weed
+Concept: Copyright (C) 2008 Chris Weed
 
 Humans vs. Zombies, created by Brad Sappington and Chris Weed, is a game of
 moderated tag commonly played on college campuses. A group of human players
@@ -10,3 +10,5 @@ of zombie players.
 This is a TurboGears <http://www.turbogears.org> web application to manage a
 game of Humans vs. Zombies.  It can be started by running the start-turbohvz.py
 script.
+
+INSTALLATION: Consult <http://docs.turbogears.org/1.0/Deployment>
