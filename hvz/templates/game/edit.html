@@ -13,7 +13,7 @@
 </py:def>
 
 <py:match path="content">
-    <div py:replace="tg.display(form, values, submit_text=_('Edit'), action=tg.url('/game/action.edit'))"></div>
+    <div py:replace="tg.display(form, values, submit_text=_('Save'), action=tg.url('/game/action.edit'))"></div>
     <a href="${tg.hvz.game_link(game)}">Cancel</a>
 </py:match>
 
