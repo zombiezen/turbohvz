@@ -28,6 +28,7 @@ from turbogears import url, validators, widgets
 from turbogears.widgets import WidgetsList
 
 from hvz import model
+from hvz.model.game import Game
 
 __author__ = "Ross Light"
 __date__ = "April 8, 2008"
@@ -65,7 +66,7 @@ class UserNameValidator(validators.UnicodeString):
         return not frozenset(s) & invalid_chars
     
     def validate_python(self, value, state): 
-        if model.User.by_user_name(value) is not None:
+        if model.identity.User.by_user_name(value) is not None:
             raise validators.Invalid(self.message('non_unique', state),
                                      value, state)
         elif not self._has_valid_chars(value):
@@ -243,17 +244,17 @@ class GameFields(WidgetsList):
         help_text=_("The length of each player's game identification number. "
                     "The default length of 16 should be sufficient for most "
                     "games."),
-        default=model.Game.DEFAULT_GID_LENGTH,)
+        default=Game.DEFAULT_GID_LENGTH,)
     zombie_starve_time = widgets.TextField(
         label=_("Zombie Starve Time"),
         help_text=_("The length of time (in hours) that a zombie has to feed "
                     "before starving."),
-        default=model.Game.DEFAULT_ZOMBIE_STARVE_TIME,)
+        default=Game.DEFAULT_ZOMBIE_STARVE_TIME,)
     zombie_report_time = widgets.TextField(
         label=_("Zombie Report Time"),
         help_text=_("The length of time (in hours) that a zombie has to "
                     "report a kill."),
-        default=model.Game.DEFAULT_ZOMBIE_REPORT_TIME,)
+        default=Game.DEFAULT_ZOMBIE_REPORT_TIME,)
     ignore_weekdays = widgets.MultipleSelectField(
         label=_("Ignore Days"),
         help_text=_("The days of the week to regularly ignore when "
@@ -277,7 +278,7 @@ class GameFields(WidgetsList):
         label=_("Safe Zones"),
         help_text=_("The safe zones to include in the rules.  Each zone must "
                     "be put on a separate line."),
-        default=model.Game.DEFAULT_SAFE_ZONES,
+        default=Game.DEFAULT_SAFE_ZONES,
         validator=ZoneListConverter())
     rules_notes = widgets.TextArea(
         label=_("Rules Notes"),
