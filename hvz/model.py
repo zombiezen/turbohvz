@@ -1289,7 +1289,7 @@ class User(Entity):
     
     @property
     def is_legendary(self):
-        game = session.query(Game).order_by(Game.c.created).first()
+        game = Game.query.order_by('created').first()
         if game is None:
             return False
         else:
