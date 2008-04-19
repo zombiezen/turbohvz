@@ -507,7 +507,8 @@ class PlayerEntry(Entity):
         report_time = now()
         # Check if game is in-progress
         if not self.game.in_progress:
-            raise WrongStateError(game, game.state, game.STATE_STARTED,
+            raise WrongStateError(self.game, self.game.state,
+                                  self.game.STATE_STARTED,
                                   _("Game is not in progress"))
         # Check for non-chronological reports
         if (self.death_date is not None and date <= self.death_date) or \
@@ -529,7 +530,7 @@ class PlayerEntry(Entity):
                 other.state = other.STATE_ZOMBIE
                 other.killed_by = self.player
             else:
-                raise WrongStateError(self, self.state, self.STATE_HUMAN,
+                raise WrongStateError(other, other.state, other.STATE_HUMAN,
                                       _("Victim is nonhuman"))
         else:
             raise WrongStateError(self, self.state, self.STATE_ZOMBIE,
