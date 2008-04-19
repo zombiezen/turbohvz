@@ -13,6 +13,9 @@
 
 <py:match path="content">
     <py:choose>
+        <py:when test="not game.in_progress">
+            <p>How did you kill someone?!  The game's already over!</p>
+        </py:when>
         <py:when test="current_entry.can_report_kill()">
             <p>Please enter in the required information below.  <strong>Kills must be reported in chronological order, or they will not be counted.</strong></p>
             <div py:replace="tg.display(form, dict(game_id=game.game_id, kill_date=default_time))">[kill form]</div>
