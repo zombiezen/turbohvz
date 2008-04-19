@@ -56,6 +56,8 @@ class PlayerEntry(Entity):
             The constant for a non-original zombie state
         STATE_DEAD : int
             The constant for a starved zombie state
+        STATE_DEAD_OZ : int
+            The constant for the original zombie starved state
         STATE_HUMAN : int
             The constant for a healthy human state
         STATE_NAMES : dict of {int: unicode}
@@ -90,10 +92,12 @@ class PlayerEntry(Entity):
     STATE_ORIGINAL_ZOMBIE = -2
     STATE_ZOMBIE = -1
     STATE_DEAD = 0
+    STATE_DEAD_OZ = -3
     STATE_HUMAN = 1
     STATE_NAMES = {STATE_ORIGINAL_ZOMBIE: _("Original zombie"),
                    STATE_ZOMBIE: _("Zombie"),
                    STATE_DEAD: _("Dead"),
+                   STATE_DEAD_OZ: _("Dead"),
                    STATE_HUMAN: _("Human"),}
     
     entry_id = Field(Integer, primary_key=True)
@@ -181,7 +185,7 @@ class PlayerEntry(Entity):
             # full attribute setup
             self.state = self.STATE_ORIGINAL_ZOMBIE
             self.death_date = date
-        elif self.state == self.STATE_ORIGINAL_ZOMBIE:
+        elif self.is_original_zombie:
             self.death_date = date
         else:
             raise WrongStateError(self, self.state, self.STATE_HUMAN,
@@ -228,6 +232,12 @@ class PlayerEntry(Entity):
                 self.feed_date = other.death_date = date
                 other.state = other.STATE_ZOMBIE
                 other.killed_by = self.player
+                if self.is_dead:
+                    self.starve_date = None
+                    if self.is_original_zombie:
+                        self.state = self.STATE_ORIGINAL_ZOMBIE
+                    else:
+                        self.state = self.STATE_ZOMBIE
             else:
                 raise WrongStateError(other, other.state, other.STATE_HUMAN,
                                       _("Victim must be human"))
@@ -255,7 +265,10 @@ class PlayerEntry(Entity):
         # Starve, if we can
         if self.is_undead:
             self.starve_date = date
-            self.state = self.STATE_DEAD
+            if self.is_original_zombie:
+                self.state = self.STATE_DEAD_OZ
+            else:
+                self.state = self.STATE_DEAD
         else:
             raise WrongStateError(self, self.state, self.STATE_ZOMBIE,
                                   _("Humans can't starve"))
@@ -361,7 +374,11 @@ class PlayerEntry(Entity):
     
     @property
     def is_dead(self):
-        return self.state == self.STATE_DEAD
+        return self.state in (self.STATE_DEAD, self.STATE_DEAD_OZ)
+    
+    @property
+    def is_original_zombie(self):
+        return self.state in (self.STATE_ORIGINAL_ZOMBIE, self.STATE_DEAD_OZ)
     
     death_date = date_prop('_death_date')
     feed_date = date_prop('_feed_date')
@@ -563,7 +580,9 @@ class Game(Entity):
         zombies = players.filter(
             or_(PlayerEntry.state == PlayerEntry.STATE_ZOMBIE,
                 PlayerEntry.state == PlayerEntry.STATE_ORIGINAL_ZOMBIE))
-        dead = players.filter(PlayerEntry.state == PlayerEntry.STATE_DEAD)
+        dead = players.filter(
+            or_(PlayerEntry.state == PlayerEntry.STATE_DEAD,
+                PlayerEntry.state == PlayerEntry.STATE_DEAD_OZ))
         # Now determine whether we should end the game
         # The two closing scenarios:
         #   1. Humans have all died.
@@ -696,8 +715,7 @@ class Game(Entity):
         return [entry for entry in self.entries if entry.original_pool]
     
     def _get_oz(self):
-        results = [entry for entry in self.entries
-                   if entry.state == PlayerEntry.STATE_ORIGINAL_ZOMBIE]
+        results = [entry for entry in self.entries if entry.is_original_zombie]
         if len(results) == 0:
             return None
         elif len(results) == 1:
