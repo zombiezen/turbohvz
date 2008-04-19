@@ -102,8 +102,10 @@ class PlayerEntry(Entity):
     
     entry_id = Field(Integer, primary_key=True)
     player = ManyToOne('hvz.model.identity.User',
-                       colname='player_id', inverse='entries')
-    game = ManyToOne('Game', colname='game_id', inverse='entries')
+                       colname='player_id', inverse='entries',
+                       ondelete='restrict', onupdate='cascade')
+    game = ManyToOne('Game', colname='game_id', inverse='entries',
+                     ondelete='cascade', onupdate='cascade')
     player_gid = Field(String(128))
     state = Field(Integer)
     _death_date = Field(DateTime, colname='death_date', synonym='death_date')
@@ -379,6 +381,30 @@ class PlayerEntry(Entity):
     @property
     def is_original_zombie(self):
         return self.state in (self.STATE_ORIGINAL_ZOMBIE, self.STATE_DEAD_OZ)
+    
+    @property
+    def survival_time(self):
+        if self.is_human or self.is_original_zombie:
+            return None
+        else:
+            return self.game.calculate_timedelta(self.game.started,
+                                                 self.death_date)
+    
+    @property
+    def undead_time(self):
+        if self.is_human:
+            return None
+        elif self.is_undead:
+            if self.game.in_progress:
+                return None
+            else:
+                return self.game.calculate_timedelta(self.death_date,
+                                                     self.game.ended)
+        elif self.is_dead:
+            return self.game.calculate_timedelta(self.death_date,
+                                                 self.starve_date)
+        else:
+            raise AssertionError("I don't know how to calculate undead time")
     
     death_date = date_prop('_death_date')
     feed_date = date_prop('_feed_date')

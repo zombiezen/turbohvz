@@ -19,6 +19,8 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import division
+
 import cherrypy
 import turbogears
 from turbogears import error_handler, expose, url, identity, validate
@@ -32,6 +34,17 @@ from hvz.model.identity import User, Group
 __author__ = 'Ross Light'
 __date__ = 'April 18, 2008'
 __all__ = ['UserController']
+
+def _calc_avg(raw_data):
+    from datetime import timedelta
+    data = [datum for datum in raw_data if datum is not None]
+    if len(data) == 0:
+        return None
+    else:
+        if isinstance(data[0], timedelta):
+            return sum(data, timedelta()) // len(data)
+        else:
+            return sum(data) / len(data)
 
 class UserController(base.BaseController):
     @expose("hvz.templates.user.index")
@@ -53,12 +66,28 @@ class UserController(base.BaseController):
             requested_user = User.by_user_name(user_id)
         if requested_user is None:
             raise NotFound()
+        # Generate statistics
+        entries = requested_user.entries
+        show_oz = (lambda e: not (entry.is_original_zombie and
+                                  not entry.game.revealed_original_zombie))
+        total_killed = len([entry for entry in entries
+                            if not entry.is_human and show_oz(entry)])
+        avg_survival = _calc_avg(entry.survival_time for entry in entries)
+        avg_undead = _calc_avg(entry.undead_time for entry in entries
+                               if show_oz(entry))
+        stats = dict(
+            total_games=len(entries),
+            total_kills=sum(entry.kills for entry in entries),
+            total_killed=total_killed,
+            avg_survival=avg_survival,
+            avg_undead=avg_undead,)
         # Get template variables
         grid = widgets.GameList()
-        games = [entry.game for entry in requested_user.entries]
+        games = [entry.game for entry in entries]
         return dict(user=requested_user,
                     games=games,
-                    game_grid=grid,)
+                    game_grid=grid,
+                    stats=stats,)
     
     @expose("hvz.templates.user.edit")
     def edit(self, user_id):
