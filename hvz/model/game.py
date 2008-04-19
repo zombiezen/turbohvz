@@ -206,7 +206,8 @@ class PlayerEntry(Entity):
         report_time = now()
         # Check if game is in-progress
         if not self.game.in_progress:
-            raise WrongStateError(game, game.state, game.STATE_STARTED,
+            raise WrongStateError(self.game, self.game.state, 
+                                  self.game.STATE_STARTED,
                                   _("Game is not in progress"))
         # Check for non-chronological reports
         if (self.death_date is not None and date <= self.death_date) or \
@@ -228,8 +229,8 @@ class PlayerEntry(Entity):
                 other.state = other.STATE_ZOMBIE
                 other.killed_by = self.player
             else:
-                raise WrongStateError(self, self.state, self.STATE_HUMAN,
-                                      _("Victim is nonhuman"))
+                raise WrongStateError(other, other.state, other.STATE_HUMAN,
+                                      _("Victim must be human"))
         else:
             raise WrongStateError(self, self.state, self.STATE_ZOMBIE,
                                   _("Killer can't be human"))
@@ -246,6 +247,12 @@ class PlayerEntry(Entity):
         """
         if date is None:
             date = now()
+        # Check if game is in-progress
+        if not self.game.in_progress:
+            raise WrongStateError(self.game, self.game.state, 
+                                  self.game.STATE_STARTED,
+                                  _("Game is not in progress"))
+        # Starve, if we can
         if self.is_undead:
             self.starve_date = date
             self.state = self.STATE_DEAD
@@ -520,14 +527,64 @@ class Game(Entity):
         # Hey, we're not playing.  Don't update!
         if not self.in_progress:
             return
-        # Initialize variables
+        # Update
         update_time = now()
-        # Bring out yer dead!
+        self._update_starved(update_time)
+        self._update_check_end(update_time)
+    
+    def _update_starved(self, update_time):
+        """
+        Find zombies who have gone past their feeding time and starve them.
+        
+        Bring out yer dead!
+        
+        :Parameters:
+            update_time : datetime.datetime
+                The time at which the update commenced
+        """
         zombies = (entry for entry in self.entries if entry.is_undead)
         for zombie in zombies:
             delta = zombie.calculate_time_since_last_feeding(update_time)
             if delta >= self.zombie_starve_timedelta:
                 zombie.starve()
+    
+    def _update_check_end(self, update_time):
+        """
+        Checks if the game is over, and if necessary, forcibly end the game.
+        
+        :Parameters:
+            update_time : datetime.datetime
+                The time at which the update commenced
+        """
+        from sqlalchemy import or_
+        # Fetch the different groups
+        players = PlayerEntry.query.filter(PlayerEntry.game == self)
+        humans = players.filter(PlayerEntry.state == PlayerEntry.STATE_HUMAN)
+        zombies = players.filter(
+            or_(PlayerEntry.state == PlayerEntry.STATE_ZOMBIE,
+                PlayerEntry.state == PlayerEntry.STATE_ORIGINAL_ZOMBIE))
+        dead = players.filter(PlayerEntry.state == PlayerEntry.STATE_DEAD)
+        # Now determine whether we should end the game
+        # The two closing scenarios:
+        #   1. Humans have all died.
+        #   2. Zombies have all starved and there are humans left.
+        should_end = False
+        if humans.count() == 0:
+            # Biosigns are negative, Jim.
+            should_end = True
+        elif zombies.count() == 0:
+            # Zombies appear to have died off...
+            # But there may still be dead ones who can report a kill.
+            for corpse in dead:
+                if corpse.can_report_kill(update_time):
+                    # Someone could still report a kill!
+                    break
+            else:
+                # Everyone has truly starved.  Give up.
+                should_end = True
+        # Do we end the game?
+        if should_end:
+            self.end()
     
     def calculate_timedelta(self, datetime1, datetime2):
         """
@@ -557,11 +614,12 @@ class Game(Entity):
         # Go previous state
         self.state -= 1
         # Do state hooks
-        if self.state == self.STATE_STARTED - 1:
+        prev_state = self.state + 1
+        if prev_state == self.STATE_STARTED:
             self.started = None
-        elif self.state == self.STATE_ENDED - 1:
+        elif prev_state == self.STATE_ENDED:
             self.ended = None
-        elif self.state == self.STATE_CHOOSE_ZOMBIE - 1:
+        elif prev_state == self.STATE_CHOOSE_ZOMBIE:
             for entry in self.entries:
                 entry.reset()
     
@@ -579,6 +637,25 @@ class Game(Entity):
             self.original_zombie.make_original_zombie() # Refresh kill date
         elif self.state == self.STATE_ENDED:
             self.ended = now()
+    
+    def end(self):
+        """
+        Terminates the game, if it's in-progress.
+        
+        This method *shouldn't* normally be called outside the class.  It's
+        mostly just used to encapsulate everything necessary to end the game
+        when `update` thinks the game is over or when the administrator forces
+        the game's end through `next_state`.
+        
+        :Raises errors.WrongStateError: If the game is not in-progress.
+        """
+        # Ensure we can end now
+        if not self.in_progress:
+            raise WrongStateError(self, self.state, self.STATE_STARTED,
+                                  _("The game cannot be ended right now %i"))
+        # Advance state
+        while self.state < self.STATE_ENDED:
+            self.next_state()
     
     ## PROPERTIES ##
     
