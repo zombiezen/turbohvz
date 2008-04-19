@@ -316,7 +316,7 @@ edit_user_form = widgets.TableForm(
     fields=EditUserFields(),
     validator=EditUserSchema(),
     action=url('/user/action.edit'),
-    submit_text=_("Edit"),)
+    submit_text=_("Save"),)
 
 game_form = widgets.TableForm(
     name="game_form",
