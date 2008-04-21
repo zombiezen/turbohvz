@@ -32,7 +32,7 @@ from sqlalchemy.orm import backref, relation, synonym
 from turbogears.database import mapper, metadata, session
 
 from hvz.model import identity
-from hvz.model.dates import now, date_prop, calc_timedelta
+from hvz.model.dates import now, as_utc, date_prop, calc_timedelta
 from hvz.model.errors import WrongStateError, InvalidTimeError
 
 __author__ = 'Ross Light'
@@ -54,7 +54,7 @@ entries_table = Table('entries', metadata,
     Column('feed_date', DateTime),
     Column('starve_date', DateTime),
     Column('kills', Integer),
-    Column('killed_by', Integer, ForeignKey('tg_user.user_id',
+    Column('killer_id', Integer, ForeignKey('tg_user.user_id',
            ondelete='RESTRICT', onupdate='CASCADE')),
     Column('original_pool', Boolean),
     # Constraints
@@ -197,6 +197,8 @@ class PlayerEntry(object):
         """
         if date is None:
             date = now()
+        else:
+            date = as_utc(date)
         if self.is_human:
             # This is the first time that the player became an OZ, give 'em the
             # full attribute setup
@@ -209,7 +211,7 @@ class PlayerEntry(object):
                                   _("Player cannot become the original "
                                     "zombie because player is non-human."))
     
-    def kill(self, other, date=None):
+    def kill(self, other, date=None, report_time=None):
         """
         Make the player zombify someone else.
         
@@ -220,11 +222,18 @@ class PlayerEntry(object):
                 The victim
             date : datetime.datetime
                 The date and time of the demise
+            report_time : datetime.datetime
+                The date and time that the kill was reported
         """
         # Default the date
         if date is None:
             date = now()
-        report_time = now()
+        else:
+            date = as_utc(date)
+        if report_time is None:
+            report_time = now()
+        else:
+            report_time = as_utc(report_time)
         # Check if game is in-progress
         if not self.game.in_progress:
             raise WrongStateError(self.game, self.game.state, 
@@ -274,6 +283,8 @@ class PlayerEntry(object):
         """
         if date is None:
             date = now()
+        else:
+            date = as_utc(date)
         # Check if game is in-progress
         if not self.game.in_progress:
             raise WrongStateError(self.game, self.game.state, 
@@ -308,6 +319,8 @@ class PlayerEntry(object):
         # Default date
         if time is None:
             time = now()
+        else:
+            time = as_utc(time)
         # Check which date to compare
         if self.feed_date is None:
             feed_date = self.death_date
@@ -346,6 +359,8 @@ class PlayerEntry(object):
         """
         if time is None:
             time = now()
+        else:
+            time = as_utc(time)
         if self.is_human:
             # Humans can't (read as: shouldn't) kill people
             return False
@@ -486,7 +501,6 @@ class Game(object):
         rules_notes : unicode
             Extra notes for the rules
     """
-    
     STATE_CREATED = 0
     STATE_OPEN = 1
     STATE_CLOSED = 2
@@ -540,12 +554,22 @@ class Game(object):
     
     ## ACTIONS ##
     
-    def update(self):
+    def update(self, update_time=None):
+        """
+        Update the game state.
+        
+        :Parameters:
+            update_time : datetime.datetime
+                The time at which the update commenced.  Defaults to now.
+        """
+        if update_time is None:
+            update_time = now()
+        else:
+            update_time = as_utc(update_time)
         # Hey, we're not playing.  Don't update!
         if not self.in_progress:
             return
         # Update
-        update_time = now()
         self._update_starved(update_time)
         self._update_check_end(update_time)
     
@@ -564,6 +588,7 @@ class Game(object):
             delta = zombie.calculate_time_since_last_feeding(update_time)
             if delta >= self.zombie_starve_timedelta:
                 zombie.starve()
+        session.flush()
     
     def _update_check_end(self, update_time):
         """
@@ -624,8 +649,19 @@ class Game(object):
                               ignore_dates=self.ignore_dates,
                               ignore_weekdays=self.ignore_weekdays,)
     
-    def previous_state(self):
-        """Change to the previous state"""
+    def previous_state(self, time=None):
+        """
+        Change to the previous state
+        
+        :Parameters:
+            time : datetime.datetime
+                The date when we go to the previous state.  This may not
+                actually be *now*.
+        """
+        if time is None:
+            time = now()
+        else:
+            time = as_utc(time)
         # Check if we can do this
         if self.is_first_state:
             raise WrongStateError(self, self.state, self.STATE_CREATED + 1,
@@ -642,8 +678,19 @@ class Game(object):
             for entry in self.entries:
                 entry.reset()
     
-    def next_state(self):
-        """Change to the next state"""
+    def next_state(self, time=None):
+        """
+        Change to the next state
+        
+        :Parameters:
+            time : datetime.datetime
+                The date when we go to the next state.  This may not actually
+                be *now*.
+        """
+        if time is None:
+            time = now()
+        else:
+            time = as_utc(time)
         # Check if we can do this
         if self.is_last_state:
             raise WrongStateError(self, self.state, self.STATE_ENDED - 1,
@@ -652,12 +699,12 @@ class Game(object):
         self.state += 1
         # Do state hooks
         if self.state == self.STATE_STARTED:
-            self.started = now()
-            self.original_zombie.make_original_zombie() # Refresh kill date
+            self.started = time
+            self.original_zombie.make_original_zombie(time) # Refresh kill date
         elif self.state == self.STATE_ENDED:
-            self.ended = now()
+            self.ended = time
     
-    def end(self):
+    def end(self, end_time=None):
         """
         Terminates the game, if it's in-progress.
         
@@ -666,35 +713,25 @@ class Game(object):
         when `update` thinks the game is over or when the administrator forces
         the game's end through `next_state`.
         
+        :Parameters:
+            end_time : datetime.datetime
+                The date we're reporting it ended.  This may not actually
+                be *now*.
         :Raises errors.WrongStateError: If the game is not in-progress.
         """
+        if end_time is None:
+            end_time = now()
+        else:
+            end_time = as_utc(end_time)
         # Ensure we can end now
         if not self.in_progress:
             raise WrongStateError(self, self.state, self.STATE_STARTED,
                                   _("The game cannot be ended right now %i"))
         # Advance state
         while self.state < self.STATE_ENDED:
-            self.next_state()
+            self.next_state(end_time)
     
     ## PROPERTIES ##
-    
-    def _get_killed_by(self):
-        from hvz.model.identity import User
-        value = self._killed_by
-        if value is None:
-            return None
-        else:
-            return User.query.get(value)
-    
-    def _set_killed_by(self, new_killer):
-        from hvz.model.identity import User
-        if new_killer is None:
-            self._killed_by = None
-        elif isinstance(new_killer, (int, long)):
-            assert User.query.get(new_killer) is not None
-            self._killed_by = new_killer
-        else:
-            self._killed_by = new_killer.user_id
     
     @property
     def zombie_starve_timedelta(self):
@@ -750,9 +787,7 @@ class Game(object):
     def _get_ignore_dates(self):
         from datetime import date
         value = self._ignore_dates
-        if value is None:
-            return frozenset()
-        else:
+        if value:
             components = value.split(';')
             result = []
             for component in components:
@@ -761,6 +796,8 @@ class Game(object):
                 new_date = date(parts[0], parts[1], parts[2])
                 result.append(new_date)
             return frozenset(result)
+        else:
+            return frozenset()
     
     def _set_ignore_dates(self, value):
         if value is None:
@@ -772,12 +809,12 @@ class Game(object):
     
     def _get_ignore_weekdays(self):
         value = self._ignore_weekdays
-        if value is None:
-            return frozenset()
-        else:
+        if value:
             components = value.split(';')
             result = [int(component, 10) for component in components]
             return frozenset(result)
+        else:
+            return frozenset()
     
     def _set_ignore_weekdays(self, value):
         if value is None:
@@ -806,7 +843,6 @@ class Game(object):
     created = date_prop('_created')
     started = date_prop('_started')
     ended = date_prop('_ended')
-    killed_by = property(_get_killed_by, _set_killed_by)
     original_zombie = property(_get_oz, _set_oz)
     ignore_dates = property(_get_ignore_dates, _set_ignore_dates)
     ignore_weekdays = property(_get_ignore_weekdays, _set_ignore_weekdays)
@@ -825,9 +861,11 @@ mapper(PlayerEntry, entries_table, properties={
                                              identity.users_table.c.user_id),
                                 uselist=True)),
     'game': relation(Game, backref='entries'),
-    # Yeah, yeah, it's actually a foreign key... but hey, man.  SQLAlchemy is
-    # freaking out about having a relation on top of an existing column name.
-    'killed_by': synonym('_killed_by', map_column=True),
+    'killed_by':
+        relation(identity.User,
+                 primaryjoin=(entries_table.c.killer_id ==
+                              identity.users_table.c.user_id),
+                 uselist=False),
     'death_date': synonym('_death_date', map_column=True),
     'feed_date': synonym('_feed_date', map_column=True),
     'starve_date': synonym('_starve_date', map_column=True),

@@ -27,7 +27,7 @@ import cherrypy
 import turbogears
 from turbogears import testutil
 
-from hvz.controllers import Root
+from hvz.controllers.base import Root
 
 __author__ = 'Ross Light'
 __date__ = 'March 30, 2008'
@@ -45,18 +45,12 @@ class TestPages(unittest.TestCase):
         See http://trac.turbogears.org/turbogears/ticket/1217 for details.
         """
         turbogears.startup.stopTurboGears()
-
-    def test_method(self):
-        "the index method should return a string called now"
-        import types
-        result = testutil.call(cherrypy.root.index)
-        assert type(result["now"]) == types.StringType
-
+    
     def test_indextitle(self):
         "The indexpage should have the right title"
         testutil.create_request("/")
         response = cherrypy.response.body[0].lower()
-        assert "<title>welcome to turbogears</title>" in response
+        assert "<title>humans vs. zombies</title>" in response
 
     def test_logintitle(self):
         "login page should have the right title"
