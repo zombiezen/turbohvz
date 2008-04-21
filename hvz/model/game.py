@@ -24,28 +24,63 @@ import random
 import string
 
 import pkg_resources
-pkg_resources.require("SQLAlchemy>=0.3.10")
-pkg_resources.require("Elixir>=0.4.0")
+pkg_resources.require("SQLAlchemy>=0.4.2")
 
-from elixir import (Entity, Field, OneToMany, ManyToOne, ManyToMany,
-                    options_defaults, using_options,
-                    using_table_options, setup_all,
-                    String, Unicode, Integer, Boolean, DateTime)
-from sqlalchemy import UniqueConstraint
-from turbogears.database import session
+from sqlalchemy import (Table, Column, ForeignKey, UniqueConstraint,
+                        String, Unicode, Integer, Boolean, DateTime)
+from sqlalchemy.orm import backref, relation, synonym
+from turbogears.database import mapper, metadata, session
 
+from hvz.model import identity
 from hvz.model.dates import now, date_prop, calc_timedelta
 from hvz.model.errors import WrongStateError, InvalidTimeError
 
 __author__ = 'Ross Light'
-__date__ = 'March 30, 2008'
+__date__ = 'April 18, 2008'
 __docformat__ = 'reStructuredText'
 __all__ = ['PlayerEntry',
            'Game',]
 
-options_defaults['autosetup'] = False
+## TABLES ##
+entries_table = Table('entries', metadata,
+    Column('entry_id', Integer, primary_key=True),
+    Column('player_id', Integer, ForeignKey('tg_user.user_id',
+           ondelete='RESTRICT', onupdate='CASCADE'), index=True),
+    Column('game_id', Integer, ForeignKey('game.game_id',
+           ondelete='CASCADE', onupdate='CASCADE'), index=True),
+    Column('player_gid', String(128)),
+    Column('state', Integer),
+    Column('death_date', DateTime),
+    Column('feed_date', DateTime),
+    Column('starve_date', DateTime),
+    Column('kills', Integer),
+    Column('killed_by', Integer, ForeignKey('tg_user.user_id',
+           ondelete='RESTRICT', onupdate='CASCADE')),
+    Column('original_pool', Boolean),
+    # Constraints
+    UniqueConstraint('game_id', 'player_gid'),
+    UniqueConstraint('game_id', 'player_id'),
+)
 
-class PlayerEntry(Entity):
+games_table = Table('game', metadata,
+    Column('game_id', Integer, primary_key=True),
+    Column('display_name', Unicode(255)),
+    Column('created', DateTime),
+    Column('started', DateTime),
+    Column('ended', DateTime),
+    Column('state', Integer),
+    Column('ignore_dates', String(2048)),
+    Column('ignore_weekdays', String(16)),
+    Column('zombie_starve_time', Integer),
+    Column('zombie_report_time', Integer),
+    Column('gid_length', Integer),
+    Column('safe_zones', Unicode(2048)),
+    Column('rules_notes', Unicode(4096)),
+)
+
+## CLASSES ##
+
+class PlayerEntry(object):
     """
     Per-game player statistics.
     
@@ -87,8 +122,6 @@ class PlayerEntry(Entity):
             When the player starved
     :See: identity.User
     """
-    using_options(tablename='entries')
-    
     STATE_ORIGINAL_ZOMBIE = -2
     STATE_ZOMBIE = -1
     STATE_DEAD = 0
@@ -99,24 +132,6 @@ class PlayerEntry(Entity):
                    STATE_DEAD: _("Dead"),
                    STATE_DEAD_OZ: _("Dead"),
                    STATE_HUMAN: _("Human"),}
-    
-    entry_id = Field(Integer, primary_key=True)
-    player = ManyToOne('hvz.model.identity.User',
-                       colname='player_id', inverse='entries',
-                       ondelete='restrict', onupdate='cascade')
-    game = ManyToOne('Game', colname='game_id', inverse='entries',
-                     ondelete='cascade', onupdate='cascade')
-    player_gid = Field(String(128))
-    state = Field(Integer)
-    _death_date = Field(DateTime, colname='death_date', synonym='death_date')
-    _feed_date = Field(DateTime, colname='feed_date', synonym='feed_date')
-    kills = Field(Integer)
-    # _killed_by: Yes, it's a foreign key, but SQLAlchemy doesn't seem to like
-    # it, so just making it an integer temporarily.
-    _killed_by = Field(Integer, colname='killed_by', synonym='killed_by')
-    original_pool = Field(Boolean)
-    _starve_date = Field(DateTime,
-                         colname='starve_date', synonym='starve_date')
     
     ## INITIALIZATION/RETRIEVING ##
     
@@ -344,24 +359,6 @@ class PlayerEntry(Entity):
     
     ## PROPERTIES ##
     
-    def _get_killed_by(self):
-        from hvz.model.identity import User
-        value = self._killed_by
-        if value is None:
-            return None
-        else:
-            return User.get(value)
-    
-    def _set_killed_by(self, new_killer):
-        from hvz.model.identity import User
-        if new_killer is None:
-            self._killed_by = None
-        elif isinstance(new_killer, (int, long)):
-            assert User.get(new_killer) is not None
-            self._killed_by = new_killer
-        else:
-            self._killed_by = new_killer.user_id
-    
     @property
     def affiliation(self):
         return self.STATE_NAMES[self.state]
@@ -409,12 +406,8 @@ class PlayerEntry(Entity):
     death_date = date_prop('_death_date')
     feed_date = date_prop('_feed_date')
     starve_date = date_prop('_starve_date')
-    killed_by = property(_get_killed_by, _set_killed_by)
-    
-    using_table_options(UniqueConstraint('game_id', 'player_gid'),
-                        UniqueConstraint('game_id', 'player_id'),)
 
-class Game(Entity):
+class Game(object):
     """
     A game played.
     
@@ -493,7 +486,6 @@ class Game(Entity):
         rules_notes : unicode
             Extra notes for the rules
     """
-    using_options(tablename='game')
     
     STATE_CREATED = 0
     STATE_OPEN = 1
@@ -518,24 +510,6 @@ class Game(Entity):
                           _("Student center"),
                           _("Health center"),
                           _("Dining halls"),]
-    
-    game_id = Field(Integer, primary_key=True)
-    display_name = Field(Unicode(255))
-    _created = Field(DateTime, colname='created', synonym='created')
-    _started = Field(DateTime, colname='started', synonym='started')
-    _ended = Field(DateTime, colname='ended', synonym='ended')
-    state = Field(Integer)
-    entries = OneToMany('PlayerEntry', inverse='game')
-    _ignore_dates = Field(String(), colname='ignore_dates',
-                          synonym='ignore_dates')
-    _ignore_weekdays = Field(String(16), colname='ignore_weekdays',
-                             synonym='ignore_weekdays')
-    zombie_starve_time = Field(Integer)
-    zombie_report_time = Field(Integer)
-    gid_length = Field(Integer)
-    _safe_zones = Field(Unicode(2048), 
-                        colname='safe_zones', synonym='safe_zones')
-    rules_notes = Field(Unicode(4096))
     
     ## INITIALIZATION/RETRIEVAL ##
     
@@ -704,6 +678,24 @@ class Game(Entity):
     
     ## PROPERTIES ##
     
+    def _get_killed_by(self):
+        from hvz.model.identity import User
+        value = self._killed_by
+        if value is None:
+            return None
+        else:
+            return User.query.get(value)
+    
+    def _set_killed_by(self, new_killer):
+        from hvz.model.identity import User
+        if new_killer is None:
+            self._killed_by = None
+        elif isinstance(new_killer, (int, long)):
+            assert User.query.get(new_killer) is not None
+            self._killed_by = new_killer
+        else:
+            self._killed_by = new_killer.user_id
+    
     @property
     def zombie_starve_timedelta(self):
         return timedelta(hours=self.zombie_starve_time)
@@ -814,7 +806,38 @@ class Game(Entity):
     created = date_prop('_created')
     started = date_prop('_started')
     ended = date_prop('_ended')
+    killed_by = property(_get_killed_by, _set_killed_by)
     original_zombie = property(_get_oz, _set_oz)
     ignore_dates = property(_get_ignore_dates, _set_ignore_dates)
     ignore_weekdays = property(_get_ignore_weekdays, _set_ignore_weekdays)
     safe_zones = property(_get_safe_zones, _set_safe_zones)
+
+### MAPPERS ###
+
+mapper(PlayerEntry, entries_table, properties={
+    'player':
+       relation(identity.User,
+                primaryjoin=(entries_table.c.player_id ==
+                             identity.users_table.c.user_id),
+                uselist=False,
+                backref=backref('entries',
+                                primaryjoin=(entries_table.c.player_id ==
+                                             identity.users_table.c.user_id),
+                                uselist=True)),
+    'game': relation(Game, backref='entries'),
+    # Yeah, yeah, it's actually a foreign key... but hey, man.  SQLAlchemy is
+    # freaking out about having a relation on top of an existing column name.
+    'killed_by': synonym('_killed_by', map_column=True),
+    'death_date': synonym('_death_date', map_column=True),
+    'feed_date': synonym('_feed_date', map_column=True),
+    'starve_date': synonym('_starve_date', map_column=True),
+})
+
+mapper(Game, games_table, properties={
+    'created': synonym('_created', map_column=True),
+    'started': synonym('_started', map_column=True),
+    'ended': synonym('_ended', map_column=True),
+    'ignore_dates': synonym('_ignore_dates', map_column=True),
+    'ignore_weekdays': synonym('_ignore_weekdays', map_column=True),
+    'safe_zones': synonym('_safe_zones', map_column=True),
+})

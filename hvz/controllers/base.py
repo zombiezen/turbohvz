@@ -45,7 +45,7 @@ def manual_login(user):
     identity_object.visit_key = key
     identity.set_current_identity(identity_object)
     # Associate with session
-    visit_link = model.identity.VisitIdentity.get(key)
+    visit_link = model.identity.VisitIdentity.query.get(key)
     if visit_link is None:
         visit_link = model.identity.VisitIdentity()
         visit_link.visit_key = key

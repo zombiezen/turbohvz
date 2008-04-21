@@ -48,8 +48,7 @@ setup(
     install_requires=[
         "TurboGears >= 1.0.4.4",
         "Genshi >= 0.4.4",
-        "SQLAlchemy>=0.3.10",
-        "Elixir>=0.4.0",
+        "SQLAlchemy>=0.4.2",
         "pytz",
     ],
     zip_safe=False,

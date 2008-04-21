@@ -19,8 +19,6 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from elixir import setup_all
-
 __author__ = 'Ross Light'
 __date__ = 'April 18, 2008'
 __all__ = ['dates',
@@ -32,5 +30,3 @@ from hvz.model import (dates,
                        errors,
                        game,
                        identity,)
-
-setup_all()

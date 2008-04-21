@@ -57,7 +57,7 @@ class GameController(base.BaseController):
     @expose("hvz.templates.game.view")
     def view(self, game_id):
         game_id = int(game_id)
-        requested_game = Game.get(game_id)
+        requested_game = Game.query.get(game_id)
         perms = identity.current.permissions
         if requested_game is None:
             raise base.NotFound()
@@ -106,7 +106,7 @@ class GameController(base.BaseController):
     @identity.require(identity.has_permission('edit-game'))
     def edit(self, game_id):
         game_id = int(game_id)
-        requested_game = Game.get(game_id)
+        requested_game = Game.query.get(game_id)
         if requested_game is None:
             raise base.NotFound()
         values = {}
@@ -121,7 +121,7 @@ class GameController(base.BaseController):
     @identity.require(identity.not_anonymous())
     def reportkill(self, game_id):
         game_id = int(game_id)
-        requested_game = Game.get(game_id)
+        requested_game = Game.query.get(game_id)
         if requested_game is None:
             raise base.NotFound()
         entry = self._get_current_entry(requested_game)
@@ -135,7 +135,7 @@ class GameController(base.BaseController):
     @identity.require(identity.has_permission('join-game'))
     def join(self, game_id):
         game_id = int(game_id)
-        requested_game = Game.get(game_id)
+        requested_game = Game.query.get(game_id)
         if requested_game is None:
             raise base.NotFound()
         return dict(game=requested_game,
@@ -150,7 +150,7 @@ class GameController(base.BaseController):
     @identity.require(identity.has_permission('stage-game'))
     def choose_oz(self, game_id):
         game_id = int(game_id)
-        requested_game = Game.get(game_id)
+        requested_game = Game.query.get(game_id)
         if requested_game is None:
             raise base.NotFound()
         # Build option list
@@ -165,7 +165,7 @@ class GameController(base.BaseController):
     @expose("hvz.templates.game.rules")
     def rules(self, game_id):
         game_id = int(game_id)
-        requested_game = Game.get(game_id)
+        requested_game = Game.query.get(game_id)
         if requested_game is None:
             raise base.NotFound()
         return dict(game=requested_game)
@@ -178,7 +178,7 @@ class GameController(base.BaseController):
         user = identity.current.user
         kill_date = model.dates.as_local(kill_date)
         game_id = int(game_id)
-        requested_game = Game.get(game_id)
+        requested_game = Game.query.get(game_id)
         if requested_game is None:
             raise base.NotFound()
         # Retrieve killer and victim
@@ -204,7 +204,7 @@ class GameController(base.BaseController):
     def action_stage(self, game_id, btnPrev=None, btnNext=None):
         user = identity.current.user
         game_id = int(game_id)
-        requested_game = Game.get(game_id)
+        requested_game = Game.query.get(game_id)
         if requested_game is None:
             raise base.NotFound()
         if btnNext:
@@ -225,7 +225,7 @@ class GameController(base.BaseController):
     def action_join(self, game_id, original_pool=False):
         user = identity.current.user
         game_id = int(game_id)
-        requested_game = Game.get(game_id)
+        requested_game = Game.query.get(game_id)
         if requested_game is None:
             raise base.NotFound()
         if not requested_game.registration_open:
@@ -243,7 +243,7 @@ class GameController(base.BaseController):
     def action_unjoin(self, game_id):
         user = identity.current.user
         game_id = int(game_id)
-        requested_game = Game.get(game_id)
+        requested_game = Game.query.get(game_id)
         if requested_game is None:
             raise base.NotFound()
         if not requested_game.registration_open:
@@ -293,7 +293,7 @@ class GameController(base.BaseController):
                     ignore_dates,
                     safe_zones,
                     rules_notes,):
-        requested_game = Game.get(game_id)
+        requested_game = Game.query.get(game_id)
         if requested_game is None:
             raise base.NotFound()
         requested_game.display_name = display_name
@@ -313,7 +313,7 @@ class GameController(base.BaseController):
     @identity.require(identity.has_permission('delete-game'))
     def action_delete(self, game_id):
         game_id = int(game_id)
-        requested_game = Game.get(game_id)
+        requested_game = Game.query.get(game_id)
         if requested_game is None:
             raise base.NotFound()
         session.delete(requested_game)
@@ -327,7 +327,7 @@ class GameController(base.BaseController):
     @validate(forms.original_zombie_form)
     def action_oz(self, game_id, original_zombie):
         game_id = int(game_id)
-        requested_game = Game.get(game_id)
+        requested_game = Game.query.get(game_id)
         if requested_game is None:
             raise base.NotFound()
         # Check if we're in the right state
@@ -342,7 +342,7 @@ class GameController(base.BaseController):
         if original_zombie == 'random':
             entry = random.choice(pool)
         else:
-            entry = PlayerEntry.get(original_zombie)
+            entry = PlayerEntry.query.get(original_zombie)
             if entry not in pool:
                 msg = _("Original zombie is not a valid choice")
                 raise PlayerNotFoundError(requested_game, msg)

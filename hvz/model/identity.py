@@ -22,21 +22,18 @@
 from datetime import datetime, timedelta
 
 import pkg_resources
-pkg_resources.require("SQLAlchemy>=0.3.10")
-pkg_resources.require("Elixir>=0.4.0")
+pkg_resources.require("SQLAlchemy>=0.4.2")
 
-from elixir import (Entity, Field, OneToMany, ManyToOne, ManyToMany,
-                    options_defaults, using_options,
-                    using_table_options, setup_all,
-                    String, Unicode, Integer, Boolean, DateTime)
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import (Table, Column, ForeignKey, UniqueConstraint,
+                        String, Unicode, Integer, Boolean, DateTime)
+from sqlalchemy.orm import relation, synonym
 from turbogears import identity
-from turbogears.database import session
+from turbogears.database import mapper, metadata, session
 
 from hvz.model.dates import now, date_prop
 
 __author__ = 'Ross Light'
-__date__ = 'March 30, 2008'
+__date__ = 'April 18, 2008'
 __docformat__ = 'reStructuredText'
 __all__ = ['Visit',
            'VisitIdentity',
@@ -44,9 +41,59 @@ __all__ = ['Visit',
            'User',
            'Permission',]
 
-options_defaults['autosetup'] = False
+### TABLES ###
 
-class Visit(Entity):
+visits_table = Table('visit', metadata,
+    Column('visit_key', String(40), primary_key=True),
+    Column('created', DateTime, nullable=False, default=datetime.utcnow),
+    Column('expiry', DateTime)
+)
+
+visit_identity_table = Table('visit_identity', metadata,
+    Column('visit_key', String(40), primary_key=True),
+    Column('user_id', Integer, ForeignKey('tg_user.user_id'), index=True),
+)
+
+groups_table = Table('tg_group', metadata,
+    Column('group_id', Integer, primary_key=True),
+    Column('group_name', Unicode(16), unique=True),
+    Column('display_name', Unicode(255)),
+    Column('created', DateTime),
+)
+
+users_table = Table('tg_user', metadata,
+    Column('user_id', Integer, primary_key=True),
+    Column('user_name', Unicode(16), unique=True),
+    Column('display_name', Unicode(255)),
+    Column('email_address', Unicode(255)),
+    Column('tg_password', Unicode(40)),
+    Column('created', DateTime),
+    Column('profile', Unicode(4096)),
+)
+
+permissions_table = Table('permission', metadata,
+    Column('permission_id', Integer, primary_key=True),
+    Column('permission_name', Unicode(16), unique=True),
+    Column('description', Unicode(255))
+)
+
+user_group_table = Table('user_group', metadata,
+    Column('user_id', Integer, ForeignKey('tg_user.user_id',
+        onupdate='CASCADE', ondelete='CASCADE')),
+    Column('group_id', Integer, ForeignKey('tg_group.group_id',
+        onupdate='CASCADE', ondelete='CASCADE'))
+)
+
+group_permission_table = Table('group_permission', metadata,
+    Column('group_id', Integer, ForeignKey('tg_group.group_id',
+        onupdate='CASCADE', ondelete='CASCADE')),
+    Column('permission_id', Integer, ForeignKey('permission.permission_id',
+        onupdate='CASCADE', ondelete='CASCADE'))
+)
+
+### CLASSES ###
+
+class Visit(object):
     """
     A visit to HvZ
     
@@ -58,17 +105,11 @@ class Visit(Entity):
         expiry : datetime
             When the visit will expire
     """
-    using_options(tablename='visit')
-
-    visit_key = Field(String(40), primary_key=True)
-    created = Field(DateTime, nullable=False, default=datetime.utcnow,)
-    expiry = Field(DateTime)
-    
     @classmethod
     def lookup_visit(cls, visit_key):
-        return Visit.get(visit_key)
+        return cls.query.get(visit_key)
 
-class VisitIdentity(Entity):
+class VisitIdentity(object):
     """
     A visit that has identified itself.
     
@@ -78,12 +119,8 @@ class VisitIdentity(Entity):
         user : `User`
             The user the visit has identified as
     """
-    using_options(tablename='visit_identity')
 
-    visit_key = Field(String(40), primary_key=True)
-    user = ManyToOne('User', colname='user_id', use_alter=True)
-
-class Group(Entity):
+class Group(object):
     """
     A group of users with the same permissions.
     
@@ -103,14 +140,6 @@ class Group(Entity):
         permissions : list of `Permissions`
             The actions the group can perform
     """
-    using_options(tablename='tg_group')
-
-    group_id = Field(Integer, primary_key=True)
-    group_name = Field(Unicode(16), unique=True)
-    display_name = Field(Unicode(255), nullable=False)
-    _created = Field(DateTime, colname='created', synonym='created')
-    users = ManyToMany('User', tablename='user_group')
-    permissions = ManyToMany('Permission', tablename='group_permission')
     
     @classmethod
     def by_group_name(cls, name):
@@ -228,7 +257,7 @@ class Group(Entity):
     
     created = date_prop('_created')
 
-class User(Entity):
+class User(object):
     """
     An individual user of the HvZ application.
     
@@ -264,18 +293,6 @@ class User(Entity):
             Whether the player was part of the first game on the server
     :See: game.PlayerEntry
     """
-    using_options(tablename='tg_user')
-
-    user_id = Field(Integer, primary_key=True)
-    user_name = Field(Unicode(16), unique=True)
-    display_name = Field(Unicode(255), nullable=False)
-    email_address = Field(Unicode(255))
-    _password = Field(Unicode(40), colname='tg_password', synonym='password')
-    _created = Field(DateTime, colname='created', synonym='created')
-    groups = ManyToMany('Group', tablename='user_group')
-    profile = Field(Unicode(4096))
-    
-    entries = OneToMany('hvz.model.game.PlayerEntry', inverse='player')
     
     @classmethod
     def by_user_name(cls, name):
@@ -319,10 +336,10 @@ class User(Entity):
         return p
     
     def _get_password(self):
-        return self._password
+        return self.tg_password
     
     def _set_password(self, new_password):
-        self._password = unicode(identity.encrypt_password(new_password))
+        self.tg_password = unicode(identity.encrypt_password(new_password))
     
     def set_raw_password(self, new_password):
         """
@@ -346,7 +363,7 @@ class User(Entity):
     created = date_prop('_created')
     password = property(_get_password, _set_password)
 
-class Permission(Entity):
+class Permission(object):
     """
     A name that determines what each `Group` can do.
     
@@ -360,12 +377,6 @@ class Permission(Entity):
         groups : list of `Group`
             The groups that have this permission
     """
-    using_options(tablename='permission')
-
-    permission_id = Field(Integer, primary_key=True)
-    permission_name = Field(Unicode(16), unique=True)
-    description = Field(Unicode(255))
-    groups = ManyToMany('Group', tablename='group_permission')
     
     @classmethod
     def by_permission_name(cls, name):
@@ -392,3 +403,19 @@ class Permission(Entity):
     
     def __unicode__(self):
         return self.description
+
+## MAPPERS ##
+
+mapper(Visit, visits_table)
+mapper(VisitIdentity, visit_identity_table,
+       properties=dict(user=relation(User, backref='visit_identity'),))
+mapper(User, users_table,
+        properties=dict(password=synonym('tg_password'),
+                        created=synonym('_created', map_column=True),))
+mapper(Group, groups_table,
+        properties=dict(users=relation(User, backref='groups',
+                                       secondary=user_group_table),
+                        created=synonym('_created', map_column=True),))
+mapper(Permission, permissions_table,
+        properties=dict(groups=relation(Group, backref='permissions',
+                                        secondary=group_permission_table),))

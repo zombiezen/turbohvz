@@ -26,7 +26,7 @@ import sys
 
 import pkg_resources
 pkg_resources.require("TurboGears>=1.0.4.4")
-pkg_resources.require("SQLAlchemy>=0.3.10")
+pkg_resources.require("SQLAlchemy>=0.4.2")
 
 import cherrypy
 import turbogears

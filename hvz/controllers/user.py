@@ -160,7 +160,7 @@ class UserController(base.BaseController):
     @validate(forms.edit_user_form)
     def action_edit(self, user_id, display_name, email_address, profile):
         # Query user
-        requested_user = User.get(user_id)
+        requested_user = User.query.get(user_id)
         if requested_user is None:
             raise NotFound()
         # Check for permission
