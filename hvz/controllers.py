@@ -76,6 +76,10 @@ class BaseController(turbogears.controllers.Controller):
         return dict(tg_template="hvz.templates.notfound", 
                     requested_uri=cherrypy.request.path,)
 
+    @expose()
+    def default(self, *args, **kw):
+        raise NotFound()
+
 class GameController(BaseController):
     @staticmethod
     def _get_current_entry(game):
