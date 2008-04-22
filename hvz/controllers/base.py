@@ -71,6 +71,10 @@ class BaseController(turbogears.controllers.Controller):
                          *args, **kw):
         return dict(tg_template="hvz.templates.notfound", 
                     requested_uri=cherrypy.request.path,)
+    
+    @expose()
+    def default(self, *args, **kw):
+        raise NotFound()
 
 class Root(turbogears.controllers.RootController, BaseController):
     def __init__(self):
