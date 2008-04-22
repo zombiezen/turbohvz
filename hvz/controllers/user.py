@@ -65,7 +65,7 @@ class UserController(base.BaseController):
         else:
             requested_user = User.by_user_name(user_id)
         if requested_user is None:
-            raise NotFound()
+            raise base.NotFound()
         # Generate statistics
         entries = requested_user.entries
         show_oz = (lambda e: not (entry.is_original_zombie and
@@ -97,7 +97,7 @@ class UserController(base.BaseController):
         else:
             requested_user = User.by_user_name(user_id)
         if requested_user is None:
-            raise NotFound()
+            raise base.NotFound()
         # Check for permission
         if not (identity.has_permission(u'edit-user') or
                 identity.current.user == requested_user):
@@ -123,7 +123,7 @@ class UserController(base.BaseController):
         else:
             requested_user = User.by_user_name(user_id)
         if requested_user is None:
-            raise NotFound()
+            raise base.NotFound()
         return dict(user=requested_user)
     
     @expose()
@@ -162,7 +162,7 @@ class UserController(base.BaseController):
         # Query user
         requested_user = User.query.get(user_id)
         if requested_user is None:
-            raise NotFound()
+            raise base.NotFound()
         # Check for permission
         if not (identity.has_permission(u'edit-user') or
                 identity.current.user == requested_user):

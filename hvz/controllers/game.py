@@ -29,6 +29,7 @@ from turbogears.paginate import paginate
 
 from hvz import forms, model, util, widgets #, json
 from hvz.controllers import base
+from hvz.model.errors import PlayerNotFoundError
 from hvz.model.game import PlayerEntry, Game
 
 __author__ = 'Ross Light'
@@ -185,11 +186,10 @@ class GameController(base.BaseController):
         killer = PlayerEntry.by_player(requested_game, user)
         if killer is None:
             msg = _("You are not a part of this game")
-            raise model.errors.PlayerNotFoundError(requested_game, msg)
+            raise PlayerNotFoundError(requested_game, msg)
         victim = PlayerEntry.by_player_gid(requested_game, victim_id)
         if victim is None:
-            raise model.errors.PlayerNotFoundError(requested_game,
-                                            _("Invalid victim"))
+            raise PlayerNotFoundError(requested_game, _("Invalid victim"))
         # Kill user in question
         killer.kill(victim, kill_date)
         # Log it and return to game
