@@ -194,14 +194,32 @@ class TestGame(SADBTest):
             game.next_state()
         assert game.registration_open is True, "Unresponsive registration"
     
+    def test_entry_insertion(self):
+        """Entries should add themselves to the game and the user"""
+        game = model.game.Game(u"Test Game")
+        user = model.identity.User(u"Test User")
+        entry = model.game.PlayerEntry(game, user)
+        session.flush()
+        assert entry in game.entries, "Entry not in game"
+        assert entry in user.entries, "Entry not in user"
+    
+    def test_entry_deletion(self):
+        """Entry destruction should remove itself from user and game"""
+        game = model.game.Game(u"Test Game")
+        user = model.identity.User(u"Test User")
+        entry = model.game.PlayerEntry(game, user)
+        session.flush()
+        entry.delete()
+        session.flush()
+        assert not user.entries, "User still has entries"
+        assert not game.entries, "Game still has entries"
+    
     def test_deletion(self):
         """Game destruction should cascade to entries"""
         game = model.game.Game(u"Game to delete")
         user = model.identity.User(u"Test User")
         entry = model.game.PlayerEntry(game, user)
         session.flush()
-        assert entry in game.entries, "Entry not in game"
-        assert entry in user.entries, "Entry not in user"
         game.delete()
         session.flush()
         assert not user.entries, "User still has entries"

@@ -372,6 +372,17 @@ class PlayerEntry(object):
                             self.game.zombie_report_timedelta)
             return bool(duration <= max_duration)
     
+    def delete(self):
+        """
+        Properly deletes the entry.
+        
+        Use this method instead of ``session.delete``, as this will properly
+        remove all references from the database.
+        """
+        self.game.entries.remove(self)
+        self.player.entries.remove(self)
+        session.delete(self)
+    
     ## PROPERTIES ##
     
     @property
@@ -739,8 +750,7 @@ class Game(object):
         remove all entries from the database.
         """
         for entry in list(self.entries):
-            entry.player.entries.remove(entry)
-            session.delete(entry)
+            entry.delete()
         session.delete(self)
     
     ## PROPERTIES ##

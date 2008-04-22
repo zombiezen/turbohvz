@@ -252,7 +252,7 @@ class GameController(base.BaseController):
                                                Game.STATE_OPEN,
                                                _("Registration is closed"))
         entry = PlayerEntry.by_player(requested_game, user)
-        session.delete(entry)
+        entry.delete()
         link = util.game_link(game_id, redirect=True) + '#sect_entry_list'
         raise turbogears.redirect(link)
     
