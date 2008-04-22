@@ -731,6 +731,18 @@ class Game(object):
         while self.state < self.STATE_ENDED:
             self.next_state(end_time)
     
+    def delete(self):
+        """
+        Properly deletes the game.
+        
+        Use this method instead of ``session.delete``, as this will properly
+        remove all entries from the database.
+        """
+        for entry in list(self.entries):
+            entry.player.entries.remove(entry)
+            session.delete(entry)
+        session.delete(self)
+    
     ## PROPERTIES ##
     
     @property
@@ -860,7 +872,6 @@ mapper(PlayerEntry, entries_table, properties={
                                 primaryjoin=(entries_table.c.player_id ==
                                              identity.users_table.c.user_id),
                                 uselist=True)),
-    'game': relation(Game, backref='entries'),
     'killed_by':
         relation(identity.User,
                  primaryjoin=(entries_table.c.killer_id ==
@@ -875,6 +886,8 @@ mapper(Game, games_table, properties={
     'created': synonym('_created', map_column=True),
     'started': synonym('_started', map_column=True),
     'ended': synonym('_ended', map_column=True),
+    'entries': relation(PlayerEntry, backref='game',
+                        cascade='all, delete, delete-orphan'),
     'ignore_dates': synonym('_ignore_dates', map_column=True),
     'ignore_weekdays': synonym('_ignore_weekdays', map_column=True),
     'safe_zones': synonym('_safe_zones', map_column=True),

@@ -316,7 +316,7 @@ class GameController(base.BaseController):
         requested_game = Game.query.get(game_id)
         if requested_game is None:
             raise base.NotFound()
-        session.delete(requested_game)
+        requested_game.delete()
         session.flush()
         turbogears.flash(_("Game deleted"))
         raise turbogears.redirect('/game/index')

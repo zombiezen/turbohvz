@@ -193,6 +193,18 @@ class TestGame(SADBTest):
         while game.state < model.game.Game.STATE_OPEN:
             game.next_state()
         assert game.registration_open is True, "Unresponsive registration"
+    
+    def test_deletion(self):
+        """Game destruction should cascade to entries"""
+        game = model.game.Game(u"Game to delete")
+        user = model.identity.User(u"Test User")
+        entry = model.game.PlayerEntry(game, user)
+        session.flush()
+        assert entry in game.entries, "Entry not in game"
+        assert entry in user.entries, "Entry not in user"
+        game.delete()
+        session.flush()
+        assert not user.entries, "User still has entries"
 
 class TestGameplay(SADBTest):
     def setUp(self):
