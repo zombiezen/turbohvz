@@ -20,7 +20,7 @@
             // Increment seconds
             currentTime.setUTCSeconds(currentTime.getUTCSeconds() + 1);
             // Format string
-            currentTimeString = toISODate(currentTime) + "T" + toISOTime(currentTime) + tzSign + ((tzHours &lt; 10) ? "0" + tzHours : tzHours) + ":" + ((tzMinutes &lt; 10) ? "0" + tzMinutes : tzMinutes);
+            currentTimeString = toISODate(currentTime) + "T" + toISOTime(currentTime, true) + tzSign + ((tzHours &lt; 10) ? "0" + tzHours : tzHours) + ":" + ((tzMinutes &lt; 10) ? "0" + tzMinutes : tzMinutes);
             // Change the element
             replaceChildNodes(timeElem, currentTimeString);
             // Thank you, call again! :)
