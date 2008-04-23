@@ -34,6 +34,7 @@
                 Welcome, ${tg.identity.user.display_name}.
                 <ul id="user_bar_links">
                     <li><a href="${tg.hvz.user_link(tg.identity.user)}">User Page</a></li>
+                    <li><a href="${tg.hvz.change_password_link()}">Change Password</a></li>
                     <li><a href="${tg.url('/logout')}">Logout</a></li>
                 </ul>
             </py:otherwise>

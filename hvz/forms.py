@@ -34,6 +34,7 @@ __date__ = "April 8, 2008"
 __all__ = ['UserNameValidator',
            'ZoneListConverter',
            'DateListValidator',
+           'PasswordValidator',
            'KillSchema',
            'StageSchema',
            'JoinSchema',
@@ -41,12 +42,14 @@ __all__ = ['UserNameValidator',
            'RegisterSchema',
            'EditUserSchema',
            'GameSchema',
+           'PasswordChangeSchema',
            'kill_form',
            'join_form',
            'original_zombie_form',
            'register_form',
            'edit_user_form',
-           'game_form',]
+           'game_form',
+           'password_change_form',]
 
 ## VALIDATORS ##
 
@@ -115,6 +118,23 @@ class DateListValidator(validators.FancyValidator):
                         for d in value]
         return '\n'.join(date_strings)
 
+class PasswordValidator(validators.FormValidator):
+    password = None
+    __unpackargs__ = ('password',)
+    
+    def validate_python(self, value, state=None):
+        from turbogears.identity import encrypt_password
+        errors = {}
+        requested_user = model.User.query.get(int(value['user_id']))
+        if requested_user is None:
+            errors['user_id'] = "Bad User ID"
+            raise validators.Invalid("This form has errors", value, state,
+                                     error_dict=errors)
+        if encrypt_password(value[self.password]) != requested_user.password:
+            errors[self.password] = "Wrong password"
+            raise validators.Invalid("This form has errors", value, state,
+                                     error_dict=errors)
+
 ## SCHEMAS ##
 
 class KillSchema(validators.Schema):
@@ -166,6 +186,14 @@ class GameSchema(validators.Schema):
     safe_zones = validators.All(ZoneListConverter(),
                                 validators.UnicodeString(max=2048))
     rules_notes = validators.UnicodeString(max=4096)
+
+class PasswordChangeSchema(validators.Schema):
+    user_id = validators.Int()
+    original_password = validators.UnicodeString()
+    password1 = validators.UnicodeString(min=8)
+    password2 = validators.UnicodeString(min=8)
+    chained_validators = [validators.FieldsMatch('password1', 'password2'),
+                          PasswordValidator('original_password'),]
 
 ## FIELDS ##
 
@@ -283,6 +311,19 @@ class GameFields(WidgetsList):
         label=_("Rules Notes"),
         help_text=_("Any additional notes to add to the end of the rules."))
 
+class PasswordChangeFields(WidgetsList):
+    user_id = widgets.HiddenField()
+    original_password = widgets.PasswordField(
+        label=_("Current Password"),
+        help_text=_("Please type your current password for security "
+                    "purposes."),)
+    password1 = widgets.PasswordField(
+        label=_("New Password"),
+        help_text=_("Must be at least 8 characters in length."),)
+    password2 = widgets.PasswordField(
+        label=_("Confirm Password"),
+        help_text=_("For security purposes, retype your password."),)
+
 ## FORMS ##
 
 kill_form = widgets.TableForm(name='kill_form',
@@ -322,4 +363,10 @@ game_form = widgets.TableForm(
     name="game_form",
     fields=GameFields(),
     validator=GameSchema(),)
-    
+
+password_change_form = widgets.TableForm(
+    name="change_password_form",
+    fields=PasswordChangeFields(),
+    validator=PasswordChangeSchema(),
+    action=url('/user/action.changepassword'),
+    submit_text=_("Change"),)

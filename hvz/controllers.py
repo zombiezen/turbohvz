@@ -465,6 +465,13 @@ class UserController(BaseController):
             raise NotFound()
         return dict(user=requested_user)
     
+    @expose("hvz.templates.user.changepassword")
+    @identity.require(identity.not_anonymous())
+    def changepassword(self):
+        requested_user = identity.current.user
+        return dict(form=forms.password_change_form,
+                    user=requested_user,)
+    
     @expose()
     @error_handler(register)
     @validate(forms.register_form)
@@ -514,6 +521,25 @@ class UserController(BaseController):
         requested_user.profile = profile
         # Go to user's page
         turbogears.flash(_("Your changes have been saved."))
+        raise turbogears.redirect(util.user_link(requested_user, redirect=True))
+    
+    @expose()
+    @error_handler(changepassword)
+    @validate(forms.password_change_form)
+    def action_changepassword(self, user_id, original_password,
+                              password1, password2):
+        # Query user
+        requested_user = model.User.query.get(user_id)
+        if requested_user is None:
+            raise base.NotFound()
+        # Check for permission
+        if identity.current.user != requested_user:
+            raise identity.IdentityFailure("Current user cannot change "
+                                           "others' passwords.")
+        # Make necessary changes
+        requested_user.password = password1
+        # Go back to user's page
+        turbogears.flash(_("Your password has been changed."))
         raise turbogears.redirect(util.user_link(requested_user, redirect=True))
 
 class Root(turbogears.controllers.RootController, BaseController):
