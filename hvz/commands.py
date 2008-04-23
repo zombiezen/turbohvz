@@ -26,7 +26,7 @@ import sys
 
 import pkg_resources
 pkg_resources.require("TurboGears>=1.0.4.4")
-pkg_resources.require("SQLAlchemy>=0.4.2")
+pkg_resources.require("SQLAlchemy>=0.3.10")
 
 import cherrypy
 import turbogears
@@ -87,7 +87,7 @@ def start(args=None):
     else:
         _load_config()
     # Start the server
-    from hvz.controllers.base import Root
+    from hvz.controllers import Root
     turbogears.start_server(Root())
 
 def start_wsgi(args=None):
@@ -100,7 +100,7 @@ def start_wsgi(args=None):
     else:
         _load_config()
     # Start the server
-    from hvz.controllers.base import Root
+    from hvz.controllers import Root
     cherrypy.root = Root()
     # These two parameters ensure that this does not block, so WSGI hooks can
     # work properly and not hang.
@@ -117,28 +117,28 @@ def create_permissions(args=None):
         _load_config()
     # Import necessary modules
     from turbogears.database import session
-    from hvz.model.identity import Permission, Group
+    from hvz import model
     # Create groups
-    player = Group(u"player", u"Player")
-    admin = Group(u"admin", u"Administrator")
+    player = model.Group(u"player", u"Player")
+    admin = model.Group(u"admin", u"Administrator")
     # Create permissions
-    perms = {'view-player-gid': Permission(u"view-player-gid",
-                                           u"View Player Game IDs"),
-             'view-oz': Permission(u"view-oz",
-                                   u"View Original Zombie"),
-             'edit-user': Permission(u"edit-user",
-                                     u"Edit Any User"),
-             'view-user-email': Permission(u"view-user-email",
-                                           u"View users' email addresses"),
-             'sudo-login': Permission(u"sudo-login",
-                                      u"Log in as anyone"),
-             'view-int-name': Permission(u"view-int-name",
-                                         u"View internal user names"),
-             'create-game': Permission(u"create-game", u"Create Games"),
-             'delete-game': Permission(u"delete-game", u"Delete Games"),
-             'edit-game': Permission(u"edit-game", u"Edit Games"),
-             'join-game': Permission(u"join-game", u"Join Games"),
-             'stage-game': Permission(u"stage-game", u"Stage Games"),}
+    perms = {'view-player-gid': model.Permission(u"view-player-gid",
+                                                 u"View Player Game IDs"),
+             'view-oz': model.Permission(u"view-oz",
+                                         u"View Original Zombie"),
+             'edit-user': model.Permission(u"edit-user",
+                                           u"Edit Any User"),
+             'view-user-email': model.Permission(u"view-user-email",
+                                                 u"View users' email addresses"),
+             'sudo-login': model.Permission(u"sudo-login",
+                                            u"Log in as anyone"),
+             'view-int-name': model.Permission(u"view-int-name",
+                                               u"View internal user names"),
+             'create-game': model.Permission(u"create-game", u"Create Games"),
+             'delete-game': model.Permission(u"delete-game", u"Delete Games"),
+             'edit-game': model.Permission(u"edit-game", u"Edit Games"),
+             'join-game': model.Permission(u"join-game", u"Join Games"),
+             'stage-game': model.Permission(u"stage-game", u"Stage Games"),}
     # Set up group permissions
     player.add_permission(perms['join-game'])
     for perm in perms.itervalues():
@@ -158,9 +158,9 @@ def create_admin(args=None):
     # Import necessary modules
     from getpass import getpass
     from turbogears.database import session
-    from hvz.model.identity import Group, User
+    from hvz import model
     # Check for admin group
-    admin = Group.by_group_name(u'admin')
+    admin = model.Group.by_group_name(u'admin')
     if admin is None:
         raise ConfigurationError("No administrator group found")
     # Get user information
@@ -181,7 +181,7 @@ def create_admin(args=None):
         else:
             print >> sys.stderr, "Error: Passwords don't match"
     # Create user
-    new_admin = User(user_name, display_name, email_address, password1)
+    new_admin = model.User(user_name, display_name, email_address, password1)
     admin.add_user(new_admin)
     # Flush to database
     session.flush()

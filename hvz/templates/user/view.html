@@ -44,30 +44,7 @@
     <h2 id="sect_games">Games</h2>
     <div py:replace="tg.display(game_grid, games)">[Games]</div>
     <h2 id="sect_statistics">Statistics</h2>
-    <table id="user_statistics" class="info_table">
-        <tbody>
-            <tr>
-                <th>Total games:</th>
-                <td py:content="stats.total_games">[#]</td>
-            </tr>
-            <tr>
-                <th>Total kills:</th>
-                <td py:content="stats.total_kills">[#]</td>
-            </tr>
-            <tr>
-                <th>Total times killed:</th>
-                <td py:content="stats.total_killed">[#]</td>
-            </tr>
-            <tr py:if="stats.avg_survival is not None">
-                <th>Average survival time:</th>
-                <td py:content="tg.display_date(stats.avg_survival)">[#]</td>
-            </tr>
-            <tr py:if="stats.avg_undead is not None">
-                <th>Average undead time:</th>
-                <td py:content="tg.display_date(stats.avg_undead)">[#]</td>
-            </tr>
-        </tbody>
-    </table>
+    <p style="font-style: italic">Coming Soon!</p>
     <script type="text/javascript">
         // EVENTS //
         safe_connect('edit_button', 'onclick',

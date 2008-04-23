@@ -190,11 +190,6 @@ html, body
     margin-bottom: 0;
 }
 
-.pager .current
-{
-    font-weight: bolder;
-}
-
 /* TURBOGEARS ELEMENTS */
 
 #status_block
