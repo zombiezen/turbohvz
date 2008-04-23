@@ -115,7 +115,7 @@ def display(widget, *args, **kw):
 def display_date(date):
     """Format dates uniformly"""
     if isinstance(date, datetime.datetime):
-        from model.dates import to_local
+        from model import to_local
         return unicode(to_local(date).replace(microsecond=0).isoformat())
     elif isinstance(date, datetime.date):
         return unicode(date.isoformat())
@@ -251,7 +251,7 @@ def str2bool(s, *args):
                 raise ValueError("Invalid bool: %r" % s)
 
 def user_link(user, action='view', **params):
-    from hvz.model.identity import User
+    from hvz.model import User
     if isinstance(user, User):
         base = '/user/%s/%s' % (quote(action, ''), quote(user.user_name, ''))
         return _make_app_link(base, params)

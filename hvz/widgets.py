@@ -24,7 +24,6 @@ from turbogears import url
 from turbogears.widgets import Widget
 
 from hvz import util
-from hvz.model.game import PlayerEntry
 
 __author__ = "Ross Light"
 __date__ = "March 31, 2008"
@@ -172,18 +171,21 @@ class EntryList(CustomDataGrid):
         return link
     
     def _get_affiliation_col(self, row, column):
+        from hvz.model import PlayerEntry
         if not self.show_oz and row.is_original_zombie:
             return row.STATE_NAMES[PlayerEntry.STATE_HUMAN]
         else:
             return row.affiliation
     
     def _get_oz_date_col(self, row, column):
+        from hvz.model import PlayerEntry
         if not self.show_oz and row.is_original_zombie:
             return u""
         else:
             return _get_date_col(row, column)
     
     def _get_kills_col(self, row, column):
+        from hvz.model import PlayerEntry
         if not self.show_oz and row.is_original_zombie:
             return 0
         else:
