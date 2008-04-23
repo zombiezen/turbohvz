@@ -38,6 +38,7 @@ class Pager(Widget):
     template = "hvz.templates.widgets.pager"
 
 def _get_date_col(row, column):
+    column = column.lstrip('_')
     date = getattr(row, column, None)
     if date is None:
         return u""
@@ -105,20 +106,20 @@ class CustomDataGrid(Widget):
 class GameList(CustomDataGrid):
     name = "game_list"
     grid_class = "custom_grid game_list"
-    default_columns = ['game_id', 'display_name', 'created', 'player_count']
+    default_columns = ['game_id', 'display_name', '_created', 'player_count']
     exclude_sorting = ['player_count']
     column_titles = {'game_id': _("ID"),
                      'display_name': _("Name"),
-                     'created': _("Created"),
-                     'started': _("Started"),
-                     'ended': _("Ended"),
+                     '_created': _("Created"),
+                     '_started': _("Started"),
+                     '_ended': _("Ended"),
                      'player_count': _("Players"),}
     accessors = {'game_id': '_get_link_col',
                  'display_name': '_get_link_col',
                  'player_count': (lambda r, c: len(r.entries)),
-                 'created': _get_date_col,
-                 'started': _get_date_col,
-                 'ended': _get_date_col,
+                 '_created': _get_date_col,
+                 '_started': _get_date_col,
+                 '_ended': _get_date_col,
                  '*': CustomDataGrid.default_accessor,}
     no_data_msg = _("No games found")
     
@@ -132,25 +133,25 @@ class GameList(CustomDataGrid):
 class EntryList(CustomDataGrid):
     name = "player_list"
     grid_class = "custom_grid player_list"
-    default_columns = ['name', 'affiliation', 'death_date',
-                       'feed_date', 'kills']
+    default_columns = ['name', 'affiliation', '_death_date',
+                       '_feed_date', 'kills']
     exclude_sorting = ['affiliation',
-                       'death_date',
-                       'feed_date',
-                       'starve_date',
+                       '_death_date',
+                       '_feed_date',
+                       '_starve_date',
                        'kills',]
     column_titles = {'player_gid': _("Game ID"),
                      'name': _("Player Name"),
-                     'death_date': _("Death Date"),
-                     'feed_date': _("Feed Date"),
-                     'starve_date': _("Starve Date"),
+                     '_death_date': _("Death Date"),
+                     '_feed_date': _("Feed Date"),
+                     '_starve_date': _("Starve Date"),
                      'kills': _("Kills"),
                      'affiliation': _("Affiliation"),}
     accessors = {'name': '_get_name_col',
                  'affiliation': '_get_affiliation_col',
-                 'death_date': '_get_oz_date_col',
-                 'feed_date': '_get_oz_date_col',
-                 'starve_date': '_get_oz_date_col',
+                 '_death_date': '_get_oz_date_col',
+                 '_feed_date': '_get_oz_date_col',
+                 '_starve_date': '_get_oz_date_col',
                  'kills': '_get_kills_col',
                  '*': CustomDataGrid.default_accessor,}
     no_data_msg = _("No players have joined yet")
@@ -192,14 +193,14 @@ class EntryList(CustomDataGrid):
 class UserList(CustomDataGrid):
     name = "user_list"
     grid_class = "custom_grid user_list"
-    default_columns = ['display_name', 'created']
+    default_columns = ['display_name', '_created']
     column_titles = {'user_id': _("UID"),
                      'user_name': _("Login"),
                      'email_address': _("Email"),
                      'display_name': _("Name"),
-                     'created': _("Joined"),}
+                     '_created': _("Joined"),}
     accessors = {'display_name': '_get_display_name_col',
-                 'created': _get_date_col,
+                 '_created': _get_date_col,
                  '*': 'default_accessor'}
     no_data_msg = _("No users yet")
     
