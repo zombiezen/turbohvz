@@ -170,7 +170,7 @@ class UserController(base.BaseController):
     @error_handler(edit)
     @validate(forms.edit_user_form)
     def action_edit(self, user_id, display_name, email_address,
-                    profile, new_image):
+                    profile, new_image, clear_user_image=False,):
         # Query user
         requested_user = User.query.get(user_id)
         if requested_user is None:
@@ -181,7 +181,7 @@ class UserController(base.BaseController):
             raise identity.IdentityFailure("Current user cannot edit "
                                            "others' accounts.")
         # Create image
-        if new_image.filename:
+        if not clear_user_image and new_image.filename:
             image_obj = Image()
             image_obj.write(new_image.file)
         else:
@@ -190,7 +190,12 @@ class UserController(base.BaseController):
         requested_user.display_name = display_name
         requested_user.email_address = email_address
         requested_user.profile = profile
-        if image_obj:
+        if clear_user_image:
+            if requested_user.image is not None:
+                requested_user.image.delete()
+        elif image_obj:
+            if requested_user.image is not None:
+                requested_user.image.delete()
             requested_user.image = image_obj
         # Go to user's page
         turbogears.flash(_("Your changes have been saved."))

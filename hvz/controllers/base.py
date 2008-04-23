@@ -66,6 +66,13 @@ class BaseController(turbogears.controllers.Controller):
                     error=tg_exception,)
     
     @turbogears.errorhandling.dispatch_error.when(
+        "isinstance(tg_exceptions, model.errors.ImageError)")
+    def handle_image_error(self, tg_source, tg_errors, tg_exception,
+                           *args, **kw):
+        return dict(tg_template="hvz.templates.imageerror",
+                    error=tg_exception,)
+    
+    @turbogears.errorhandling.dispatch_error.when(
         "isinstance(tg_exceptions, NotFound)")
     def handle_not_found(self, tg_source, tg_errors, tg_exception,
                          *args, **kw):
@@ -91,9 +98,8 @@ class Root(turbogears.controllers.RootController, BaseController):
         img = model.images.Image.by_uuid(image_uuid)
         if img is None:
             raise NotFound()
-        # TODO: Get proper MIME type
-        return cherrypy.lib.cptools.serve_file(img.path,
-                                               contentType='image/jpeg')
+        mime_type = img.get_mime_type()
+        return cherrypy.lib.cptools.serve_file(img.path, contentType=mime_type)
     
     @expose("hvz.templates.welcome")
     def index(self):

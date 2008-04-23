@@ -174,6 +174,7 @@ class EditUserSchema(validators.Schema):
     email_address = validators.Email()
     profile = validators.UnicodeString(max=4096, strip=True)
     new_image = validators.FieldStorageUploadConverter()
+    clear_user_image = validators.Bool()
 
 class GameSchema(validators.Schema):
     game_id = validators.Int(if_empty=None, not_empty=False)
@@ -248,6 +249,18 @@ class RegisterFields(WidgetsList):
         cols=64,
         rows=20,)
 
+def _new_image_help_text():
+    from hvz.util import display_file_size
+    max_file_size = model.images.Image.get_max_file_size()
+    max_image_width, max_image_height = model.images.Image.get_max_image_size()
+    return _("[Optional] A picture of yourself.  This image must be under %s "
+             "and smaller than %ix%i pixels.  If you leave this field blank, "
+             "your current image will be kept, unless you check the box "
+             "below.") % \
+        (display_file_size(max_file_size),
+         max_image_width,
+         max_image_height)
+
 class EditUserFields(WidgetsList):
     user_id = widgets.HiddenField()
     display_name = widgets.TextField(
@@ -266,7 +279,11 @@ class EditUserFields(WidgetsList):
         rows=20,)
     new_image = widgets.FileField(
         label=_("Image"),
-        help_text=_("[Optional] A picture of yourself."),)
+        help_text=_new_image_help_text(),)
+    clear_user_image = widgets.CheckBox(
+        label=_("Delete Image"),
+        help_text=_("If you check this box, your current image will be "
+                    "permanently deleted."),)
 
 class GameFields(WidgetsList):
     game_id = widgets.HiddenField()

@@ -21,6 +21,20 @@
 
 """Utility functions provided to templates and the rest of the project"""
 
+from __future__ import division
+from cgi import escape
+import datetime
+import re
+from urllib import quote, quote_plus, unquote, urlencode
+from urlparse import urlparse, urlunparse
+from uuid import UUID
+
+import cherrypy
+import genshi
+import turbogears
+from turbogears.util import DictObj
+from turbojson.jsonify import encode as jsencode
+
 __author__ = 'Ross Light'
 __date__ = 'March 30, 2008'
 __docformat__ = 'reStructuredText'
@@ -30,8 +44,10 @@ __all__ = ['abslink',
            'change_password_link',
            'display',
            'display_date',
+           'display_file_size',
            'display_weekday',
            'game_link',
+           'image_link',
            'insecurelink',
            'insecureurl',
            'login_link',
@@ -44,18 +60,6 @@ __all__ = ['abslink',
            'to_uuid',
            'user_link',
            'add_template_variables',]
-
-from cgi import escape
-import datetime
-import re
-from urllib import quote, quote_plus, unquote, urlencode
-from urlparse import urlparse, urlunparse
-
-import cherrypy
-import genshi
-import turbogears
-from turbogears.util import DictObj
-from turbojson.jsonify import encode as jsencode
 
 _nl_pattern = re.compile(r'((?:\r\n)|[\r\n])')
 
@@ -137,6 +141,32 @@ def display_date(date):
     else:
         raise TypeError("display_date received a non-datetime %r" % date)
 
+def display_file_size(size):
+    """
+    Formats a file size to something human-readable.
+    
+    :Parameters:
+        size : int
+            The file size (in bytes)
+    :Returns: The human-readable file size
+    :ReturnType: unicode
+    """
+    base = 1024
+    if size < (base ** 1):
+        return _("%i bytes") % (size)
+    elif size < (base ** 2):
+        return _("%g KiB") % (size / (base ** 1))
+    elif size < (base ** 3):
+        return _("%g MiB") % (size / (base ** 2))
+    elif size < (base ** 4):
+        return _("%g GiB") % (size / (base ** 3))
+    elif size < (base ** 5):
+        # Not sure why we need this, but you never know...
+        return _("%g TiB") % (size / (base ** 4))
+    else:
+        # Okay, we really shouldn't be worrying about sizes this big...
+        return _("%g PiB") % (size / (base ** 5))
+
 def display_weekday(day):
     """Turn an ISO weekday to a name"""
     lookup = {1: _("Monday"),
@@ -154,6 +184,15 @@ def game_link(game, action='view', **params):
     else:
         game = game.game_id
     base = '/game/%s/%s' % (quote(action, ''), quote(str(game), ''))
+    return _make_app_link(base, params)
+
+def image_link(image, **params):
+    from hvz.model.images import Image
+    if isinstance(image, Image):
+        image_uuid = image.uuid
+    else:
+        image_uuid = to_uuid(image)
+    base = '/image/%s' % (quote(str(image_uuid), ''))
     return _make_app_link(base, params)
 
 def insecurelink(path):
@@ -252,7 +291,6 @@ def str2bool(s, *args):
                 raise ValueError("Invalid bool: %r" % s)
 
 def to_uuid(value):
-    from uuid import UUID
     if isinstance(value, UUID) or value is None:
         return value
     elif isinstance(value, basestring):
@@ -283,6 +321,7 @@ def user_link(user, action='view', **params):
 def add_template_variables(vars):
     hvzNamespace = DictObj(change_password_link=change_password_link,
                            game_link=game_link,
+                           image_link=image_link,
                            login_link=login_link,
                            register_link=register_link,
                            user_link=user_link,)
@@ -292,6 +331,7 @@ def add_template_variables(vars):
                   change_params=change_params,
                   display=display,
                   display_date=display_date,
+                  display_file_size=display_file_size,
                   display_weekday=display_weekday,
                   insecurelink=insecurelink,
                   insecureurl=insecureurl,

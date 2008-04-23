@@ -26,7 +26,9 @@ __all__ = ['ModelError',
            'WrongStateError',
            'InvalidTimeError',
            'PlayerNotFoundError',
-           'BadImageError',]
+           'ImageError',
+           'InvalidImageTypeError',
+           'ImageNotFoundError',]
 
 class ModelError(Exception):
     """
@@ -112,5 +114,14 @@ class InvalidTimeError(ModelError):
 class PlayerNotFoundError(ModelError):
     """Raised when a player can't be found (i.e. an invalid GID is given)."""
 
-class BadImageError(Exception):
-    """Exception raised if there is an image is unacceptable."""
+class ImageError(Exception):
+    """Base exception for all image-related errors."""
+
+class InvalidImageTypeError(ImageError):
+    """Raised when the image's type is not allowed or not known."""
+
+class ImageNotFoundError(ImageError):
+    """
+    Raised when an operation requiring a image file is used when the image
+    file does not exist.
+    """

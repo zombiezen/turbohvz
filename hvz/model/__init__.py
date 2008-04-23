@@ -24,9 +24,11 @@ __date__ = 'April 18, 2008'
 __all__ = ['dates',
            'errors',
            'game',
-           'identity',]
+           'identity',
+           'images',]
 
 from hvz.model import (dates,
                        errors,
                        game,
-                       identity,)
+                       identity,
+                       images,)

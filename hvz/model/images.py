@@ -32,12 +32,32 @@ from PIL import Image as PILImage
 from turbogears import config
 
 import hvz
-from hvz.model.errors import BadImageError
+from hvz.model.errors import InvalidImageTypeError, ImageNotFoundError
 
 __author__ = 'Ross Light'
 __date__ = 'April 23, 2008'
 __docformat__ = 'reStructuredText'
-__all__ = ['Image']
+__all__ = ['pil_mime_types',
+           'Image',]
+
+pil_mime_types = {'BMP':  'image/x-ms-bmp',
+                  'CUR':  'image/vnd.microsoft.icon',
+                  'EPS':  'image/eps',
+                  'FPX':  'image/fpx',
+                  'GIF':  'image/gif',
+                  'ICO':  'image/vnd.microsoft.icon',
+                  'JPEG': 'image/jpeg',
+                  'PCX':  'image/pcx',
+                  'PDF':  'application/pdf',
+                  'PNG':  'image/png',
+                  'PPM':  'image/x-ppm',
+                  'PSD':  'image/photoshop',
+                  'SGI':  'image/sgi',
+                  'TGA':  'image/x-targa',
+                  'TIFF': 'image/tiff',
+                  'WMF':  'image/x-wmf',
+                  'XBM':  'image/x-xbm',
+                  'XPM':  'image/x-xpm',}
 
 class Image(object):
     @staticmethod
@@ -47,13 +67,14 @@ class Image(object):
         if os.path.isdir(dirname):
             pass
         elif os.path.exists(dirname):
-            raise IOError("Image directory already exists")
+            raise IOError("Image directory path is not a directory")
         else:
             os.mkdir(dirname)
         return dirname
     
     @staticmethod
     def get_max_file_size():
+        # Defaults to 1MiB
         return config.get('hvz.image_max_file_size', 1024 * 1024)
     
     @staticmethod
@@ -91,6 +112,17 @@ class Image(object):
             uuid = uuid4()
         self.uuid = hvz.util.to_uuid(uuid)
     
+    def get_mime_type(self):
+        path = self.path
+        if not os.path.exists(path):
+            raise IOError("Image does not exist")
+        try:
+            img = PILImage.open(path)
+        except IOError:
+            raise InvalidImageTypeError("Unrecognized data")
+        else:
+            return pil_mime_types.get(img.format, 'application/octet-stream')
+    
     def write(self, data):
         from shutil import copyfileobj
         # Convert to StringIO if data is string
@@ -100,22 +132,24 @@ class Image(object):
         max_size = self.get_max_file_size()
         img_buffer = data.read(max_size + 1)
         if len(img_buffer) > max_size:
-            raise BadImageError("Image is greater than %i bytes" % max_size)
+            raise InvalidImageTypeError("Image is greater than %i bytes" %
+                                        max_size)
         data.seek(0)
         # Check for acceptable types
         try:
             img = PILImage.open(data)
         except IOError:
-            raise BadImageError("Unrecognized data")
+            raise InvalidImageTypeError("Unrecognized data")
         else:
             if img.format not in self.get_allowed_formats():
-                raise BadImageError("Image is %r, not allowed" % img.format)
+                raise InvalidImageTypeError("Image is %r, not allowed" %
+                                            img.format)
         # Check for size
         max_width, max_height = self.get_max_image_size()
         img_width, img_height = img.size
         if img_width > max_width or img_height > max_height:
-            raise BadImageError("Image is greater than %ix%i" % (max_width,
-                                                                 max_height))
+            raise InvalidImageTypeError("Image is larger than %ix%i" %
+                                        (max_width, max_height))
         # Clean up PIL image
         del img
         data.seek(0)
@@ -124,6 +158,13 @@ class Image(object):
         f = open(path, 'wb')
         copyfileobj(data, f)
         f.close()
+    
+    def delete(self):
+        path = self._get_image_path(self.uuid)
+        if os.path.exists(path):
+            os.remove(path)
+        else:
+            raise ImageNotFoundError("Image does not exist")
     
     @property
     def path(self):

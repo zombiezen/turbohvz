@@ -257,7 +257,7 @@ html, body
 #user_profile_image
 {
     float: left;
-    height: 128px;
+    max-width: 128px;
     margin-right: 1em;
     margin-bottom: 1em;
 }
