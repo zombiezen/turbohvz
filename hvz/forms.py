@@ -173,6 +173,7 @@ class EditUserSchema(validators.Schema):
     display_name = validators.UnicodeString(min=1, max=255, strip=True)
     email_address = validators.Email()
     profile = validators.UnicodeString(max=4096, strip=True)
+    new_image = validators.FieldStorageUploadConverter()
 
 class GameSchema(validators.Schema):
     game_id = validators.Int(if_empty=None, not_empty=False)
@@ -263,6 +264,9 @@ class EditUserFields(WidgetsList):
                     "Must be under 4096 characters in length."),
         cols=64,
         rows=20,)
+    new_image = widgets.FileField(
+        label=_("Image"),
+        help_text=_("[Optional] A picture of yourself."),)
 
 class GameFields(WidgetsList):
     game_id = widgets.HiddenField()

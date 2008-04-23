@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#   model.py
+#   model/identity.py
 #   TurboHvZ
 #
 #   Copyright (C) 2008 Ross Light
@@ -20,6 +20,7 @@
 #
 
 from datetime import datetime, timedelta
+from uuid import UUID, uuid4
 
 import pkg_resources
 pkg_resources.require("SQLAlchemy>=0.4.2")
@@ -30,6 +31,7 @@ from sqlalchemy.orm import relation, synonym
 from turbogears import identity
 from turbogears.database import mapper, metadata, session
 
+import hvz
 from hvz.model.dates import now, date_prop
 
 __author__ = 'Ross Light'
@@ -69,6 +71,7 @@ users_table = Table('tg_user', metadata,
     Column('tg_password', Unicode(40)),
     Column('created', DateTime),
     Column('profile', Unicode(4096)),
+    Column('image_uuid', String(32)),
 )
 
 permissions_table = Table('permission', metadata,
@@ -351,6 +354,33 @@ class User(object):
         """
         self._password = unicode(new_password)
     
+    def _get_image_uuid(self):
+        if self._image_uuid is None:
+            return None
+        else:
+            return UUID(hex=self._image_uuid)
+    
+    def _set_image_uuid(self, value):
+        value = hvz.util.to_uuid(value)
+        self._image_uuid = value.hex
+    
+    def _get_image(self):
+        if self.image_uuid is not None:
+            return hvz.model.images.Image.by_uuid(self.image_uuid)
+        else:
+            return None
+    
+    def _set_image(self, value):
+        if self._image_uuid:
+            # TODO: Clean up old image
+            pass
+        if value is None:
+            self.image_uuid = None
+        elif isinstance(value, hvz.model.images.Image):
+            self.image_uuid = value.uuid
+        else:
+            self.image_uuid = value
+    
     @property
     def is_legendary(self):
         from hvz.model.game import Game, PlayerEntry
@@ -362,6 +392,8 @@ class User(object):
     
     created = date_prop('_created')
     password = property(_get_password, _set_password)
+    image_uuid = property(_get_image_uuid, _set_image_uuid)
+    image = property(_get_image, _set_image)
 
 class Permission(object):
     """
@@ -411,7 +443,8 @@ mapper(VisitIdentity, visit_identity_table,
        properties=dict(user=relation(User, backref='visit_identity'),))
 mapper(User, users_table,
         properties=dict(password=synonym('tg_password'),
-                        created=synonym('_created', map_column=True),))
+                        created=synonym('_created', map_column=True),
+                        image_uuid=synonym('_image_uuid', map_column=True),))
 mapper(Group, groups_table,
         properties=dict(users=relation(User, backref='groups',
                                        secondary=user_group_table),

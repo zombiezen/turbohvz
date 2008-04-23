@@ -254,6 +254,14 @@ html, body
     height: 32px;
 }
 
+#user_profile_image
+{
+    float: left;
+    height: 128px;
+    margin-right: 1em;
+    margin-bottom: 1em;
+}
+
 /* MISC FORMATTING */
 
 a.link, a, a.active
@@ -266,6 +274,7 @@ h1, h2, h3, h4, h5, h6
     color: #600;
     font-family: Impact, Arial, FreeSans, sans-serif;
     font-weight: bold;
+    clear: both;
 }
 
 h1#title

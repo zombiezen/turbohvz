@@ -33,6 +33,7 @@
         <button py:if="'sudo-login' in tg.identity.permissions" id="sudo_button">Sudo</button>
     </div>
     <h2 id="sect_profile">Profile</h2>
+    <img py:if="user.image" id="user_profile_image" src="${tg.url('/image/' + user.image.uuid.hex)}" alt="User picture" />
     <div py:if="tg.config('hvz.show_legendary', False) and user.is_legendary" id="legendary" title="This user was a participant in the server's first game.">
         <img src="${tg.url('/static/images/star.png')}" alt="star" />
         Legendary

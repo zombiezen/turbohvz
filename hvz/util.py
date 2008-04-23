@@ -41,6 +41,7 @@ __all__ = ['abslink',
            'securelink',
            'secureurl',
            'str2bool',
+           'to_uuid',
            'user_link',
            'add_template_variables',]
 
@@ -249,6 +250,21 @@ def str2bool(s, *args):
                 return args[0]
             else:
                 raise ValueError("Invalid bool: %r" % s)
+
+def to_uuid(value):
+    from uuid import UUID
+    if isinstance(value, UUID) or value is None:
+        return value
+    elif isinstance(value, basestring):
+        if len(value) == 16:
+            return UUID(bytes=value)
+        else:
+            return UUID(value)
+    elif isinstance(value, (int, long)):
+        return UUID(int=value)
+    else:
+        raise TypeError("Unrecognized type for UUID, got '%s'" %
+                        (type(value).__name__))
 
 def user_link(user, action='view', **params):
     from hvz.model.identity import User

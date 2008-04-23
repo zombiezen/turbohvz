@@ -30,6 +30,7 @@ from turbogears.paginate import paginate
 from hvz import forms, util, widgets
 from hvz.controllers import base
 from hvz.model.identity import User, Group
+from hvz.model.images import Image
 
 __author__ = 'Ross Light'
 __date__ = 'April 18, 2008'
@@ -107,7 +108,10 @@ class UserController(base.BaseController):
         values = {}
         for field in forms.edit_user_form.fields:
             name = field.name
-            values[name] = getattr(requested_user, name)
+            try:
+                values[name] = getattr(requested_user, name)
+            except AttributeError:
+                pass
         return dict(user=requested_user,
                     form=forms.edit_user_form,
                     values=values,)
@@ -165,7 +169,8 @@ class UserController(base.BaseController):
     @expose()
     @error_handler(edit)
     @validate(forms.edit_user_form)
-    def action_edit(self, user_id, display_name, email_address, profile):
+    def action_edit(self, user_id, display_name, email_address,
+                    profile, new_image):
         # Query user
         requested_user = User.query.get(user_id)
         if requested_user is None:
@@ -175,10 +180,18 @@ class UserController(base.BaseController):
                 identity.current.user == requested_user):
             raise identity.IdentityFailure("Current user cannot edit "
                                            "others' accounts.")
+        # Create image
+        if new_image.filename:
+            image_obj = Image()
+            image_obj.write(new_image.file)
+        else:
+            image_obj = None
         # Make necessary changes
         requested_user.display_name = display_name
         requested_user.email_address = email_address
         requested_user.profile = profile
+        if image_obj:
+            requested_user.image = image_obj
         # Go to user's page
         turbogears.flash(_("Your changes have been saved."))
         raise redirect(util.user_link(requested_user, redirect=True))

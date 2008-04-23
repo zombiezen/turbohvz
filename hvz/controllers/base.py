@@ -86,6 +86,15 @@ class Root(turbogears.controllers.RootController, BaseController):
         # Make sure we have real randomness
         random.seed()
     
+    @expose()
+    def image(self, image_uuid):
+        img = model.images.Image.by_uuid(image_uuid)
+        if img is None:
+            raise NotFound()
+        # TODO: Get proper MIME type
+        return cherrypy.lib.cptools.serve_file(img.path,
+                                               contentType='image/jpeg')
+    
     @expose("hvz.templates.welcome")
     def index(self):
         return dict()
