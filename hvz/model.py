@@ -486,7 +486,7 @@ class PlayerEntry(Entity):
             # full attribute setup
             self.state = self.STATE_ORIGINAL_ZOMBIE
             self.death_date = date
-        elif self.state == self.is_original_zombie:
+        elif self.is_original_zombie:
             self.death_date = date
         else:
             raise WrongStateError(self, self.state, self.STATE_HUMAN,
