@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://web.resource.org/cc/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="256"
+   height="256"
+   id="svg2"
+   sodipodi:version="0.32"
+   inkscape:version="0.45.1"
+   version="1.0"
+   sodipodi:docbase="/home/ross/src/Python/Projects/TurboHvZ/hvz/static/images"
+   sodipodi:docname="no-user-picture.svg"
+   inkscape:output_extension="org.inkscape.output.svg.inkscape"
+   inkscape:export-filename="/home/ross/src/Python/Projects/TurboHvZ/hvz/static/images/no-user-picture.png"
+   inkscape:export-xdpi="45"
+   inkscape:export-ydpi="45">
+  <defs
+     id="defs4">
+    <filter
+       inkscape:collect="always"
+       x="-0.089588019"
+       width="1.179176"
+       y="-0.46059038"
+       height="1.9211808"
+       id="filter5222">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="7.3901367"
+         id="feGaussianBlur5224" />
+    </filter>
+    <filter
+       inkscape:collect="always"
+       x="-0.10125"
+       width="1.2025"
+       y="-0.081"
+       height="1.162"
+       id="filter6199">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="5.4"
+         id="feGaussianBlur6201" />
+    </filter>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     gridtolerance="10000"
+     guidetolerance="10"
+     objecttolerance="10"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1"
+     inkscape:cx="160.18005"
+     inkscape:cy="124.43503"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     width="256px"
+     height="256px"
+     showgrid="true"
+     gridempspacing="16"
+     inkscape:grid-points="false"
+     inkscape:grid-bbox="false"
+     inkscape:window-width="910"
+     inkscape:window-height="627"
+     inkscape:window-x="179"
+     inkscape:window-y="56" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       style="fill:#000000;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter6199)"
+       d="M 64,206 C 64,206 64,174 80,174 C 96,174 106,174 106,158 C 106,142 80,142 80,110 C 80,62 96,46 128,46 C 160,46 176,62 176,110 C 176,142 150,142 150,158 C 150,174 160,174 176,174 C 192,174 192,206 192,206 C 192,206 64.790368,204.94618 64,206 z "
+       id="path2160"
+       sodipodi:nodetypes="cssssssscc"
+       transform="matrix(1.3683127,0,0,1.3683127,-47.144024,-19.014)" />
+    <g
+       id="g6203"
+       transform="matrix(1.2357302,0,0,1.2357302,-30.173461,-54.416604)">
+      <text
+         xml:space="preserve"
+         style="font-size:48px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#f2f2f2;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter5222);font-family:Impact"
+         x="27.042969"
+         y="146.69141"
+         id="text4247"
+         sodipodi:linespacing="125%"><tspan
+           sodipodi:role="line"
+           id="tspan4249"
+           x="27.042969"
+           y="146.69141">No Picture</tspan><tspan
+           sodipodi:role="line"
+           id="tspan4251"
+           x="27.042969"
+           y="206.69141"></tspan></text>
+      <text
+         sodipodi:linespacing="125%"
+         id="text4239"
+         y="146.69141"
+         x="27.042969"
+         style="font-size:48px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Impact"
+         xml:space="preserve"><tspan
+           y="146.69141"
+           x="27.042969"
+           id="tspan4243"
+           sodipodi:role="line">No Picture</tspan><tspan
+           y="206.69141"
+           x="27.042969"
+           id="tspan4245"
+           sodipodi:role="line"></tspan></text>
+    </g>
+  </g>
+</svg>

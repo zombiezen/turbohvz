@@ -34,6 +34,7 @@
     </div>
     <h2 id="sect_profile">Profile</h2>
     <img py:if="user.image" id="user_profile_image" src="${tg.hvz.image_link(user.image)}" alt="User picture" />
+    <img py:if="user.image is None" id="user_profile_image" src="${tg.url('/static/images/no-user-picture.png')}" alt="No picture" />
     <div py:if="tg.config('hvz.show_legendary', False) and user.is_legendary" id="legendary" title="This user was a participant in the server's first game.">
         <img src="${tg.url('/static/images/star.png')}" alt="star" />
         Legendary
