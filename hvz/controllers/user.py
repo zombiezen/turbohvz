@@ -23,7 +23,7 @@ from __future__ import division
 
 import cherrypy
 import turbogears
-from turbogears import error_handler, expose, url, identity, validate
+from turbogears import error_handler, expose, url, identity, redirect, validate
 from turbogears.database import session
 from turbogears.paginate import paginate
 
@@ -126,6 +126,13 @@ class UserController(base.BaseController):
             raise base.NotFound()
         return dict(user=requested_user)
     
+    @expose("hvz.templates.user.changepassword")
+    @identity.require(identity.not_anonymous())
+    def changepassword(self):
+        requested_user = identity.current.user
+        return dict(form=forms.password_change_form,
+                    user=requested_user,)
+    
     @expose()
     @error_handler(register)
     @validate(forms.register_form)
@@ -153,7 +160,7 @@ class UserController(base.BaseController):
         turbogears.flash(msg)
         base.manual_login(new_user)
         link = util.user_link(new_user, 'thankyou', redirect=True)
-        raise turbogears.redirect(link)
+        raise redirect(link)
     
     @expose()
     @error_handler(edit)
@@ -174,4 +181,23 @@ class UserController(base.BaseController):
         requested_user.profile = profile
         # Go to user's page
         turbogears.flash(_("Your changes have been saved."))
-        raise turbogears.redirect(util.user_link(requested_user, redirect=True))
+        raise redirect(util.user_link(requested_user, redirect=True))
+    
+    @expose()
+    @error_handler(changepassword)
+    @validate(forms.password_change_form)
+    def action_changepassword(self, user_id, original_password,
+                              password1, password2):
+        # Query user
+        requested_user = User.query.get(user_id)
+        if requested_user is None:
+            raise base.NotFound()
+        # Check for permission
+        if identity.current.user != requested_user:
+            raise identity.IdentityFailure("Current user cannot change "
+                                           "others' passwords.")
+        # Make necessary changes
+        requested_user.password = password1
+        # Go back to user's page
+        turbogears.flash(_("Your password has been changed."))
+        raise redirect(util.user_link(requested_user, redirect=True))

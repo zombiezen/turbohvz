@@ -27,6 +27,7 @@ __docformat__ = 'reStructuredText'
 __all__ = ['abslink',
            'absurl',
            'change_params',
+           'change_password_link',
            'display',
            'display_date',
            'display_weekday',
@@ -96,6 +97,15 @@ def change_params(url=None, d=None, **kw):
     else:
         parse_result[4] = urlencode(newValues)
         return urlunparse(parse_result)
+
+def change_password_link():
+    """Returns the proper URL to the change password page."""
+    if turbogears.config.get('hvz.secure_login', False):
+        # Secure login
+        return secureurl('/user/changepassword')
+    else:
+        # Insecure login
+        return turbogears.url('/user/changepassword')
 
 def display(widget, *args, **kw):
     """Display a widget in Genshi"""
@@ -255,7 +265,8 @@ def user_link(user, action='view', **params):
     return _make_app_link(base, params)
 
 def add_template_variables(vars):
-    hvzNamespace = DictObj(game_link=game_link,
+    hvzNamespace = DictObj(change_password_link=change_password_link,
+                           game_link=game_link,
                            login_link=login_link,
                            register_link=register_link,
                            user_link=user_link,)
