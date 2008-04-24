@@ -301,16 +301,16 @@ class GameFields(WidgetsList):
         help_text=_("The length of time (in hours) that a zombie has to feed "
                     "before starving."),
         default=Game.DEFAULT_ZOMBIE_STARVE_TIME,)
-    human_undead_time = widgets.TextField(
-        label=_("Human Infection Time"),
-        help_text=_("The length of time (in minutes) that it takes to turn a "
-                    "human into a zombie"),
-        default=Game.DEFAULT_HUMAN_UNDEAD_TIME,)
     zombie_report_time = widgets.TextField(
         label=_("Zombie Report Time"),
         help_text=_("The length of time (in hours) that a zombie has to "
                     "report a kill."),
         default=Game.DEFAULT_ZOMBIE_REPORT_TIME,)
+    human_undead_time = widgets.TextField(
+        label=_("Human Infection Time"),
+        help_text=_("The length of time (in minutes) that it takes to turn a "
+                    "human into a zombie"),
+        default=Game.DEFAULT_HUMAN_UNDEAD_TIME,)
     ignore_weekdays = widgets.MultipleSelectField(
         label=_("Ignore Days"),
         help_text=_("The days of the week to regularly ignore when "
