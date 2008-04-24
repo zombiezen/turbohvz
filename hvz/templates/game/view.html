@@ -64,6 +64,12 @@
                     <span py:replace="tg.display_date(game.zombie_report_timedelta)">[# hour(s)]</span>
                 </td>
             </tr>
+            <tr>
+                <th>Zombie Infection Time:</th>
+                <td>
+                    <span py:replace="tg.display_date(game.human_undead_timedelta)">[# minute(s)]</span>
+                </td>
+            </tr>
             <tr py:if="game.ignore_weekdays">
                 <th>Ignores weekdays:</th>
                 <td>

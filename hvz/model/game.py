@@ -32,7 +32,7 @@ from sqlalchemy.orm import backref, relation, synonym
 from turbogears.database import mapper, metadata, session
 
 from hvz.model import identity
-from hvz.model.dates import now, as_utc, date_prop, calc_timedelta
+from hvz.model.dates import now, date_prop, calc_timedelta, make_aware
 from hvz.model.errors import WrongStateError, InvalidTimeError
 
 __author__ = 'Ross Light'
@@ -73,6 +73,7 @@ games_table = Table('game', metadata,
     Column('ignore_weekdays', String(16)),
     Column('zombie_starve_time', Integer),
     Column('zombie_report_time', Integer),
+    Column('human_undead_time', Integer),
     Column('gid_length', Integer),
     Column('safe_zones', Unicode(2048)),
     Column('rules_notes', Unicode(4096)),
@@ -198,7 +199,7 @@ class PlayerEntry(object):
         if date is None:
             date = now()
         else:
-            date = as_utc(date)
+            date = make_aware(date)
         if self.is_human:
             # This is the first time that the player became an OZ, give 'em the
             # full attribute setup
@@ -229,11 +230,15 @@ class PlayerEntry(object):
         if date is None:
             date = now()
         else:
-            date = as_utc(date)
+            date = make_aware(date)
         if report_time is None:
             report_time = now()
         else:
-            report_time = as_utc(report_time)
+            report_time = make_aware(report_time)
+        # Check for reports in the future
+        if (date > report_time):
+            raise InvalidTimeError(self,
+                                   _("You cannot kill someone in the future"))
         # Check if game is in-progress
         if not self.game.in_progress:
             raise WrongStateError(self.game, self.game.state, 
@@ -255,7 +260,8 @@ class PlayerEntry(object):
             # Ensure that the victim is human
             if other.is_human:
                 self.kills += 1
-                self.feed_date = other.death_date = date
+                self.feed_date = date
+                other.death_date = date + self.game.human_undead_timedelta
                 other.state = other.STATE_ZOMBIE
                 other.killed_by = self.player
                 if self.is_dead:
@@ -284,7 +290,7 @@ class PlayerEntry(object):
         if date is None:
             date = now()
         else:
-            date = as_utc(date)
+            date = make_aware(date)
         # Check if game is in-progress
         if not self.game.in_progress:
             raise WrongStateError(self.game, self.game.state, 
@@ -320,14 +326,17 @@ class PlayerEntry(object):
         if time is None:
             time = now()
         else:
-            time = as_utc(time)
+            time = make_aware(time)
         # Check which date to compare
         if self.feed_date is None:
             feed_date = self.death_date
         else:
             feed_date = self.feed_date
-        # Return result
-        return self.game.calculate_timedelta(feed_date, time)
+        # If we haven't actually died yet, return zero
+        if time <= feed_date:
+            return timedelta()
+        else:
+            return self.game.calculate_timedelta(feed_date, time)
     
     def calculate_time_before_starving(self, time=None):
         """
@@ -360,7 +369,7 @@ class PlayerEntry(object):
         if time is None:
             time = now()
         else:
-            time = as_utc(time)
+            time = make_aware(time)
         if self.is_human:
             # Humans can't (read as: shouldn't) kill people
             return False
@@ -458,6 +467,9 @@ class Game(object):
             The default number of hours before a zombie starves
         DEFAULT_ZOMBIE_REPORT_TIME : int
             The default number of hours that a zombie has to report a kill
+        DEFAULT_HUMAN_UNDEAD_TIME : int
+            The default number of minutes it takes to turn a human into a
+            zombie
         DEFAULT_GID_LENGTH : int
             The default length of a player GID (see `PlayerEntry.player_gid`)
         DEFAULT_SAFE_ZONES : list of unicode
@@ -507,6 +519,12 @@ class Game(object):
             rely on `zombie_report_timedelta` (data abstraction and all).
         zombie_report_timedelta : datetime.timedelta
             The duration a zombie has to report a kill
+        human_undead_time : int
+            The number of minutes it takes to turn a human into a zombie.  If
+            possible, rely on `human_undead_timedelta` (data abstraction and
+            all).
+        human_undead_timedelta : datetime.timedelta
+            The duration it takes to turn a human into a zombie
         safe_zones : list of unicode
             Safe zones
         rules_notes : unicode
@@ -528,6 +546,7 @@ class Game(object):
                    STATE_ENDED: _("Game ended"),}
     DEFAULT_ZOMBIE_STARVE_TIME = 48
     DEFAULT_ZOMBIE_REPORT_TIME = 3
+    DEFAULT_HUMAN_UNDEAD_TIME = 60
     DEFAULT_GID_LENGTH = 16
     DEFAULT_SAFE_ZONES = [_("Bathrooms"),
                           _("Academic buildings"),
@@ -548,6 +567,7 @@ class Game(object):
         self.ignore_weekdays = []
         self.zombie_starve_time = self.DEFAULT_ZOMBIE_STARVE_TIME
         self.zombie_report_time = self.DEFAULT_ZOMBIE_REPORT_TIME
+        self.human_undead_time = self.DEFAULT_HUMAN_UNDEAD_TIME
         self.gid_length = self.DEFAULT_GID_LENGTH
         self.safe_zones = self.DEFAULT_SAFE_ZONES
         self.rules_notes = None
@@ -576,7 +596,7 @@ class Game(object):
         if update_time is None:
             update_time = now()
         else:
-            update_time = as_utc(update_time)
+            update_time = make_aware(update_time)
         # Hey, we're not playing.  Don't update!
         if not self.in_progress:
             return
@@ -672,7 +692,7 @@ class Game(object):
         if time is None:
             time = now()
         else:
-            time = as_utc(time)
+            time = make_aware(time)
         # Check if we can do this
         if self.is_first_state:
             raise WrongStateError(self, self.state, self.STATE_CREATED + 1,
@@ -701,7 +721,7 @@ class Game(object):
         if time is None:
             time = now()
         else:
-            time = as_utc(time)
+            time = make_aware(time)
         # Check if we can do this
         if self.is_last_state:
             raise WrongStateError(self, self.state, self.STATE_ENDED - 1,
@@ -733,7 +753,7 @@ class Game(object):
         if end_time is None:
             end_time = now()
         else:
-            end_time = as_utc(end_time)
+            end_time = make_aware(end_time)
         # Ensure we can end now
         if not self.in_progress:
             raise WrongStateError(self, self.state, self.STATE_STARTED,
@@ -762,6 +782,10 @@ class Game(object):
     @property
     def zombie_report_timedelta(self):
         return timedelta(hours=self.zombie_report_time)
+    
+    @property
+    def human_undead_timedelta(self):
+        return timedelta(minutes=self.human_undead_time)
     
     @property
     def revealed_original_zombie(self):

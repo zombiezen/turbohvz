@@ -271,12 +271,13 @@ class TestGameplay(SADBTest):
         self._choose_oz()
         self._start_game()
         kill_time = as_local(datetime(2008, 4, 22, 14, 15))
+        zombie_time = kill_time + self.game.human_undead_timedelta
         self.entry1.kill(self.entry2, kill_time, kill_time)
         assert self.entry1.feed_date == kill_time, "Wrong feed time"
         assert self.entry1.kills == 1, "Wrong kill count"
         assert self.entry2.state == model.game.PlayerEntry.STATE_ZOMBIE, \
             "Victim is not a zombie"
-        assert self.entry2.death_date == kill_time, "Wrong death time"
+        assert self.entry2.death_date == zombie_time, "Wrong death time"
         assert self.entry2.killed_by is self.user1, "Wrong killer"
     
     def test_check_human_end(self):

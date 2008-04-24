@@ -42,7 +42,7 @@
     <h2 id="sect_human_rules">Human Rules</h2>
     <p><span class="rule_name">ID Number</span> Humans must keep one index card with their unique identification number (player GID) on them at all times</p>
     <p><span class="rule_name">Stunning a Zombie</span> Humans may stun a Zombie for 15 minutes by throwing a sock at them.</p>
-    <p><span class="rule_name">When Tagged By a Zombie</span> When tagged by a Zombie, a Human is required to distribute their ID card. One hour after being tagged, a Human becomes a member of the Zombie team. Reverse your wristband to show the "Z"&#x2014;you are now allowed to tag other Humans.</p>
+    <p><span class="rule_name">When Tagged By a Zombie</span> When tagged by a Zombie, a Human is required to distribute their ID card.  After <span py:replace="tg.display_date(game.human_undead_timedelta)">[time]</span>, a Human becomes a member of the Zombie team. Reverse your wristband to show the "Z"&#x2014;you are now allowed to tag other Humans.</p>
     <p><span class="rule_name">Wearing a Wristband</span> Humans must wear a wristband showing the "H" around an arm or leg to identify them as players of the game.</p>
     <h2 id="sect_zombie_rules">Zombie Rules</h2>
     <p><span class="rule_name">Feeding</span> Zombies must feed every <span py:replace="tg.display_date(game.zombie_starve_timedelta)">[time]</span>. A zombie feeds by <a href="${tg.hvz.game_link(game, 'reportkill')}">reporting their tags on the website</a>. Time on certain days (depends on the game) does not count toward the time limit.  For example, if the game ignores weekends, has 48 hour starve time, and a zombie tags someone six hours before a Saturday, then the zombie will have forty-two hours (48 - 6 = 42) from midnight on Monday to tag someone.</p>

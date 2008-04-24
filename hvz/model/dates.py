@@ -35,6 +35,7 @@ __all__ = ['now',
            'as_utc',
            'to_local',
            'to_utc',
+           'make_aware',
            'date_prop',
            'calc_timedelta',]
 
@@ -95,8 +96,7 @@ def to_local(date, tz=None):
     """
     if tz is None:
         tz = _get_local_timezone()
-    if date.tzinfo is None:
-        date = as_utc(date)
+    date = make_aware(date)
     return date.astimezone(tz)
 
 def to_utc(date):
@@ -110,9 +110,28 @@ def to_utc(date):
     :Returns: The timezone-aware date
     :ReturnType: datetime.datetime
     """
-    if date.tzinfo is None:
-        date = as_utc(date)
+    date = make_aware(date)
     return date.astimezone(pytz.utc)
+
+def make_aware(date, local=False):
+    """
+    Ensures that a date is timezone-aware.
+    
+    :Parameters:
+        date : datetime.datetime
+            The date to interpret
+    :Keywords:
+        local : bool
+            Whether this should default to a local time.
+    :Returns: The timezone-aware date
+    :ReturnType: datetime.datetime
+    """
+    if date.tzinfo is None:
+        if local:
+            date = as_local(date)
+        else:
+            date = as_utc(date)
+    return date
 
 def _get_date_prop(name):
     """
