@@ -182,6 +182,7 @@ class GameSchema(validators.Schema):
     gid_length = validators.Int(min=1, max=128)
     zombie_starve_time = validators.Int(min=1)
     zombie_report_time = validators.Int(min=1)
+    human_undead_time = validators.Int(min=0)
     ignore_weekdays = validators.ForEach(validators.Int(min=1, max=7),
                                          convert_to_list=True,
                                          if_empty=[],
@@ -300,6 +301,11 @@ class GameFields(WidgetsList):
         help_text=_("The length of time (in hours) that a zombie has to feed "
                     "before starving."),
         default=Game.DEFAULT_ZOMBIE_STARVE_TIME,)
+    human_undead_time = widgets.TextField(
+        label=_("Human Infection Time"),
+        help_text=_("The length of time (in minutes) that it takes to turn a "
+                    "human into a zombie"),
+        default=Game.DEFAULT_HUMAN_UNDEAD_TIME,)
     zombie_report_time = widgets.TextField(
         label=_("Zombie Report Time"),
         help_text=_("The length of time (in hours) that a zombie has to "

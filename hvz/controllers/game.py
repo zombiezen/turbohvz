@@ -264,6 +264,7 @@ class GameController(base.BaseController):
                       gid_length,
                       zombie_starve_time,
                       zombie_report_time,
+                      human_undead_time,
                       ignore_weekdays,
                       ignore_dates,
                       safe_zones,
@@ -273,6 +274,7 @@ class GameController(base.BaseController):
         new_game.gid_length = gid_length
         new_game.zombie_starve_time = zombie_starve_time
         new_game.zombie_report_time = zombie_report_time
+        new_game.human_undead_time = human_undead_time
         new_game.ignore_weekdays = ignore_weekdays
         new_game.ignore_dates = ignore_dates
         new_game.safe_zones = safe_zones
@@ -289,6 +291,7 @@ class GameController(base.BaseController):
                     gid_length,
                     zombie_starve_time,
                     zombie_report_time,
+                    human_undead_time,
                     ignore_weekdays,
                     ignore_dates,
                     safe_zones,
@@ -300,6 +303,7 @@ class GameController(base.BaseController):
         requested_game.gid_length = gid_length
         requested_game.zombie_starve_time = zombie_starve_time
         requested_game.zombie_report_time = zombie_report_time
+        requested_game.human_undead_time = human_undead_time
         requested_game.ignore_weekdays = ignore_weekdays
         requested_game.ignore_dates = ignore_dates
         requested_game.safe_zones = safe_zones
