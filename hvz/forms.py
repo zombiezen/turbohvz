@@ -255,9 +255,9 @@ def _new_image_help_text():
     max_file_size = model.images.Image.get_max_file_size()
     max_image_width, max_image_height = model.images.Image.get_max_image_size()
     return _("[Optional] A picture of yourself.  This image must be under %s "
-             "and smaller than %ix%i pixels.  If you leave this field blank, "
-             "your current image will be kept, unless you check the box "
-             "below.") % \
+             "and smaller than %ix%i pixels and will replace the image you "
+             "have now.  If you leave this field blank, your current image "
+             "will be kept, unless you check the box below.") % \
         (display_file_size(max_file_size),
          max_image_width,
          max_image_height)
