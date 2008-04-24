@@ -125,6 +125,7 @@ class GameController(base.BaseController):
         requested_game = Game.query.get(game_id)
         if requested_game is None:
             raise base.NotFound()
+        requested_game.update()
         entry = self._get_current_entry(requested_game)
         default_time = model.dates.to_local(model.dates.now())
         return dict(game=requested_game,
@@ -182,6 +183,8 @@ class GameController(base.BaseController):
         requested_game = Game.query.get(game_id)
         if requested_game is None:
             raise base.NotFound()
+        # Update the game state
+        requested_game.update()
         # Retrieve killer and victim
         killer = PlayerEntry.by_player(requested_game, user)
         if killer is None:

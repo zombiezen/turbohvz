@@ -96,6 +96,8 @@ class PlayerEntry(object):
             The constant for the original zombie starved state
         STATE_HUMAN : int
             The constant for a healthy human state
+        STATE_INFECTED : int
+            The constant for a human who has been tagged state
         STATE_NAMES : dict of {int: unicode}
             State-to-human-readable-name lookup table
     :IVariables:
@@ -128,11 +130,13 @@ class PlayerEntry(object):
     STATE_DEAD = 0
     STATE_DEAD_OZ = -3
     STATE_HUMAN = 1
+    STATE_INFECTED = 2
     STATE_NAMES = {STATE_ORIGINAL_ZOMBIE: _("Original zombie"),
                    STATE_ZOMBIE: _("Zombie"),
                    STATE_DEAD: _("Dead"),
                    STATE_DEAD_OZ: _("Dead"),
-                   STATE_HUMAN: _("Human"),}
+                   STATE_HUMAN: _("Human"),
+                   STATE_INFECTED: _("Infected"),}
     
     ## INITIALIZATION/RETRIEVING ##
     
@@ -235,8 +239,12 @@ class PlayerEntry(object):
             report_time = now()
         else:
             report_time = make_aware(report_time)
+        # Check for human trying to kill
+        if not (self.is_undead or self.is_dead):
+            raise WrongStateError(self, self.state, self.STATE_ZOMBIE,
+                                  _("Killer must be zombie"))
         # Check for reports in the future
-        if (date > report_time):
+        if date > report_time:
             raise InvalidTimeError(self,
                                    _("You cannot kill someone in the future"))
         # Check if game is in-progress
@@ -252,30 +260,26 @@ class PlayerEntry(object):
         # Check if the demise is within the report window
         if report_time - date > self.game.zombie_report_timedelta:
             raise InvalidTimeError(self, _("Kill not within report window"))
-        if not self.is_human:
-            # Ensure the player didn't starve first
-            starve_delta = self.calculate_time_since_last_feeding(date)
-            if starve_delta > self.game.zombie_starve_timedelta:
-                raise InvalidTimeError(self, _("Killer has already starved"))
-            # Ensure that the victim is human
-            if other.is_human:
-                self.kills += 1
-                self.feed_date = date
-                other.death_date = date + self.game.human_undead_timedelta
-                other.state = other.STATE_ZOMBIE
-                other.killed_by = self.player
-                if self.is_dead:
-                    self.starve_date = None
-                    if self.is_original_zombie:
-                        self.state = self.STATE_ORIGINAL_ZOMBIE
-                    else:
-                        self.state = self.STATE_ZOMBIE
+        # Ensure the player didn't starve first
+        starve_delta = self.calculate_time_since_last_feeding(date)
+        if starve_delta > self.game.zombie_starve_timedelta:
+            raise InvalidTimeError(self, _("Killer has already starved"))
+        # Ensure that the victim is human
+        if not other.is_human:
+            raise WrongStateError(other, other.state, other.STATE_HUMAN,
+                                  _("Victim must be human"))
+        # Now we're ready to kill
+        self.kills += 1
+        self.feed_date = date
+        other.death_date = date + self.game.human_undead_timedelta
+        other.state = other.STATE_INFECTED
+        other.killed_by = self.player
+        if self.is_dead:
+            self.starve_date = None
+            if self.is_original_zombie:
+                self.state = self.STATE_ORIGINAL_ZOMBIE
             else:
-                raise WrongStateError(other, other.state, other.STATE_HUMAN,
-                                      _("Victim must be human"))
-        else:
-            raise WrongStateError(self, self.state, self.STATE_ZOMBIE,
-                                  _("Killer can't be human"))
+                self.state = self.STATE_ZOMBIE
     
     def starve(self, date=None):
         """
@@ -297,15 +301,14 @@ class PlayerEntry(object):
                                   self.game.STATE_STARTED,
                                   _("Game is not in progress"))
         # Starve, if we can
-        if self.is_undead:
-            self.starve_date = date
-            if self.is_original_zombie:
-                self.state = self.STATE_DEAD_OZ
-            else:
-                self.state = self.STATE_DEAD
-        else:
+        if not self.is_undead:
             raise WrongStateError(self, self.state, self.STATE_ZOMBIE,
-                                  _("Humans can't starve"))
+                                  _("Non-zombies can't starve"))
+        self.starve_date = date
+        if self.is_original_zombie:
+            self.state = self.STATE_DEAD_OZ
+        else:
+            self.state = self.STATE_DEAD
     
     def calculate_time_since_last_feeding(self, time=None):
         """
@@ -373,6 +376,9 @@ class PlayerEntry(object):
         if self.is_human:
             # Humans can't (read as: shouldn't) kill people
             return False
+        elif self.is_infected:
+            # Player is being infected, but can't kill yet
+            return False
         else:
             # Regardless of whether the game caught it yet, let's see how much
             # game time would have elapsed.
@@ -415,6 +421,10 @@ class PlayerEntry(object):
         return self.state in (self.STATE_ORIGINAL_ZOMBIE, self.STATE_DEAD_OZ)
     
     @property
+    def is_infected(self):
+        return self.state == self.STATE_INFECTED
+    
+    @property
     def survival_time(self):
         if self.is_human or self.is_original_zombie:
             return None
@@ -426,7 +436,7 @@ class PlayerEntry(object):
     def undead_time(self):
         if self.is_human:
             return None
-        elif self.is_undead:
+        elif self.is_undead or self.is_infected:
             if self.game.in_progress:
                 return None
             else:
@@ -602,6 +612,7 @@ class Game(object):
             return
         # Update
         self._update_starved(update_time)
+        self._update_infected(update_time)
         self._update_check_end(update_time)
     
     def _update_starved(self, update_time):
@@ -621,6 +632,23 @@ class Game(object):
                 zombie.starve()
         session.flush()
     
+    def _update_infected(self, update_time):
+        """
+        Find infected who have become zombies and zombify them.
+        
+        :Parameters:
+            update_time : datetime.datetime
+                The time at which the update commenced
+        """
+        from sqlalchemy import and_
+        infected = PlayerEntry.query.filter(
+            and_(PlayerEntry.game == self,
+                 PlayerEntry.state == PlayerEntry.STATE_INFECTED))
+        for player in infected:
+            if update_time >= player.death_date:
+                player.state = PlayerEntry.STATE_ZOMBIE
+        session.flush()
+    
     def _update_check_end(self, update_time):
         """
         Checks if the game is over, and if necessary, forcibly end the game.
@@ -635,7 +663,8 @@ class Game(object):
         humans = players.filter(PlayerEntry.state == PlayerEntry.STATE_HUMAN)
         zombies = players.filter(
             or_(PlayerEntry.state == PlayerEntry.STATE_ZOMBIE,
-                PlayerEntry.state == PlayerEntry.STATE_ORIGINAL_ZOMBIE))
+                PlayerEntry.state == PlayerEntry.STATE_ORIGINAL_ZOMBIE,
+                PlayerEntry.state == PlayerEntry.STATE_INFECTED,))
         dead = players.filter(
             or_(PlayerEntry.state == PlayerEntry.STATE_DEAD,
                 PlayerEntry.state == PlayerEntry.STATE_DEAD_OZ))
