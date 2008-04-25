@@ -46,7 +46,7 @@ def manual_login(user):
     else:
         current_uname = identity.current.user.user_name
     log.info("User %s forced login as %s",
-             current_name, user.user_name)
+             current_uname, user.user_name)
     # Log in user
     identity_object = identity.current_provider.authenticated_identity(user)
     key = turbogears.visit.current().key
