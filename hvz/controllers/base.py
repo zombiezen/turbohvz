@@ -20,6 +20,7 @@
 #
 
 import logging
+import sys
 
 import cherrypy
 import turbogears
@@ -39,6 +40,13 @@ __all__ = ['log',
 log = logging.getLogger("hvz.controllers")
 
 def manual_login(user):
+    # Log the login attempt
+    if identity.current.anonymous:
+        current_uname = "<ANONYMOUS>"
+    else:
+        current_uname = identity.current.user.user_name
+    log.info("User %s forced login as %s",
+             current_name, user.user_name)
     # Log in user
     identity_object = identity.current_provider.authenticated_identity(user)
     key = turbogears.visit.current().key
@@ -62,6 +70,7 @@ class BaseController(turbogears.controllers.Controller):
         "isinstance(tg_exceptions, model.errors.ModelError)")
     def handle_model_error(self, tg_source, tg_errors, tg_exception,
                            *args, **kw):
+        log.error("Model error raised", exc_info=sys.exc_info())
         return dict(tg_template="hvz.templates.modelerror",
                     error=tg_exception,)
     
@@ -69,6 +78,7 @@ class BaseController(turbogears.controllers.Controller):
         "isinstance(tg_exceptions, model.errors.ImageError)")
     def handle_image_error(self, tg_source, tg_errors, tg_exception,
                            *args, **kw):
+        log.error("Image error raised", exc_info=sys.exc_info())
         return dict(tg_template="hvz.templates.imageerror",
                     error=tg_exception,)
     
@@ -76,6 +86,8 @@ class BaseController(turbogears.controllers.Controller):
         "isinstance(tg_exceptions, NotFound)")
     def handle_not_found(self, tg_source, tg_errors, tg_exception,
                          *args, **kw):
+        log.warning("URL not found: %s", cherrypy.request.path)
+        cherrypy.response.status = 404
         return dict(tg_template="hvz.templates.notfound", 
                     requested_uri=cherrypy.request.path,)
     

@@ -159,6 +159,8 @@ class UserController(base.BaseController):
         for group in groups:
             group.add_user(new_user)
         session.flush()
+        # Log info
+        base.log.info("%r Created", new_user)
         # Handle interface
         msg = _("Your account has been created, %s.") % (unicode(new_user))
         turbogears.flash(msg)
@@ -197,6 +199,8 @@ class UserController(base.BaseController):
             if requested_user.image is not None:
                 requested_user.image.delete()
             requested_user.image = image_obj
+        # Log info
+        base.log.info("%r Edited", requested_user)
         # Go to user's page
         turbogears.flash(_("Your changes have been saved."))
         raise redirect(util.user_link(requested_user, redirect=True))
@@ -216,6 +220,8 @@ class UserController(base.BaseController):
                                            "others' passwords.")
         # Make necessary changes
         requested_user.password = password1
+        # Log info
+        base.log.info("%r Password Changed", requested_user)
         # Go back to user's page
         turbogears.flash(_("Your password has been changed."))
         raise redirect(util.user_link(requested_user, redirect=True))

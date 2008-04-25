@@ -196,7 +196,8 @@ class GameController(base.BaseController):
         # Kill user in question
         killer.kill(victim, kill_date)
         # Log it and return to game
-        base.log.info("OMG, %s killed %s!  Those idiots!", killer, victim)
+        base.log.info("<Game %i> %r killed %r!",
+                      game_id, killer, victim)
         link = util.game_link(game_id, redirect=True) + '#sect_entry_list'
         raise turbogears.redirect(link)
     
@@ -216,8 +217,13 @@ class GameController(base.BaseController):
                 link = util.game_link(game_id, 'choose_oz', redirect=True)
                 raise turbogears.redirect(link)
             requested_game.next_state()
+            base.log.info("<Game %i> Next Stage %i -> %i",
+                          game_id, next_state - 1, next_state)
         elif btnPrev:
             requested_game.previous_state()
+            base.log.info("<Game %i> Previous Stage %i -> %i",
+                          game_id, requested_game.state + 1,
+                          requested_game.state)
         link = util.game_link(game_id, redirect=True) + '#sect_stage'
         raise turbogears.redirect(link)
     
@@ -238,6 +244,8 @@ class GameController(base.BaseController):
                                                _("Registration is closed"))
         entry = PlayerEntry(requested_game, user)
         entry.original_pool = original_pool
+        session.flush()
+        base.log.info("<Game %i> %r joined", game_id, entry)
         link = util.game_link(game_id, redirect=True) + '#sect_entry_list'
         raise turbogears.redirect(link)
     
@@ -256,6 +264,7 @@ class GameController(base.BaseController):
                                                _("Registration is closed"))
         entry = PlayerEntry.by_player(requested_game, user)
         entry.delete()
+        base.log.info("<Game %i> %r unjoined", game_id, user)
         link = util.game_link(game_id, redirect=True) + '#sect_entry_list'
         raise turbogears.redirect(link)
     
@@ -283,6 +292,7 @@ class GameController(base.BaseController):
         new_game.safe_zones = safe_zones
         new_game.rules_notes = rules_notes
         session.flush()
+        base.log.info("<Game %i> Created", game_id)
         turbogears.flash(_("Game created"))
         raise turbogears.redirect(util.game_link(new_game, redirect=True))
     
@@ -312,6 +322,7 @@ class GameController(base.BaseController):
         requested_game.safe_zones = safe_zones
         requested_game.rules_notes = rules_notes
         session.flush()
+        base.log.info("<Game %i> Updated", game_id)
         turbogears.flash(_("Game updated"))
         raise turbogears.redirect(util.game_link(requested_game,
                                                  redirect=True))
@@ -325,6 +336,7 @@ class GameController(base.BaseController):
             raise base.NotFound()
         requested_game.delete()
         session.flush()
+        base.log.info("<Game %i> Deleted", game_id)
         turbogears.flash(_("Game deleted"))
         raise turbogears.redirect('/game/index')
     
@@ -357,6 +369,8 @@ class GameController(base.BaseController):
         requested_game.original_zombie = entry
         # Advance stage
         requested_game.next_state()
+        # Log change
+        base.log.info("<Game %i> OZ Chosen %r", game_id, entry)
         # Go back to game page
         turbogears.flash(_("Original zombie chosen"))
         link = util.game_link(requested_game, redirect=True)
