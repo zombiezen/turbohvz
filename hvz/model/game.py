@@ -437,7 +437,7 @@ class PlayerEntry(object):
         if self.is_human:
             return None
         elif self.is_undead or self.is_infected:
-            if self.game.in_progress:
+            if self.game.in_progress or (self.death_date > self.game.ended):
                 return None
             else:
                 return self.game.calculate_timedelta(self.death_date,
