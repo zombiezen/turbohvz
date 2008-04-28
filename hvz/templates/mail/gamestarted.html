@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+
+<py:def function="page_title">Welcome to Humans vs. Zombies!</py:def>
+<py:def function="head_info"></py:def>
+
+<py:match path="content">
+    <p>To all players:</p>
+    <p>Game <span py:replace="game.game_id">[#]</span>: "<span py:replace="game.display_name">[name]</span>" has begun!  Check <a href="${tg.abslink(tg.hvz.game_link(game))}">the game page</a> regularly to get up-to-date information on who's still alive, what the rules are, and what your Player ID is.</p>
+    <p style="font-weight: bolder;">Humans vs. Zombies Checklist</p>
+    <ul>
+        <li>Write down your Player ID on a 3x5 index card.  You can find your Player ID by visiting <a href="${tg.abslink(tg.hvz.game_link(game))}">the game page</a>.</li>
+        <li>Review <a href="${tg.abslink(tg.hvz.game_link(game, 'rules'))}">the rules</a> to ensure that you know where the safe zones are, and any game-specific information.</li>
+        <li>Equip yourself with several socks to protect yourself from any zombies.</li>
+        <li>Wear your wristband identifying yourself as a player of the game (for more information, consult <a href="${tg.abslink(tg.hvz.game_link(game, 'rules'))}">the rules</a>).</li>
+    </ul>
+    <p>If you encounter problems or have questions at any time during the game, please contact a moderator.</p>
+    <p>Good luck!</p>
+</py:match>
+
+<xi:include href="mail_template.html" />
+
+</html>

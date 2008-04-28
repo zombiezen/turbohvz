@@ -119,6 +119,12 @@
         <button py:if="game.registration_open and current_entry is not None" id="unjoin_button">Unjoin</button>
         <button py:if="'join-game' in tg.identity.permissions and game.registration_open and current_entry is None" id="join_button">Join</button>
     </div>
+    <div py:if="'send-mail' in tg.identity.permissions">
+        <button id="email_all_button">Email All</button>
+        <button id="email_humans_button">Email Humans</button>
+        <button id="email_zombies_button">Email Zombies</button>
+        <button id="email_starved_button">Email Starved</button>
+    </div>
     <h2 id="sect_stage">Stage</h2>
     <table id="stage_table">
         <tr py:for="value, name in sorted(game.STATE_NAMES.iteritems(), key=(lambda item: item[0]))">
@@ -163,6 +169,26 @@
             function()
             {
                 redirect(${tg.jsencode(tg.hvz.game_link(game, 'join'))});
+            });
+        safe_connect('email_all_button', 'onclick',
+            function()
+            {
+                redirect(${tg.jsencode(tg.url('/mail', recipients=all_emails))});
+            });
+        safe_connect('email_humans_button', 'onclick',
+            function()
+            {
+                redirect(${tg.jsencode(tg.url('/mail', recipients=human_emails))});
+            });
+        safe_connect('email_zombies_button', 'onclick',
+            function()
+            {
+                redirect(${tg.jsencode(tg.url('/mail', recipients=zombie_emails))});
+            });
+        safe_connect('email_starved_button', 'onclick',
+            function()
+            {
+                redirect(${tg.jsencode(tg.url('/mail', recipients=starved_emails))});
             });
         // CLOCK //
         callLater(1, update_server_clock);

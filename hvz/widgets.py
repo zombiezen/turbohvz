@@ -20,8 +20,10 @@
 #
 
 from kid import Element
-from turbogears import url
-from turbogears.widgets import Widget
+from pkg_resources import resource_filename
+import turbogears
+from turbogears import url, widgets
+from turbogears.widgets import FormField, Widget
 
 from hvz import util
 from hvz.model.game import PlayerEntry
@@ -29,13 +31,31 @@ from hvz.model.game import PlayerEntry
 __author__ = "Ross Light"
 __date__ = "March 31, 2008"
 __all__ = ['Pager',
+           'FieldList',
            'CustomDataGrid',
            'EntryList',
            'GameList',
            'UserList',]
 
+## WIDGET RESOURCES ##
+
+static_dir = resource_filename('hvz', 'widget_static')
+turbogears.widgets.register_static_directory('hvz', static_dir)
+
+## WIDGETS ##
+
 class Pager(Widget):
     template = "hvz.templates.widgets.pager"
+
+class FieldList(FormField):
+    template = "hvz.templates.widgets.fieldlist"
+    field_class = 'text_field_list'
+    css = [widgets.CSSLink('hvz', 'fieldlist.css')]
+    javascript = [widgets.mochikit, widgets.JSLink('hvz', 'fieldlist.js')]
+    params = ['attrs']
+    params_doc = {'attrs' : "Dictionary containing extra (X)HTML attributes "
+                            "for the field list's parent tag"}
+    attrs = {}
 
 def _get_date_col(row, column):
     column = column.lstrip('_')

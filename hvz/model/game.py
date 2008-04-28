@@ -143,6 +143,8 @@ class PlayerEntry(object):
     @staticmethod
     def _generate_id(id_length):
         id_chars = string.ascii_uppercase + string.digits
+        # Remove "O"s (zeros are better)
+        id_chars = id_chars.replace('O', '')
         result = ''.join(random.choice(id_chars) for i in xrange(id_length))
         return result
     

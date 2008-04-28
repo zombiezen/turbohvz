@@ -138,7 +138,8 @@ def create_permissions(args=None):
              'delete-game': Permission(u"delete-game", u"Delete Games"),
              'edit-game': Permission(u"edit-game", u"Edit Games"),
              'join-game': Permission(u"join-game", u"Join Games"),
-             'stage-game': Permission(u"stage-game", u"Stage Games"),}
+             'stage-game': Permission(u"stage-game", u"Stage Games"),
+             'send-mail': Permission(u"send-mail", u"Use site email system"),}
     # Set up group permissions
     player.add_permission(perms['join-game'])
     for perm in perms.itervalues():

@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+
+<py:def function="page_title">Welcome to Humans vs. Zombies!</py:def>
+<py:def function="head_info"></py:def>
+
+<py:match path="content">
+    <p>To <span py:replace="user">[user]</span>:</p>
+    <p>Thank you for registering with this Humans vs. Zombies server.</p>
+    <p>You have signed up with the user name: <span style="font-weight: bolder;" py:content="user.user_name">[internal name]</span></p>
+    <p>Even though you have registered, you won't be signed up for any games.  To join a game, find a game you want from the <a href="$tg.absurl('/game/index')">game list</a>, and click the "Join" button underneath the player roster.</p>
+    <p>Also, don't forget to update your profile!  You can upload a personal image and view statistics on games that you've played in.  You can edit your profile at any time by clicking "Edit" on your user page.</p>
+    <p>Enjoy the zombie-fest!</p>
+</py:match>
+
+<xi:include href="mail_template.html" />
+
+</html>

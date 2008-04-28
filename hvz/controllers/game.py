@@ -27,7 +27,7 @@ from turbogears import error_handler, expose, url, identity, validate
 from turbogears.database import session
 from turbogears.paginate import paginate
 
-from hvz import forms, model, util, widgets #, json
+from hvz import email, forms, model, util, widgets #, json
 from hvz.controllers import base
 from hvz.model.errors import PlayerNotFoundError
 from hvz.model.game import PlayerEntry, Game
@@ -93,6 +93,18 @@ class GameController(base.BaseController):
         total_offset = abs(days * (60 * 60 * 24) + seconds)
         tz_hours, extra_offset = divmod(total_offset, 60 * 60)
         tz_minutes = extra_offset // 60
+        # Find email addresses
+        all_emails = [entry.player.email_address
+                      for entry in requested_game.entries]
+        human_emails = [entry.player.email_address
+                        for entry in requested_game.entries
+                        if entry.is_human]
+        zombie_emails = [entry.player.email_address
+                         for entry in requested_game.entries
+                         if entry.is_undead]
+        starved_emails = [entry.player.email_address
+                          for entry in requested_game.entries
+                          if entry.is_dead]
         # Return template variables
         return dict(game=requested_game,
                     grid=grid,
@@ -101,7 +113,11 @@ class GameController(base.BaseController):
                     current_time=current_time,
                     tz_sign=tz_sign,
                     tz_hours=tz_hours,
-                    tz_minutes=tz_minutes,)
+                    tz_minutes=tz_minutes,
+                    all_emails=all_emails,
+                    human_emails=human_emails,
+                    zombie_emails=zombie_emails,
+                    starved_emails=starved_emails,)
     
     @expose("hvz.templates.game.edit")
     @identity.require(identity.has_permission('edit-game'))
@@ -195,9 +211,19 @@ class GameController(base.BaseController):
             raise PlayerNotFoundError(requested_game, _("Invalid victim"))
         # Kill user in question
         killer.kill(victim, kill_date)
-        # Log it and return to game
+        # Log it
         base.log.info("<Game %i> %r killed %r!",
                       game_id, killer, victim)
+        # Send out email
+        recipients = [entry.player.email_address for entry in requested_game.entries]
+        email.sendmail(recipients,
+                       "HvZ: New zombie",
+                       "hvz.templates.mail.zombienotif",
+                       dict(game=requested_game,
+                            killer=killer,
+                            victim=victim,
+                            kill_date=kill_date,))
+        # Return to game
         link = util.game_link(game_id, redirect=True) + '#sect_entry_list'
         raise turbogears.redirect(link)
     
@@ -217,6 +243,14 @@ class GameController(base.BaseController):
                 link = util.game_link(game_id, 'choose_oz', redirect=True)
                 raise turbogears.redirect(link)
             requested_game.next_state()
+            if requested_game.state == Game.STATE_STARTED:
+                # Send out email
+                recipients = [entry.player.email_address
+                              for entry in requested_game.entries]
+                email.sendmail(recipients,
+                               "HvZ: Game Started",
+                               "hvz.templates.mail.gamestarted",
+                               dict(game=requested_game,))
             base.log.info("<Game %i> Next Stage %i -> %i",
                           game_id, next_state - 1, next_state)
         elif btnPrev:
@@ -371,6 +405,12 @@ class GameController(base.BaseController):
         requested_game.next_state()
         # Log change
         base.log.info("<Game %i> OZ Chosen %r", game_id, entry)
+        # Send out email
+        email.sendmail(entry.player.email_address,
+                       "HvZ: You are the original zombie",
+                       "hvz.templates.mail.oznotif",
+                       dict(game=requested_game,
+                            entry=entry))
         # Go back to game page
         turbogears.flash(_("Original zombie chosen"))
         link = util.game_link(requested_game, redirect=True)

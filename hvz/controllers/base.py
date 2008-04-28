@@ -159,3 +159,28 @@ class Root(turbogears.controllers.RootController, BaseController):
             raise NotFound()
         manual_login(requested_user)
         raise turbogears.redirect('/')
+    
+    @expose("hvz.templates.sendmail")
+    @identity.require(identity.has_permission('send-mail'))
+    def mail(self, recipients=None, tg_errors=None):
+        if recipients is None:
+            recipients = []
+        elif isinstance(recipients, basestring):
+            recipients = [recipients]
+        return dict(form=forms.send_mail_form,
+                    recipients=recipients,)
+    
+    @expose()
+    @identity.require(identity.has_permission('send-mail'))
+    @error_handler(mail)
+    @validate(forms.send_mail_form)
+    def action_sendmail(self, recipients, subject, message):
+        if identity.current.anonymous:
+            current_uname = "<ANONYMOUS>"
+        else:
+            current_uname = identity.current.user.user_name
+        email.send_generic_mail(recipients, subject, message)
+        log.info("[MAIL] %s\n  To: %s\n  Subject: %s",
+                 current_uname, recipients, subject)
+        turbogears.flash(_("Mail has been sent"))
+        raise turbogears.redirect('/')

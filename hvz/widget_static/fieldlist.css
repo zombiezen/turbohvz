@@ -1,0 +1,18 @@
+/*
+ *  fieldlist.css
+ *  HvZ
+ *
+ *  Created by Ross Light on April 27, 2008.
+ */
+
+.text_field_list ul
+{
+    margin: 0 0 1ex;
+    padding: 0;
+    list-style: none;
+}
+
+.text_field_list li
+{
+    margin-bottom: 1ex;
+}

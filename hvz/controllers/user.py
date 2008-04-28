@@ -27,7 +27,7 @@ from turbogears import error_handler, expose, url, identity, redirect, validate
 from turbogears.database import session
 from turbogears.paginate import paginate
 
-from hvz import forms, util, widgets
+from hvz import email, forms, util, widgets
 from hvz.controllers import base
 from hvz.model.identity import User, Group
 from hvz.model.images import Image
@@ -54,9 +54,11 @@ class UserController(base.BaseController):
         all_users = session.query(User)
         grid = widgets.UserList(sortable=True)
         pager = widgets.Pager()
+        emails = [user.email_address for user in session.query(User)]
         return dict(users=all_users,
                     grid=grid,
-                    pager=pager,)
+                    pager=pager,
+                    emails=emails,)
     
     @expose("hvz.templates.user.view")
     def view(self, user_id):
@@ -161,6 +163,11 @@ class UserController(base.BaseController):
         session.flush()
         # Log info
         base.log.info("%r Created", new_user)
+        # Send email
+        email.sendmail(new_user.email_address,
+                       "Welcome to Humans vs. Zombies!",
+                       "hvz.templates.mail.welcome",
+                       dict(user=new_user,))
         # Handle interface
         msg = _("Your account has been created, %s.") % (unicode(new_user))
         turbogears.flash(msg)

@@ -27,7 +27,7 @@ import string
 from turbogears import url, validators, widgets
 from turbogears.widgets import WidgetsList
 
-from hvz import model
+from hvz import model, widgets as hvz_widgets
 from hvz.model.game import Game
 
 __author__ = "Ross Light"
@@ -44,13 +44,15 @@ __all__ = ['UserNameValidator',
            'EditUserSchema',
            'GameSchema',
            'PasswordChangeSchema',
+           'SendMailSchema',
            'kill_form',
            'join_form',
            'original_zombie_form',
            'register_form',
            'edit_user_form',
            'game_form',
-           'password_change_form',]
+           'password_change_form',
+           'send_mail_form',]
 
 ## VALIDATORS ##
 
@@ -199,6 +201,14 @@ class PasswordChangeSchema(validators.Schema):
     password2 = validators.UnicodeString(min=8)
     chained_validators = [validators.FieldsMatch('password1', 'password2'),
                           PasswordValidator('original_password'),]
+
+class SendMailSchema(validators.Schema):
+    recipients = validators.ForEach(validators.All(validators.Email(),
+                                                   validators.NotEmpty()),
+                                    convert_to_list=True,
+                                    not_empty=True,)
+    subject = validators.UnicodeString(min=1)
+    message = validators.UnicodeString(max=8192)
 
 ## FIELDS ##
 
@@ -353,6 +363,16 @@ class PasswordChangeFields(WidgetsList):
         label=_("Confirm Password"),
         help_text=_("For security purposes, retype your password."),)
 
+class SendMailFields(WidgetsList):
+    recipients = hvz_widgets.FieldList(label=_("To"),)
+    subject = widgets.TextField(
+        label=_("Subject"),
+        attrs={'size': 64},)
+    message = widgets.TextArea(
+        label=_("Message"),
+        rows=20,
+        cols=64,)
+
 ## FORMS ##
 
 kill_form = widgets.TableForm(name='kill_form',
@@ -399,3 +419,11 @@ password_change_form = widgets.TableForm(
     validator=PasswordChangeSchema(),
     action=url('/user/action.changepassword'),
     submit_text=_("Change"),)
+
+send_mail_form = widgets.TableForm(
+    name="send_mail_form",
+    fields=SendMailFields(),
+    validator=SendMailSchema(),
+    action=url('/action.sendmail'),
+    submit_text=_("Send"),
+    method='GET',)

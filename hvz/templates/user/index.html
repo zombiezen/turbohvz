@@ -12,13 +12,21 @@
 <py:match path="content">
     <span py:replace="tg.display(pager)">[pager]</span>
     <span py:replace="tg.display(grid, users)"></span>
-    <button id="register_button">Register</button>
+    <div>
+        <button id="register_button">Register</button>
+        <button py:if="'send-mail' in tg.identity.permissions" id="email_button">Email All</button>
+    </div>
     <script type="text/javascript">
         // EVENTS //
         safe_connect('register_button', 'onclick',
             function()
             {
                 redirect(${tg.jsencode(tg.hvz.register_link())});
+            });
+        safe_connect('email_button', 'onclick',
+            function()
+            {
+                redirect(${tg.jsencode(tg.url('/mail', recipients=emails))});
             });
     </script>
 </py:match>
