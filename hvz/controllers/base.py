@@ -27,7 +27,7 @@ import turbogears
 from turbogears import error_handler, expose, url, identity, validate
 from turbogears.database import session
 
-from hvz import forms, model, util, widgets #, json
+from hvz import email, forms, model, util, widgets #, json
 
 __author__ = 'Ross Light'
 __date__ = 'April 18, 2008'
