@@ -11,7 +11,13 @@
 <py:def function="page_parents"></py:def>
 
 <py:match path="content">
-    <div py:replace="tg.display(form, {'recipients': recipients})"></div>
+    <py:choose>
+        <div py:when="tg.config('mail.on', False)" py:replace="tg.display(form, {'recipients': recipients})"></div>
+        <py:otherwise>
+            <p>Sorry, but email has been disabled on this server.</p>
+            <p>Contact your system administrator if you think this is incorrect.</p>
+        </py:otherwise>
+    </py:choose>
 </py:match>
 
 <xi:include href="master.html" />
