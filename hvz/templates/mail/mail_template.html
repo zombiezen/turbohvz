@@ -5,9 +5,9 @@
       xmlns:py="http://genshi.edgewall.org/"
       xmlns:xi="http://www.w3.org/2001/XInclude"
       py:strip="">
-    <head>
+    <head py:if="email_format == 'rich'">
         <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
-        <meta py:if="email_format == 'rich'" py:replace="head_info()" />
+        <meta py:replace="head_info()" />
     </head>
     <body style="margin: 0; padding: 0; color: white; background-color: black; font: small Verdana, Kalimati, Helvetica, FreeSans, Arial, sans-serif;">
         <div py:if="email_format == 'rich'" style="width: 733px; height: 189px; margin: 2em auto 0; padding: 0;"><a href="${tg.absurl('/')}"><img src="${tg.absurl('/static/images/hvz-logo.jpg')}" style="border: none;" /></a></div>
@@ -16,9 +16,9 @@
             <!-- Begin content -->
             <content>Content goes here</content>
             <!-- End content -->
-            <p style="font-style: italic; font-color: #333;">--Your Friendly Moderating Team</p>
+            <p py:if="message_format != 'sms'" style="font-style: italic; font-color: #333;">--Your Friendly Moderating Team</p>
         </div>
-        <div style="color: #f33; font-size: 80%; text-align: center;">
+        <div py:if="message_format != 'sms'" style="color: #f33; font-size: 80%; text-align: center;">
             <p>
                 This email was automatically sent to you by <a href="http://turbohvz.googlecode.com/">TurboHvZ</a>.  Please do not reply to this email.<br />
                 TurboHvZ is released as free software under the <a href="http://www.gnu.org/licenses/gpl.html">GPLv3</a>.

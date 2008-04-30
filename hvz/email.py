@@ -109,7 +109,7 @@ class GenshiMessage(Message):
         return '\r\n'.join(lines)
         '\r\n'.join(line.strip() for line in text.splitlines())
 
-def sendmail(*args, **kw):
+def sendmail(recipient, subject, template, variables={}, **kw):
     """
     Conveniently sends an email.
     
@@ -122,8 +122,11 @@ def sendmail(*args, **kw):
     if not turbogears.config.get('mail.on', False):
         # Mail has been turned off, ignore it.
         return
+    variables = variables.copy()
+    variables.setdefault('message_format', 'email')
     from_address = turbogears.config.get('hvz.webmaster_email')
-    new_message = GenshiMessage(from_address, *args, **kw)
+    new_message = GenshiMessage(from_address, recipient, subject,
+                                template, variables, **kw)
     turbomail.enqueue(new_message)
     return new_message
 
@@ -165,4 +168,6 @@ def send_sms(numbers, subject, template, variables={}):
     if isinstance(numbers, tuple):
         numbers = [numbers]
     addresses = [_make_address(item) for item in numbers]
+    variables = variables.copy()
+    variables.setdefault('message_format', 'sms')
     return sendmail(addresses, subject, template, variables, plain_only=True)

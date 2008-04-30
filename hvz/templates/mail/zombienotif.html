@@ -9,11 +9,18 @@
 <py:def function="head_info"></py:def>
 
 <py:match path="content">
-    <p>To all players:</p>
-    <img py:if="victim.player.image" src="${tg.abslink(tg.hvz.image_link(victim.player.image))}" alt="${victim}'s picture" />
-    <p>At <span py:replace="tg.display_date(kill_date)">[date]</span>, <a href="${tg.abslink(tg.hvz.user_link(victim))}" py:content="victim">[player]</a> was infected with the zombie plague<py:if test="not killer.is_original_zombie or game.revealed_original_zombie"> by <a href="${tg.abslink(tg.hvz.user_link(killer))}" py:content="killer">[player]</a></py:if>.  This loss will be greatly mourned.</p>
-    <p>However, you must be wary: if you encounter this player, make sure you have your sock ready!</p>
-    <p>Good Luck!</p>
+    <py:choose>
+        <py:when test="message_format == 'sms'">
+            <p><span py:replace="victim">[player]</span> was killed<py:if test="not killer.is_original_zombie or game.revealed_original_zombie"> by <span py:content="killer">[player]</span></py:if> at <span py:replace="tg.display_date(kill_date)">[date]</span>.</p>
+        </py:when>
+        <py:otherwise>
+            <p>To all players:</p>
+            <img py:if="victim.player.image" src="${tg.abslink(tg.hvz.image_link(victim.player.image))}" alt="${victim}'s picture" />
+            <p>At <span py:replace="tg.display_date(kill_date)">[date]</span>, <a href="${tg.abslink(tg.hvz.user_link(victim))}" py:content="victim">[player]</a> was infected with the zombie plague<py:if test="not killer.is_original_zombie or game.revealed_original_zombie"> by <a href="${tg.abslink(tg.hvz.user_link(killer))}" py:content="killer">[player]</a></py:if>.  This loss will be greatly mourned.</p>
+            <p>However, you must be wary: if you encounter this player, make sure you have your sock ready!</p>
+            <p>Good Luck!</p>
+        </py:otherwise>
+    </py:choose>
 </py:match>
 
 <xi:include href="mail_template.html" />
