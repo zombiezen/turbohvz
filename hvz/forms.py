@@ -36,6 +36,7 @@ __all__ = ['UserNameValidator',
            'ZoneListConverter',
            'DateListValidator',
            'PasswordValidator',
+           'CellProviderValidator',
            'KillSchema',
            'StageSchema',
            'JoinSchema',
@@ -139,6 +140,17 @@ class PasswordValidator(validators.FormValidator):
             raise validators.Invalid("This form has errors", value, state,
                                      error_dict=errors)
 
+class CellProviderValidator(validators.UnicodeString):
+    messages = {'bad_provider': "Provider is unrecognized.",}
+    
+    def validate_python(self, value, state):
+        from hvz.email import cell_providers
+        if value not in cell_providers:
+            raise validators.Invalid(self.message('bad_provider', state),
+                                     value, state)
+        else:
+            super(CellProviderValidator, self).validate_python(value, state)
+
 ## SCHEMAS ##
 
 class KillSchema(validators.Schema):
@@ -154,6 +166,7 @@ class StageSchema(validators.Schema):
 class JoinSchema(validators.Schema):
     game_id = validators.Int()
     original_pool = validators.Bool()
+    notify_sms = validators.Bool()
 
 class OriginalZombieSchema(validators.Schema):
     game_id = validators.Int()
@@ -165,16 +178,20 @@ class RegisterSchema(validators.Schema):
     user_name = UserNameValidator(min=4, max=16, strip=True)
     display_name = validators.UnicodeString(min=1, max=255, strip=True)
     email_address = validators.Email()
+    cell_number = validators.PhoneNumber(if_empty=None, not_empty=False)
+    cell_provider = CellProviderValidator()
     password1 = validators.UnicodeString(min=8)
-    password2 = validators.UnicodeString(min=8)
+    password2 = validators.UnicodeString()
     profile = validators.UnicodeString(max=4096, strip=True)
     chained_validators = [validators.FieldsMatch('password1', 'password2')]
 
 class EditUserSchema(validators.Schema):
     user_id = validators.Int()
-    display_name = validators.UnicodeString(min=1, max=255, strip=True)
-    email_address = validators.Email()
-    profile = validators.UnicodeString(max=4096, strip=True)
+    display_name = RegisterSchema.fields['display_name']
+    cell_number = RegisterSchema.fields['cell_number']
+    cell_provider = RegisterSchema.fields['cell_provider']
+    email_address = RegisterSchema.fields['email_address']
+    profile = RegisterSchema.fields['profile']
     new_image = validators.FieldStorageUploadConverter()
     clear_user_image = validators.Bool()
 
@@ -197,8 +214,8 @@ class GameSchema(validators.Schema):
 class PasswordChangeSchema(validators.Schema):
     user_id = validators.Int()
     original_password = validators.UnicodeString()
-    password1 = validators.UnicodeString(min=8)
-    password2 = validators.UnicodeString(min=8)
+    password1 = RegisterSchema.fields['password1']
+    password2 = RegisterSchema.fields['password2']
     chained_validators = [validators.FieldsMatch('password1', 'password2'),
                           PasswordValidator('original_password'),]
 
@@ -227,12 +244,31 @@ class JoinFields(WidgetsList):
     game_id = widgets.HiddenField()
     original_pool = widgets.CheckBox(
         label=_("Consider for Original Zombie"),)
+    notify_sms = widgets.CheckBox(
+        label=_("Send SMS Updates"),
+        help_text=_("Check this box if you want to receive game updates "
+                    "through text messages."),)
 
 class OriginalZombieFields(WidgetsList):
     game_id = widgets.HiddenField()
     original_zombie = widgets.SingleSelectField(
         label=_("Original Zombie"),
         options=[("random", _("Random"))],)
+
+def _provider_options():
+    from hvz.email import cell_providers
+    return [(key, name) for key, (name, domain) in cell_providers.iteritems()]
+
+_cell_number_help_text = _(
+    "[Optional] Your cell phone number.  This number will "
+    "only be used to send you short game notifications.  Only "
+    "the system administrator will be able to use it.")
+
+_cell_provider_help_text = _(
+    "[Optional] Your cell phone's provider.  You must give "
+    "this if you want text message updates to work properly. "
+    "If your provider is not on this list, then we can't send "
+    "text messages to you.")
 
 class RegisterFields(WidgetsList):
     user_name = widgets.TextField(
@@ -247,6 +283,14 @@ class RegisterFields(WidgetsList):
         help_text=_("Your email address.  Only the system administrator will "
                     "see your address and will use it only to send "
                     "notifications and other game information to you."),)
+    cell_number = widgets.TextField(
+        label=_("Cell Phone Number"),
+        help_text=_cell_number_help_text,
+        validator=RegisterSchema.fields['cell_number'],)
+    cell_provider = widgets.SingleSelectField(
+        label=_("Cell Phone Provider"),
+        help_text=_cell_provider_help_text,
+        options=_provider_options,)
     password1 = widgets.PasswordField(
         label=_("Password"),
         help_text=_("Must be at least 8 characters in length"),)
@@ -282,6 +326,14 @@ class EditUserFields(WidgetsList):
         help_text=_("Your email address.  Only the system administrator will "
                     "see your address and will use it only to send "
                     "notifications and other game information to you."),)
+    cell_number = widgets.TextField(
+        label=_("Cell Phone Number"),
+        help_text=_cell_number_help_text,
+        validator=RegisterSchema.fields['cell_number'],)
+    cell_provider = widgets.SingleSelectField(
+        label=_("Cell Phone Provider"),
+        help_text=_cell_provider_help_text,
+        options=_provider_options,)
     profile = widgets.TextArea(
         label=_("Profile"),
         help_text=_("[Optional] Create a short profile describing yourself.  "

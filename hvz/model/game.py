@@ -57,6 +57,7 @@ entries_table = Table('entries', metadata,
     Column('killer_id', Integer, ForeignKey('tg_user.user_id',
            ondelete='RESTRICT', onupdate='CASCADE')),
     Column('original_pool', Boolean),
+    Column('notify_sms', Boolean),
     # Constraints
     UniqueConstraint('game_id', 'player_gid'),
     UniqueConstraint('game_id', 'player_id'),
@@ -123,6 +124,9 @@ class PlayerEntry(object):
             zombie
         starve_date : datetime.datetime
             When the player starved
+        notify_sms : bool
+            Whether the user wants to be notified by text message when the game
+            is updated
     :See: identity.User
     """
     STATE_ORIGINAL_ZOMBIE = -2
@@ -165,6 +169,7 @@ class PlayerEntry(object):
         self.player = player
         self.player_gid = self._generate_id(self.game.gid_length)
         self.original_pool = False
+        self.notify_sms = False
         self.reset()
     
     ## STRING REPRESENTATION ##

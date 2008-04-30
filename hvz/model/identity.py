@@ -19,6 +19,8 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+"""User and permission system."""
+
 from datetime import datetime, timedelta
 from uuid import UUID, uuid4
 
@@ -72,6 +74,8 @@ users_table = Table('tg_user', metadata,
     Column('created', DateTime),
     Column('profile', Unicode(4096)),
     Column('image_uuid', String(32)),
+    Column('cell_number', String(10)),
+    Column('cell_provider', String(16)),
 )
 
 permissions_table = Table('permission', metadata,
@@ -294,6 +298,10 @@ class User(object):
             permissions.
         is_legendary : bool
             Whether the player was part of the first game on the server
+        cell_number : str
+            The user's cell phone number
+        cell_provider : str
+            The user's cell phone provider
     :See: game.PlayerEntry
     """
     

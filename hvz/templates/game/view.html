@@ -90,7 +90,7 @@
             </tr>
         </tbody>
     </table>
-    <div py:if="'edit-game' in tg.identity.permissions or 'delete-game' in tg.identity.permissions">
+    <div py:if="'edit-game' in tg.identity.permissions or 'delete-game' in tg.identity.permissions" class="buttons">
         <button py:if="'edit-game' in tg.identity.permissions" id="edit_button">Edit</button>
         <button py:if="'delete-game' in tg.identity.permissions" id="delete_button">Delete</button>
     </div>
@@ -114,16 +114,16 @@
         </div>
     </py:if>
     <h2 id="sect_entry_list">Player Roster</h2>
-    <span py:replace="tg.display(grid, entries)">[players]</span>
-    <div py:if="not tg.identity.anonymous">
-        <button py:if="game.registration_open and current_entry is not None" id="unjoin_button">Unjoin</button>
-        <button py:if="'join-game' in tg.identity.permissions and game.registration_open and current_entry is None" id="join_button">Join</button>
-    </div>
-    <div py:if="'send-mail' in tg.identity.permissions">
+    <div py:if="'send-mail' in tg.identity.permissions" class="buttons">
         <button id="email_all_button">Email All</button>
         <button id="email_humans_button">Email Humans</button>
         <button id="email_zombies_button">Email Zombies</button>
         <button id="email_starved_button">Email Starved</button>
+    </div>
+    <span py:replace="tg.display(grid, entries)">[players]</span>
+    <div py:if="not tg.identity.anonymous" class="buttons">
+        <button py:if="game.registration_open and current_entry is not None" id="unjoin_button">Unjoin</button>
+        <button py:if="'join-game' in tg.identity.permissions and game.registration_open and current_entry is None" id="join_button">Join</button>
     </div>
     <h2 id="sect_stage">Stage</h2>
     <table id="stage_table">
@@ -133,7 +133,7 @@
         </tr>
     </table>
     <form py:if="'stage-game' in tg.identity.permissions" action="${tg.url('/game/action.stage')}">
-        <p>
+        <p class="buttons">
             <input type="hidden" name="game_id" value="${game.game_id}" />
             <input py:if="not game.is_first_state" type="submit" name="btnPrev" value="Previous Stage" />
             <input py:if="not game.is_last_state" type="submit" name="btnNext" value="Next Stage" />

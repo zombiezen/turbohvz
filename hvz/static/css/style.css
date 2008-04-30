@@ -264,6 +264,11 @@ html, body
 
 /* MISC FORMATTING */
 
+.buttons
+{
+    margin-bottom: 1em;
+}
+
 a.link, a, a.active
 {
     color: #369;

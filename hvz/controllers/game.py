@@ -94,17 +94,17 @@ class GameController(base.BaseController):
         tz_hours, extra_offset = divmod(total_offset, 60 * 60)
         tz_minutes = extra_offset // 60
         # Find email addresses
-        all_emails = [entry.player.email_address
-                      for entry in requested_game.entries]
-        human_emails = [entry.player.email_address
-                        for entry in requested_game.entries
-                        if entry.is_human]
-        zombie_emails = [entry.player.email_address
-                         for entry in requested_game.entries
-                         if entry.is_undead]
-        starved_emails = [entry.player.email_address
-                          for entry in requested_game.entries
-                          if entry.is_dead]
+        all_emails = [e.player.email_address
+                      for e in requested_game.entries]
+        human_emails = [e.player.email_address
+                        for e in requested_game.entries
+                        if e.is_human]
+        zombie_emails = [e.player.email_address
+                         for e in requested_game.entries
+                         if e.is_undead]
+        starved_emails = [e.player.email_address
+                          for e in requested_game.entries
+                          if e.is_dead]
         # Return template variables
         return dict(game=requested_game,
                     grid=grid,
@@ -216,13 +216,22 @@ class GameController(base.BaseController):
                       game_id, killer, victim)
         # Send out email
         recipients = [entry.player.email_address for entry in requested_game.entries]
+        notif_vars = dict(game=requested_game,
+                          killer=killer,
+                          victim=victim,
+                          kill_date=kill_date,)
         email.sendmail(recipients,
                        "HvZ: New zombie",
                        "hvz.templates.mail.zombienotif",
-                       dict(game=requested_game,
-                            killer=killer,
-                            victim=victim,
-                            kill_date=kill_date,))
+                       notif_vars)
+        # Send out SMS
+        numbers = [(entry.player.cell_number, entry.player.cell_provider)
+                   for entry in requested_game.entries
+                   if entry.notify_sms and entry.player.cell_number]
+        email.send_sms(numbers,
+                       "HvZ: New zombie",
+                       "hvz.templates.mail.zombienotif",
+                       notif_vars)
         # Return to game
         link = util.game_link(game_id, redirect=True) + '#sect_entry_list'
         raise turbogears.redirect(link)
@@ -265,7 +274,7 @@ class GameController(base.BaseController):
     @identity.require(identity.has_permission('join-game'))
     @error_handler(join)
     @validate(forms.join_form)
-    def action_join(self, game_id, original_pool=False):
+    def action_join(self, game_id, original_pool=False, notify_sms=False):
         user = identity.current.user
         game_id = int(game_id)
         requested_game = Game.query.get(game_id)
@@ -278,6 +287,7 @@ class GameController(base.BaseController):
                                                _("Registration is closed"))
         entry = PlayerEntry(requested_game, user)
         entry.original_pool = original_pool
+        entry.notify_sms = notify_sms
         session.flush()
         base.log.info("<Game %i> %r joined", game_id, entry)
         link = util.game_link(game_id, redirect=True) + '#sect_entry_list'

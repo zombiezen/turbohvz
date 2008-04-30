@@ -143,6 +143,7 @@ class UserController(base.BaseController):
     @error_handler(register)
     @validate(forms.register_form)
     def action_register(self, user_name, display_name, email_address,
+                        cell_number, cell_provider,
                         password1, password2, profile):
         # Determine group
         group_config = turbogears.config.get("hvz.default_group", "player")
@@ -156,6 +157,12 @@ class UserController(base.BaseController):
             raise ValueError("Default group %r not recognized" % group_config)
         # Create user
         new_user = User(user_name, display_name, email_address, password1)
+        if cell_number:
+            new_user.cell_number = cell_number.replace('-', '')[:10]
+            new_user.cell_provider = cell_provider
+        else:
+            new_user.cell_number = None
+            new_user.cell_provider = None
         if profile:
             new_user.profile = profile
         for group in groups:
@@ -179,6 +186,7 @@ class UserController(base.BaseController):
     @error_handler(edit)
     @validate(forms.edit_user_form)
     def action_edit(self, user_id, display_name, email_address,
+                    cell_number, cell_provider,
                     profile, new_image, clear_user_image=False,):
         # Query user
         requested_user = User.query.get(user_id)
@@ -198,6 +206,12 @@ class UserController(base.BaseController):
         # Make necessary changes
         requested_user.display_name = display_name
         requested_user.email_address = email_address
+        if cell_number:
+            requested_user.cell_number = cell_number.replace('-', '')[:10]
+            requested_user.cell_provider = cell_provider
+        else:
+            requested_user.cell_number = None
+            requested_user.cell_provider = None
         requested_user.profile = profile
         if clear_user_image:
             if requested_user.image is not None:
