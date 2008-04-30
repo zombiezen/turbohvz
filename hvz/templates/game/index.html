@@ -12,7 +12,9 @@
 <py:match path="content">
     <div py:replace="tg.display(pager)"></div>
     <span py:replace="tg.display(grid, games)"></span>
-    <button py:if="'create-game' in tg.identity.permissions" id="create_button">Create</button>
+    <div class="buttons">
+        <button py:if="'create-game' in tg.identity.permissions" id="create_button">Create</button>
+    </div>
     <script type="text/javascript">
         // EVENTS //
         safe_connect('create_button', 'onclick',
