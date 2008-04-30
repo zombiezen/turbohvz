@@ -61,6 +61,10 @@
                 <th>Total times killed:</th>
                 <td py:content="stats.total_killed">[#]</td>
             </tr>
+            <tr>
+                <th>Kills/Killed Ratio:</th>
+                <td py:content="stats.kill_ratio">[#]</td>
+            </tr>
             <tr py:if="stats.avg_survival is not None">
                 <th>Average survival time:</th>
                 <td py:content="tg.display_date(stats.avg_survival)">[#]</td>

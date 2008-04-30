@@ -73,17 +73,23 @@ class UserController(base.BaseController):
         entries = requested_user.entries
         show_oz = (lambda e: not (entry.is_original_zombie and
                                   not entry.game.revealed_original_zombie))
+        total_kills = sum(entry.kills for entry in entries)
         total_killed = len([entry for entry in entries
                             if not entry.is_human and show_oz(entry)])
+        if total_killed == 0:
+            kill_ratio = 0.0
+        else:
+            kill_ratio = float(total_kills / total_killed)
         avg_survival = _calc_avg(entry.survival_time for entry in entries)
         avg_undead = _calc_avg(entry.undead_time for entry in entries
                                if show_oz(entry))
         stats = dict(
             total_games=len(entries),
-            total_kills=sum(entry.kills for entry in entries),
+            total_kills=total_kills,
             total_killed=total_killed,
             avg_survival=avg_survival,
-            avg_undead=avg_undead,)
+            avg_undead=avg_undead,
+            kill_ratio=kill_ratio,)
         # Get template variables
         grid = widgets.GameList()
         games = [entry.game for entry in entries]
