@@ -260,6 +260,9 @@ html, body
     max-width: 128px;
     margin-right: 1em;
     margin-bottom: 1em;
+    border: thin solid #666;
+    border-left: thin solid black;
+    border-bottom: thin solid black;
 }
 
 /* MISC FORMATTING */
