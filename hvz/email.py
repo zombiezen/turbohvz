@@ -44,7 +44,7 @@ cell_providers = \
     'att': (_("AT&T"), 'mms.att.net'),
     'nextel': (_("Nextel"), 'messaging.nextel.com'),
     'sprint': (_("Sprint"), 'messaging.sprintpcs.com'),
-    't-mobile': (_("T-Mobile"), 'tomomail.net'),
+    't-mobile': (_("T-Mobile"), 'tmomail.net'),
     'verizon': (_("Verizon"), 'vtext.com'),
     'virgin': (_("Virgin Mobile"), 'vmobl.com'),
     'boost': (_("Boost"), 'myboostmobile.com'),
