@@ -178,7 +178,7 @@ class UserController(base.BaseController):
         base.log.info("%r Created", new_user)
         # Send email
         email.sendmail(new_user.email_address,
-                       "Welcome to Humans vs. Zombies!",
+                       _("Welcome to Humans vs. Zombies!"),
                        "hvz.templates.mail.welcome",
                        dict(user=new_user,))
         # Handle interface

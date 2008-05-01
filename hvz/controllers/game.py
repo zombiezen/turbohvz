@@ -215,21 +215,23 @@ class GameController(base.BaseController):
         base.log.info("<Game %i> %r killed %r!",
                       game_id, killer, victim)
         # Send out email
-        recipients = [entry.player.email_address for entry in requested_game.entries]
+        recipients = [entry.player.email_address
+                      for entry in requested_game.entries]
+        subject = _("HvZ: \"%s\": %s is a zombie") % \
+                       (requested_game.display_name,
+                        victim.player.display_name)
         notif_vars = dict(game=requested_game,
                           killer=killer,
                           victim=victim,
                           kill_date=kill_date,)
-        email.sendmail(recipients,
-                       "HvZ: New zombie",
+        email.sendmail(recipients, subject,
                        "hvz.templates.mail.zombienotif",
                        notif_vars)
         # Send out SMS
         numbers = [(entry.player.cell_number, entry.player.cell_provider)
                    for entry in requested_game.entries
                    if entry.notify_sms and entry.player.cell_number]
-        email.send_sms(numbers,
-                       "HvZ: New zombie",
+        email.send_sms(numbers, subject,
                        "hvz.templates.mail.zombienotif",
                        notif_vars)
         # Return to game
@@ -257,7 +259,8 @@ class GameController(base.BaseController):
                 recipients = [entry.player.email_address
                               for entry in requested_game.entries]
                 email.sendmail(recipients,
-                               "HvZ: Game Started",
+                               _("HvZ: \"%s\" Started" %
+                                   (requested_game.display_name)),
                                "hvz.templates.mail.gamestarted",
                                dict(game=requested_game,))
             base.log.info("<Game %i> Next Stage %i -> %i",
@@ -417,7 +420,7 @@ class GameController(base.BaseController):
         base.log.info("<Game %i> OZ Chosen %r", game_id, entry)
         # Send out email
         email.sendmail(entry.player.email_address,
-                       "HvZ: You are the original zombie",
+                       _("HvZ: You are the original zombie"),
                        "hvz.templates.mail.oznotif",
                        dict(game=requested_game,
                             entry=entry))
