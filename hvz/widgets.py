@@ -159,20 +159,23 @@ class EntryList(CustomDataGrid):
                        '_death_date',
                        '_feed_date',
                        '_starve_date',
-                       'kills',]
+                       'kills',
+                       'edit',]
     column_titles = {'player_gid': _("Game ID"),
                      'name': _("Player Name"),
                      '_death_date': _("Death Date"),
                      '_feed_date': _("Feed Date"),
                      '_starve_date': _("Starve Date"),
                      'kills': _("Kills"),
-                     'affiliation': _("Affiliation"),}
+                     'affiliation': _("Affiliation"),
+                     'edit': _("Edit"),}
     accessors = {'name': '_get_name_col',
                  'affiliation': '_get_affiliation_col',
                  '_death_date': '_get_oz_date_col',
                  '_feed_date': '_get_oz_date_col',
                  '_starve_date': '_get_oz_date_col',
                  'kills': '_get_kills_col',
+                 'edit': '_get_edit_col',
                  '*': CustomDataGrid.default_accessor,}
     no_data_msg = _("No players have joined yet")
     
@@ -209,6 +212,12 @@ class EntryList(CustomDataGrid):
             return 0
         else:
             return self.default_accessor(row, column)
+    
+    def _get_edit_col(self, row, column):
+        link = Element("{http://www.w3.org/1999/xhtml}a",
+                       href=url('/game/editentry', entry_id=row.entry_id))
+        link.text = _("Edit")
+        return link
 
 class UserList(CustomDataGrid):
     name = "user_list"

@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+
+<py:def function="page_title">Editing Player "<span py:replace="entry.player">[player]</span>"</py:def>
+<py:def function="head_info"></py:def>
+<py:def function="page_parents">
+    <a href="${tg.url('/game/index')}">Games</a>
+    <a href="${tg.hvz.game_link(entry.game)}">Game <span py:replace="entry.game.game_id">[#]</span></a>
+</py:def>
+
+<py:match path="content">
+    <h2>Quick Actions</h2>
+    <p>These buttons allow you to modify the player in several common ways.  Using these buttons is recommended over manual configuration.</p>
+    <div class="buttons">
+        <button id="human_button">Make Human</button>
+        <button id="infected_button">Infect</button>
+        <button id="zombie_button">Make Undead</button>
+        <button id="dead_button">Kill</button>
+    </div>
+    <h2>Manual Configuration</h2>
+    <p><strong>WARNING:</strong> Modification of the values below can cause damage to your game.  <strong>Use with extreme caution!</strong></p>
+    <div py:replace="tg.display(form, values)"></div>
+    <a href="${tg.hvz.game_link(entry.game)}">Cancel</a>
+    <script type="text/javascript">
+        // EVENTS //
+        safe_connect('human_button', 'onclick',
+            function()
+            {
+                redirect(${tg.jsencode(tg.url('/game/action.entryquick', entry_id=entry.entry_id, action='human'))});
+            });
+        safe_connect('infected_button', 'onclick',
+            function()
+            {
+                redirect(${tg.jsencode(tg.url('/game/action.entryquick', entry_id=entry.entry_id, action='infected'))});
+            });
+        safe_connect('zombie_button', 'onclick',
+            function()
+            {
+                redirect(${tg.jsencode(tg.url('/game/action.entryquick', entry_id=entry.entry_id, action='zombie'))});
+            });
+        safe_connect('dead_button', 'onclick',
+            function()
+            {
+                redirect(${tg.jsencode(tg.url('/game/action.entryquick', entry_id=entry.entry_id, action='dead'))});
+            });
+    </script>
+</py:match>
+
+<xi:include href="../master.html" />
+
+</html>

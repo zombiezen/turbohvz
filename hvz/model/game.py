@@ -141,6 +141,12 @@ class PlayerEntry(object):
                    STATE_DEAD_OZ: _("Dead"),
                    STATE_HUMAN: _("Human"),
                    STATE_INFECTED: _("Infected"),}
+    STATE_INTERNAL_NAMES = {STATE_ORIGINAL_ZOMBIE: _("Original zombie"),
+                            STATE_ZOMBIE: _("Zombie"),
+                            STATE_DEAD: _("Dead"),
+                            STATE_DEAD_OZ: _("Dead (Original Zombie)"),
+                            STATE_HUMAN: _("Human"),
+                            STATE_INFECTED: _("Infected"),}
     
     ## INITIALIZATION/RETRIEVING ##
     
@@ -404,6 +410,64 @@ class PlayerEntry(object):
         self.game.entries.remove(self)
         self.player.entries.remove(self)
         session.delete(self)
+    
+    def force_to_human(self, time=None):
+        """Force the player to become human."""
+        if time is None:
+            time = now()
+        else:
+            time = make_aware(time)
+        self.reset()
+    
+    def force_to_infected(self, time=None):
+        """Force the player to become infected."""
+        if time is None:
+            time = now()
+        else:
+            time = make_aware(time)
+        if self.is_infected:
+            return
+        # Infection is inherently a human condition, so we can lose any kill
+        # information.
+        self.reset()
+        self.death_date = time + self.game.human_undead_timedelta
+        self.state = self.STATE_INFECTED
+    
+    def force_to_zombie(self, time=None):
+        """Force the player to become undead."""
+        if time is None:
+            time = now()
+        else:
+            time = make_aware(time)
+        if self.is_undead:
+            pass
+        elif self.is_human or self.is_infected:
+            self.death_date = time
+            self.state = self.STATE_ZOMBIE
+        elif self.is_dead:
+            self.feed_date = time # Renew the zombie's "life"
+            self.starve_date = None
+            if self.is_original_zombie:
+                self.state = self.STATE_ORIGINAL_ZOMBIE
+            else:
+                self.state = self.STATE_ZOMBIE
+        else:
+            raise AssertionError("Unknown state when forced to zombie")
+    
+    def force_to_dead(self, time=None):
+        """Force the player to become dead."""
+        if time is None:
+            time = now()
+        else:
+            time = make_aware(time)
+        if not self.is_dead:
+            if self.death_date is None or self.death_date > time:
+                self.death_date = time
+            self.starve_date = time
+            if self.is_original_zombie:
+                self.state = self.STATE_DEAD_OZ
+            else:
+                self.state = self.STATE_DEAD
     
     ## PROPERTIES ##
     

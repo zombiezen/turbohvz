@@ -37,6 +37,7 @@ __all__ = ['UserNameValidator',
            'DateListValidator',
            'PasswordValidator',
            'CellProviderValidator',
+           'PlayerStateValidator',
            'KillSchema',
            'StageSchema',
            'JoinSchema',
@@ -46,6 +47,7 @@ __all__ = ['UserNameValidator',
            'GameSchema',
            'PasswordChangeSchema',
            'SendMailSchema',
+           'EditEntrySchema',
            'kill_form',
            'join_form',
            'original_zombie_form',
@@ -53,7 +55,8 @@ __all__ = ['UserNameValidator',
            'edit_user_form',
            'game_form',
            'password_change_form',
-           'send_mail_form',]
+           'send_mail_form',
+           'edit_entry_form',]
 
 ## VALIDATORS ##
 
@@ -141,7 +144,7 @@ class PasswordValidator(validators.FormValidator):
                                      error_dict=errors)
 
 class CellProviderValidator(validators.UnicodeString):
-    messages = {'bad_provider': "Provider is unrecognized.",}
+    messages = {'bad_provider': "Provider is not recognized.",}
     
     def validate_python(self, value, state):
         from hvz.email import cell_providers
@@ -150,6 +153,17 @@ class CellProviderValidator(validators.UnicodeString):
                                      value, state)
         else:
             super(CellProviderValidator, self).validate_python(value, state)
+
+class PlayerStateValidator(validators.Int):
+    messages = {'bad_state': "State is not recognized.",}
+    
+    def validate_python(self, value, state):
+        from hvz.model.game import PlayerEntry
+        if value not in PlayerEntry.STATE_NAMES:
+            raise validators.Invalid(self.message('bad_state', state),
+                                     value, state)
+        else:
+            super(PlayerStateValidator, self).validate_python(value, state)
 
 ## SCHEMAS ##
 
@@ -226,6 +240,16 @@ class SendMailSchema(validators.Schema):
                                     not_empty=True,)
     subject = validators.UnicodeString(min=1)
     message = validators.UnicodeString(max=8192)
+
+class EditEntrySchema(validators.Schema):
+    entry_id = validators.Int()
+    original_pool = validators.Bool()
+    notify_sms = validators.Bool()
+    state = PlayerStateValidator()
+    kills = validators.Int(min=0)
+    death_date = validators.DateTimeConverter()
+    feed_date = validators.DateTimeConverter()
+    starve_date = validators.DateTimeConverter()
 
 ## FIELDS ##
 
@@ -425,6 +449,38 @@ class SendMailFields(WidgetsList):
         rows=20,
         cols=64,)
 
+def _entry_state_options():
+    from hvz.model.game import PlayerEntry
+    return PlayerEntry.STATE_INTERNAL_NAMES.items()
+
+class EditEntryFields(WidgetsList):
+    entry_id = widgets.HiddenField()
+    original_pool = widgets.CheckBox(
+        label=_("Consider for Original Zombie"),
+        help_text=_("Whether to consider this player for the original "
+                    "zombie"),)
+    notify_sms = widgets.CheckBox(
+        label=_("Send SMS Updates"),
+        help_text=_("Whether this player receives text messages for this "
+                    "game."),)
+    state = widgets.SingleSelectField(
+        label=_("Affiliation"),
+        help_text=_("Choose what state the player is in."),
+        options=_entry_state_options,)
+    kills = widgets.TextField(
+        label=_("Kills"),
+        help_text=_("The number of kills the player has."),
+        attrs={'length': 3},)
+    death_date = widgets.CalendarDateTimePicker(
+        label=_("Death Date"),
+        help_text=_("The time at which the player turned into a zombie."),)
+    feed_date = widgets.CalendarDateTimePicker(
+        label=_("Feed Date"),
+        help_text=_("The time at which the player last fed."),)
+    starve_date = widgets.CalendarDateTimePicker(
+        label=_("Starve Date"),
+        help_text=_("The time at which the player starved."),)
+
 ## FORMS ##
 
 kill_form = widgets.TableForm(name='kill_form',
@@ -477,5 +533,11 @@ send_mail_form = widgets.TableForm(
     fields=SendMailFields(),
     validator=SendMailSchema(),
     action=url('/action.sendmail'),
-    submit_text=_("Send"),
-    method='GET',)
+    submit_text=_("Send"),)
+
+edit_entry_form = widgets.TableForm(
+    name="edit_entry_form",
+    fields=EditEntryFields(),
+    validator=EditEntrySchema(),
+    action=url('/game/action.editentry'),
+    submit_text=_("Save"),)

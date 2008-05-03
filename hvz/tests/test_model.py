@@ -265,6 +265,9 @@ class TestGameplay(SADBTest):
             "Original zombie is prematurely dead"
         self.game.update(as_local(datetime(2008, 4, 23, 14, 15)))
         assert self.game.original_zombie.is_dead, "Original zombie is not dead"
+        assert (self.game.original_zombie.state == 
+                model.game.PlayerEntry.STATE_DEAD_OZ), \
+            "Wrong death state"
     
     def test_killing(self):
         """Zombie kills turn other players into zombies"""
@@ -276,12 +279,14 @@ class TestGameplay(SADBTest):
         # Check for infection
         assert self.entry1.feed_date == kill_time, "Wrong feed time"
         assert self.entry1.kills == 1, "Wrong kill count"
+        assert self.entry2.is_infected, "Not infected yet"
         assert self.entry2.state == model.game.PlayerEntry.STATE_INFECTED, \
             "Victim is not infected"
         assert self.entry2.death_date == zombie_time, "Wrong death time"
         assert self.entry2.killed_by is self.user1, "Wrong killer"
         # Check for zombie
         self.game.update(zombie_time)
+        assert self.entry2.is_undead, "Not zombie yet"
         assert self.entry2.state == model.game.PlayerEntry.STATE_ZOMBIE, \
             "Victim is not a zombie"
     
@@ -302,3 +307,101 @@ class TestGameplay(SADBTest):
         self.entry1.kill(self.entry3, kill_time, kill_time)
         self.game.update(as_local(datetime(2008, 4, 27)))
         assert not self.game.in_progress, "Game is still advancing"
+    
+    def test_force_to_human(self):
+        """Forcing to human should revert any zombie attributes"""
+        self._choose_oz()
+        self._start_game()
+        kill_time = as_local(datetime(2008, 4, 22, 14, 15))
+        self.entry1.kill(self.entry2, kill_time, kill_time)
+        # Test original zombie to human
+        self.entry1.force_to_human()
+        assert self.entry1.is_human, "Not human yet"
+        assert self.entry1.state == model.game.PlayerEntry.STATE_HUMAN, \
+            "Not turned back to human"
+        assert self.entry1.kills == 0, "Lingering kill count"
+        assert self.entry1.death_date is None, "Lingering death date"
+        assert self.entry1.feed_date is None, "Lingering death date"
+        assert self.entry1.starve_date is None, "Lingering starve date"
+        # Test zombie to human
+        self.entry2.force_to_human()
+        assert self.entry2.is_human, "Not human yet"
+        assert self.entry2.state == model.game.PlayerEntry.STATE_HUMAN, \
+            "Not turned back to human"
+        assert self.entry2.kills == 0, "Lingering kill count"
+        assert self.entry2.killed_by is None, "Still knows killer"
+        assert self.entry2.death_date is None, "Lingering death date"
+        assert self.entry2.feed_date is None, "Lingering death date"
+        assert self.entry2.starve_date is None, "Lingering starve date"
+    
+    def test_force_to_infected(self):
+        """Forcing to infected should infect the player"""
+        self._choose_oz()
+        time = as_local(datetime(2008, 4, 22, 14, 15))
+        zombie_time = time + self.game.human_undead_timedelta
+        # Test zombie to infected
+        self.entry1.force_to_infected(time)
+        assert self.entry1.is_infected, "Not infected yet"
+        assert self.entry1.state == model.game.PlayerEntry.STATE_INFECTED, \
+            "Has not been infected"
+        assert self.entry1.death_date == zombie_time, "Wrong death date"
+        # Test human to infected
+        self.entry2.force_to_infected(time)
+        assert self.entry2.is_infected, "Not infected yet"
+        assert self.entry2.state == model.game.PlayerEntry.STATE_INFECTED, \
+            "Has not been infected"
+        assert self.entry2.death_date == zombie_time, "Wrong death date"
+    
+    def test_force_to_zombie(self):
+        """Forcing to zombie should completely zombie the player"""
+        time = as_local(datetime(2008, 4, 22, 14, 15))
+        starve_time = time + self.game.zombie_starve_timedelta
+        resurrect_time = starve_time + timedelta(minutes=5)
+        # Test human to zombie
+        self.entry1.force_to_zombie(time)
+        assert self.entry1.is_undead, "Not undead yet"
+        assert self.entry1.state == model.game.PlayerEntry.STATE_ZOMBIE, \
+            "Has not been zombied"
+        assert self.entry1.death_date == time, "Wrong death date"
+        # Test starved to zombie
+        self.entry2.force_to_zombie(time)
+        self.entry2.force_to_dead(starve_time)
+        self.entry2.force_to_zombie(resurrect_time)
+        assert self.entry2.is_undead, "Not undead yet"
+        assert self.entry2.state == model.game.PlayerEntry.STATE_ZOMBIE, \
+            "Has not been zombied"
+        assert self.entry2.death_date == time, "Obliterated death date"
+        assert self.entry2.feed_date == resurrect_time, \
+            "Did not fully resurrect"
+        assert self.entry2.starve_date is None, "Lingering starve date"
+    
+    def test_force_to_dead(self):
+        """Forcing to die should completely kill the player"""
+        self._choose_oz()
+        self._start_game()
+        time = as_local(datetime(2008, 4, 22, 14, 15))
+        starve_time = time + self.game.zombie_starve_timedelta
+        resurrect_time = starve_time + timedelta(minutes=5)
+        # Test infected to dead
+        self.entry1.kill(self.entry3, time, time)
+        self.entry3.force_to_dead(time)
+        assert self.entry3.is_dead, "Not dead yet"
+        assert self.entry3.state == model.game.PlayerEntry.STATE_DEAD, \
+            "Has not been killed"
+        assert self.entry3.death_date == time, "Wrong death date"
+        assert self.entry3.starve_date == time, "Wrong starve date"
+        # Test original zombie to dead
+        self.entry1.force_to_dead(time)
+        assert self.entry1.is_dead, "Not dead yet"
+        assert self.entry1.state == model.game.PlayerEntry.STATE_DEAD_OZ, \
+            "Has not been killed"
+        assert self.entry1.death_date == self.game.started, \
+            "Tampered with death date"
+        assert self.entry1.starve_date == time, "Wrong starve date"
+        # Test human to dead
+        self.entry2.force_to_dead(time)
+        assert self.entry2.is_dead, "Not dead yet"
+        assert self.entry2.state == model.game.PlayerEntry.STATE_DEAD, \
+            "Has not been killed"
+        assert self.entry2.death_date == time, "Wrong death date"
+        assert self.entry2.starve_date == time, "Wrong starve date"

@@ -74,6 +74,8 @@ class GameController(base.BaseController):
         columns = list(widgets.EntryList.default_columns)
         if 'view-player-gid' in perms:
             columns.insert(0, 'player_gid')
+        if 'edit-entry' in perms:
+            columns.append('edit')
         # Determine whether to show original zombie
         oz = requested_game.revealed_original_zombie
         if entry is not None:
@@ -180,6 +182,25 @@ class GameController(base.BaseController):
             values[name] = getattr(requested_game, name)
         return dict(game=requested_game,
                     form=forms.game_form,
+                    values=values,)
+    
+    @expose("hvz.templates.game.editentry")
+    @identity.require(identity.has_permission('edit-entry'))
+    def editentry(self, entry_id):
+        entry_id = int(entry_id)
+        requested_entry = PlayerEntry.query.get(entry_id)
+        if requested_entry is None:
+            raise base.NotFound()
+        values = {}
+        for field in forms.edit_entry_form.fields:
+            name = field.name
+            new_value = getattr(requested_entry, name)
+            if new_value is None:
+                values[name] = u''
+            else:
+                values[name] = new_value
+        return dict(entry=requested_entry,
+                    form=forms.edit_entry_form,
                     values=values,)
     
     @expose("hvz.templates.game.reportkill")
@@ -420,6 +441,67 @@ class GameController(base.BaseController):
         base.log.info("<Game %i> Updated", game_id)
         turbogears.flash(_("Game updated"))
         raise turbogears.redirect(util.game_link(requested_game,
+                                                 redirect=True))
+    
+    @expose()
+    @identity.require(identity.has_permission('edit-entry'))
+    @error_handler(editentry)
+    @validate(forms.edit_entry_form)
+    def action_editentry(self, entry_id,
+                         state, kills, death_date, feed_date, starve_date,
+                         original_pool=False,
+                         notify_sms=False,):
+        entry_id = int(entry_id)
+        requested_entry = PlayerEntry.query.get(entry_id)
+        if requested_entry is None:
+            raise base.NotFound()
+        # Update parameters
+        if death_date:
+            death_date = model.dates.as_local(death_date)
+        if feed_date:
+            feed_date = model.dates.as_local(feed_date)
+        if starve_date:
+            starve_date = model.dates.as_local(starve_date)
+        # Update entry
+        requested_entry.state = state
+        requested_entry.kills = kills
+        requested_entry.death_date = death_date
+        requested_entry.feed_date = feed_date
+        requested_entry.starve_date = starve_date
+        requested_entry.original_pool = original_pool
+        requested_entry.notify_sms = notify_sms
+        session.flush()
+        # Go back to game page
+        base.log.info("<Entry %i;%i:%s> Updated",
+                      entry_id, requested_entry.game.game_id,
+                      requested_entry.player_gid)
+        turbogears.flash(_("Player updated"))
+        raise turbogears.redirect(util.game_link(requested_entry.game,
+                                                 redirect=True))
+    
+    @expose()
+    @identity.require(identity.has_permission('edit-entry'))
+    def action_entryquick(self, entry_id, action):
+        entry_id = int(entry_id)
+        requested_entry = PlayerEntry.query.get(entry_id)
+        if requested_entry is None:
+            raise base.NotFound()
+        # Perform requested action
+        actions = {'human': requested_entry.force_to_human,
+                   'infected': requested_entry.force_to_infected,
+                   'zombie': requested_entry.force_to_zombie,
+                   'dead': requested_entry.force_to_dead,}
+        func = actions.get(action)
+        if func is not None:
+            func()
+        else:
+            raise ValueError("Invalid action given")
+        # Go back to game page
+        base.log.info("<Entry %i;%i:%s> Changed to: %s",
+                      entry_id, requested_entry.game.game_id,
+                      requested_entry.player_gid, action)
+        turbogears.flash(_("Player updated"))
+        raise turbogears.redirect(util.game_link(requested_entry.game,
                                                  redirect=True))
     
     @expose()
