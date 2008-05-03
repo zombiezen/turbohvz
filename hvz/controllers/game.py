@@ -19,6 +19,7 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import division
 import random
 
 import cherrypy
@@ -27,7 +28,7 @@ from turbogears import error_handler, expose, url, identity, validate
 from turbogears.database import session
 from turbogears.paginate import paginate
 
-from hvz import email, forms, model, util, widgets #, json
+from hvz import charts, email, forms, model, util, widgets #, json
 from hvz.controllers import base
 from hvz.model.errors import PlayerNotFoundError
 from hvz.model.game import PlayerEntry, Game
@@ -35,6 +36,9 @@ from hvz.model.game import PlayerEntry, Game
 __author__ = 'Ross Light'
 __date__ = 'March 30, 2008'
 __all__ = ['GameController']
+
+def _get_seconds(delta):
+    return delta.days * 24 * 60 * 60 + delta.seconds
 
 class GameController(base.BaseController):
     @staticmethod
@@ -77,11 +81,59 @@ class GameController(base.BaseController):
         else:
             is_oz = False
         can_view_oz = bool('view-oz' in perms)
+        # Find factions
+        humans = [e.player for e in requested_game.entries if e.is_human]
+        zombies = [e.player for e in requested_game.entries if e.is_undead]
+        infected = [e.player for e in requested_game.entries if e.is_infected]
+        starved = [e.player for e in requested_game.entries if e.is_dead]
         # Create widgets
         grid = widgets.EntryList(columns=columns,
                                  show_oz=(oz or is_oz or can_view_oz),)
         entries = sorted(requested_game.entries,
                          key=(lambda e: e.player.display_name))
+        # Create charts
+        if requested_game.in_progress:
+            # Create data
+            chart_data = [len(humans),
+                          len(zombies),
+                          len(infected),
+                          len(starved)]
+            chart_labels = [_("Humans (%i)") % len(humans),
+                            _("Zombies (%i)") % len(zombies),
+                            _("Infected (%i)") % len(infected),
+                            _("Starved (%i)") % len(starved),]
+            chart_colors = ['ff0000',
+                            'cccccc',
+                            '00CC00',
+                            '333333',]
+            # Remove empty statistics
+            i = 0
+            while True:
+                try:
+                    i = chart_data.index(0, i)
+                except ValueError:
+                    break
+                else:
+                    del chart_data[i], chart_labels[i], chart_colors[i]
+            # Generate chart
+            player_chart = charts.PieChart(chart_data,
+                                           title=_("Player Statistics"),
+                                           labels=chart_labels,
+                                           colors=chart_colors,
+                                           pie3D=True,)
+            # Determine whether we need starve meter
+            if entry is not None and entry.is_undead:
+                time = entry.calculate_time_before_starving()
+                elapsed_sec = _get_seconds(time)
+                max_sec = _get_seconds(requested_game.zombie_starve_timedelta)
+                starve_meter = charts.GoogleOMeter(
+                    [elapsed_sec / max_sec * 100],
+                    colors=['ff0000', 'ffff00', '00ff00'])
+            else:
+                starve_meter = None
+        else:
+            player_chart = None
+            starve_meter = None
         # Calculate server time and timezone
         current_time = model.dates.now()
         offset = model.dates.to_local(current_time).utcoffset()
@@ -96,15 +148,9 @@ class GameController(base.BaseController):
         # Find email addresses
         all_emails = [e.player.email_address
                       for e in requested_game.entries]
-        human_emails = [e.player.email_address
-                        for e in requested_game.entries
-                        if e.is_human]
-        zombie_emails = [e.player.email_address
-                         for e in requested_game.entries
-                         if e.is_undead]
-        starved_emails = [e.player.email_address
-                          for e in requested_game.entries
-                          if e.is_dead]
+        human_emails = [player.email_address for player in humans]
+        zombie_emails = [player.email_address for player in zombies]
+        starved_emails = [player.email_address for player in starved]
         # Return template variables
         return dict(game=requested_game,
                     grid=grid,
@@ -117,7 +163,9 @@ class GameController(base.BaseController):
                     all_emails=all_emails,
                     human_emails=human_emails,
                     zombie_emails=zombie_emails,
-                    starved_emails=starved_emails,)
+                    starved_emails=starved_emails,
+                    player_chart=player_chart,
+                    starve_meter=starve_meter,)
     
     @expose("hvz.templates.game.edit")
     @identity.require(identity.has_permission('edit-game'))

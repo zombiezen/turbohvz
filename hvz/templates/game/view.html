@@ -34,6 +34,7 @@
 
 <py:match path="content">
     <a id="sect_game_info"></a>
+    <img py:if="player_chart" src="${player_chart.build_link((250, 100))}" id="player_chart" alt="Player Statistics" />
     <table id="game_info" class="info_table">
         <tbody>
             <tr>
@@ -97,6 +98,10 @@
     <p><a href="${tg.hvz.game_link(game, 'rules')}">Rules</a></p>
     <py:if test="current_entry is not None">
         <h2 id="sect_player_info">Your Info</h2>
+        <div py:if="starve_meter" id="starve_meter">
+            <img src="${starve_meter.build_link((200, 100))}" alt="Starve Meter" />
+            <p>Starve Meter</p>
+        </div>
         <ul>
             <li>Your ID is <span py:replace="current_entry.player_gid">[gid]</span></li>
             <li>You are <span py:replace="current_entry.affiliation">[affiliation]</span></li>

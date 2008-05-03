@@ -227,6 +227,23 @@ html, body
 
 /* GAME VIEW STYLES */
 
+#player_chart
+{
+    float: right;
+}
+
+#starve_meter
+{
+    float: right;
+    margin-left: 1em;
+    margin-bottom: 1em;
+    border: thin solid #666;
+    background: #CCC;
+    font-size: smaller;
+    font-weight: bolder;
+    text-align: center;
+}
+
 .check
 {
     width: 1em;
