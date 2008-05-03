@@ -14,7 +14,9 @@
 <py:match path="content">
     <py:choose>
         <py:when test="game.state == game.STATE_CHOOSE_ZOMBIE - 1">
+            <p>You must now select the original zombie for the game.  After you have selected the original zombie, he or she will receive an email notification of his or her condition.</p>
             <span py:replace="tg.display(form, {'game_id': game.game_id, 'original_zombie': 'random'}, options={'original_zombie': options})"></span>
+            <p><a href="${tg.hvz.game_link(game)}">Cancel</a></p>
         </py:when>
         <py:otherwise>
             <p>The game requested is not choosing an original zombie right now.</p>
