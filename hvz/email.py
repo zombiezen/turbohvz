@@ -165,6 +165,9 @@ def send_sms(numbers, subject, template, variables={}):
             raise ValueError('Number is not a valid US phone number')
         provider_name, provider_domain = cell_providers[provider]
         return number + '@' + provider_domain
+    if not turbogears.config.get('hvz.notify_sms', True):
+        # SMS has been turned off, ignore it.
+        return
     if isinstance(numbers, tuple):
         numbers = [numbers]
     addresses = [_make_address(item) for item in numbers]

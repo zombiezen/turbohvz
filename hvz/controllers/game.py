@@ -94,7 +94,8 @@ class GameController(base.BaseController):
         entries = sorted(requested_game.entries,
                          key=(lambda e: e.player.display_name))
         # Create charts
-        if requested_game.in_progress:
+        if (turbogears.config.get('hvz.show_charts', True) and
+            requested_game.in_progress):
             # Create data
             chart_data = [len(humans),
                           len(zombies),
