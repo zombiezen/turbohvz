@@ -117,6 +117,10 @@ class Root(turbogears.controllers.RootController, BaseController):
     def index(self):
         return dict()
     
+    @expose("hvz.templates.help")
+    def help(self):
+        return dict()
+    
     @expose("hvz.templates.login")
     def login(self, forward_url=None, previous_url=None, *args, **kw):
         if not identity.current.anonymous and \

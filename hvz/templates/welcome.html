@@ -17,6 +17,7 @@
         <li><a href="${tg.url('/user/index')}">Users</a></li>
         <li><a href="${tg.hvz.register_link()}">Register</a></li>
         <li py:if="'send-mail' in tg.identity.permissions"><a href="${tg.url('/mail')}">Send Mail</a></li>
+        <li><a href="${tg.url('/help')}">Help</a></li>
     </ul>
 </py:match>
 

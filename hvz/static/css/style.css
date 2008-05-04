@@ -282,6 +282,24 @@ html, body
     border-bottom: thin solid black;
 }
 
+/* DOCUMENTATION */
+
+#toc
+{
+    padding-left: 1em;
+    border-left: medium solid #333;
+}
+
+#toc h1
+{
+    font-size: 100%;
+}
+
+.procedure
+{
+    font-weight: bold;
+}
+
 /* MISC FORMATTING */
 
 .buttons

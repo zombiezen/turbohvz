@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+
+<py:def function="page_title">Help</py:def>
+<py:def function="head_info"></py:def>
+<py:def function="page_parents"></py:def>
+
+<py:match path="content">
+    <p>Welcome to Humans versus Zombies!</p>
+    <p>Humans vs. Zombies is a game of moderated tag commonly played on college campuses. A group of human players attempts to survive a "zombie outbreak" by not being tagged by a growing group of zombie players.</p>
+    <div id="toc">
+        <h1>Table of Contents</h1>
+        <ul>
+            <li><a href="#sect_signing_up">Signing Up</a></li>
+            <li>
+                <a href="#sect_playing">Playing a Game</a>
+                <ul>
+                    <li><a href="#sect_how_to_play">How to Play</a></li>
+                    <li><a href="#sect_reporting">Reporting a Kill</a></li>
+                </ul>
+            </li>
+            <li><a href="#sect_profile">Editing Your Profile</a></li>
+        </ul>
+    </div>
+    <h1 id="sect_signing_up">Signing Up</h1>
+    <p>Signing up for a Humans vs. Zombies game is a two-step process:</p>
+    <ol>
+        <li id="sect_register">
+            <p class="procedure">Register for an account</p>
+            <p>An account for Humans vs. Zombies allows you to join games, create a user profile, and gather statistics on your performance as a Humans vs. Zombies player.  To create your account, choose "Register" from the main menu:</p>
+            <img src="${tg.url('/static/images/help/menu-register.png')}" alt="Register link screenshot" />
+            <p>You must then fill out the form that appears.  Fields that are optional will be noted.  Everything that you enter in the form (with the exception of the internal name) can be changed at a later time.</p>
+            <img src="${tg.url('/static/images/help/register-page.png')}" alt="Register page screenshot" />
+            <p>After you are finished registering, a brief welcome page will appear, giving you the URL for your user profile page.</p>
+        </li>
+        <li id="sect_join">
+            <p class="procedure">Join a game</p>
+            <p>This Humans vs. Zombies service allows multiple games, so in order to participate in a game, you must sign up for it.</p>
+            <p>To join a game, select "Games" from the main menu:</p>
+            <img src="${tg.url('/static/images/help/menu-games.png')}" alt="Game link screenshot" />
+            <p>You will then see <a href="${tg.url('/game/index')}">a list of all games</a>.  Browse through the list and find the one you want to join, then click the name of the game.  You will then be presented with the game's info page:</p>
+            <img src="${tg.url('/static/images/help/game-page.png')}" alt="Game page screenshot" />
+            <p>Scroll down to find the player roster.  If the game is open for registration, you will see a "Join" button:</p>
+            <img src="${tg.url('/static/images/help/join-button.png')}" alt="Join button screenshot" />
+            <p>Click this button and fill out the requested information to join the game.</p>
+            <p>Once you've joined a game, make sure that you write down your Player ID.  Every game you join will assign you a unique Player ID so that other players cannot guess it and maliciously report you as dead.  However, your Player ID is essential to playing Humans vs. Zombies, so make sure you always have it with you when playing.</p>
+        </li>
+    </ol>
+    <h1 id="sect_playing">Playing a Game</h1>
+    <p>Once you've joined a game, this service is your main source for updates related to the game.</p>
+    <h2 id="sect_how_to_play">How to Play</h2>
+    <p>Each game of Humans vs. Zombies can be slightly different (safe zones can be changed, starving time may vary, etc.) so you will need to look at the specific rules for the game you are playing.  Every game page has a link to its rules.</p>
+    <img src="${tg.url('/static/images/help/rules-link.png')}" alt="Rules link screenshot" />
+    <h2 id="sect_reporting">Reporting a Kill</h2>
+    <p>Every Humans vs. Zombies game requires the zombies to report kills to this website.</p>
+    <p>To report a kill, log in, and go to the game page.  You will find a "Report Kill" button:</p>
+    <img src="${tg.url('/static/images/help/report-kill-button.png')}" alt="Report kill button screenshot" />
+    <p>After getting to the report kill page, enter in the victim's Player ID and the time at which you tagged the player.</p>
+    <h1 id="sect_profile">Editing Your Profile</h1>
+    <p>Humans vs. Zombies, like many other websites, allows you to create a user profile to share information about yourself and the games you've played.  You can even upload a picture of yourself, which will be used to notify others when you become a zombie.</p>
+    <p>To edit your profile, go to your user page by clicking "User Page" from the bar at the top of the screen.  Make sure you are logged in, and click "Edit":</p>
+    <img src="${tg.url('/static/images/help/user-edit-button.png')}" alt="Edit button screenshot" />
+    <p>You can upload a picture to replace the one you currently have, or you can remove your picture altogether while you are editing.</p>
+</py:match>
+
+<xi:include href="master.html" />
+
+</html>

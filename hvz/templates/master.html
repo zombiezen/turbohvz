@@ -28,6 +28,7 @@
                 <ul id="user_bar_links">
                     <li><a href="${tg.hvz.login_link()}">Login</a></li>
                     <li><a href="${tg.hvz.register_link()}">Register</a></li>
+                    <li><a href="${tg.url('/help')}">Help</a></li>
                 </ul>
             </py:when>
             <py:otherwise>
@@ -35,6 +36,7 @@
                 <ul id="user_bar_links">
                     <li><a href="${tg.hvz.user_link(tg.identity.user)}">User Page</a></li>
                     <li><a href="${tg.hvz.change_password_link()}">Change Password</a></li>
+                    <li><a href="${tg.url('/help')}">Help</a></li>
                     <li><a href="${tg.url('/logout')}">Logout</a></li>
                 </ul>
             </py:otherwise>
