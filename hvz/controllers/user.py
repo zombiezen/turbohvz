@@ -71,9 +71,10 @@ class UserController(base.BaseController):
             raise base.NotFound()
         # Generate statistics
         entries = requested_user.entries
-        show_oz = (lambda e: not (entry.is_original_zombie and
-                                  not entry.game.revealed_original_zombie))
-        total_kills = sum(entry.kills for entry in entries)
+        show_oz = (lambda e: not e.is_original_zombie or
+                             e.game.revealed_original_zombie)
+        total_kills = sum(entry.kills for entry in entries
+                          if show_oz(entry))
         total_killed = len([entry for entry in entries
                             if not entry.is_human and show_oz(entry)])
         if total_killed == 0:
