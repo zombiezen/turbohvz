@@ -30,7 +30,7 @@
     </table>
     <div id="sect_actions" class="buttons">
         <button py:if="'edit-user' in tg.identity.permissions or tg.identity.user == user" id="edit_button">Edit</button>
-        <button py:if="'sudo-login' in tg.identity.permissions" id="sudo_button">Sudo</button>
+        <button py:if="'sudo-login' in tg.identity.permissions and tg.identity.user != user" id="sudo_button">Sudo</button>
         <button py:if="'send-mail' in tg.identity.permissions" id="email_button">Email</button>
     </div>
     <h2 id="sect_profile">Profile</h2>
