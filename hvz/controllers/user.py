@@ -49,7 +49,7 @@ def _calc_avg(raw_data):
 
 class UserController(base.BaseController):
     @expose("hvz.templates.user.index")
-    @paginate('users', default_order='display_name')
+    @paginate('users', limit=20, default_order='display_name')
     def index(self):
         all_users = session.query(User)
         grid = widgets.UserList(sortable=True)
@@ -93,6 +93,7 @@ class UserController(base.BaseController):
         # Get template variables
         grid = widgets.GameList()
         games = [entry.game for entry in entries]
+        games.sort(key=(lambda g: g.created), reverse=True)
         return dict(user=requested_user,
                     games=games,
                     game_grid=grid,

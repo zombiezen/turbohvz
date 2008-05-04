@@ -50,7 +50,7 @@ class GameController(base.BaseController):
             return None
     
     @expose("hvz.templates.game.index")
-    @paginate('games', default_order='-game_id')
+    @paginate('games', limit=20, default_order='-game_id')
     def index(self):
         all_games = session.query(Game)
         grid = widgets.GameList(sortable=True)
