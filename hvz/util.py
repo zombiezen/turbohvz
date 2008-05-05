@@ -134,10 +134,13 @@ def display_date(date):
         d, s = date.days, date.seconds
         h, s = s // (60 * 60), s % (60 * 60)
         m, s = s // 60, s % 60
-        comps = ["%s %s" % (value, pluralize(value, singular, plural))
+        comps = ["%i %s" % (value, pluralize(value, singular, plural))
                  for value, (singular, plural) in zip([d, h, m, s], names)
                  if value]
-        return " ".join(comps)
+        if comps:
+            return " ".join(comps)
+        else:
+            return "%i %s" % (0, _("seconds"))
     else:
         raise TypeError("display_date received a non-datetime %r" % date)
 
