@@ -59,6 +59,7 @@ def _load_config(configfile=None):
     :Parameters:
         configfile : str
             Path to a configuration file
+    :Raises ConfigurationError: If no suitable configuration could be found
     """
     setupdir = os.path.dirname(os.path.dirname(__file__))
     curdir = os.getcwd()
