@@ -37,7 +37,8 @@ __all__ = ['now',
            'to_utc',
            'make_aware',
            'date_prop',
-           'calc_timedelta',]
+           'calc_timedelta',
+           'calc_addtimedelta',]
 
 def _get_local_timezone():
     return pytz.timezone(config.get('hvz.timezone', 'UTC'))
@@ -251,7 +252,73 @@ def calc_timedelta(datetime1, datetime2, tz=None,
         # Okay, let's take up the next day
         accum_date += timedelta(1)
     # Ensure that difference >= 0
-    # This prevents the weird case where 
+    # This prevents the weird case where the dates are on the same ignore day
     difference = max(timedelta(), difference)
     # Return result
     return difference
+
+def calc_addtimedelta(dt, delta, tz=None,
+                      ignore_dates=None, ignore_weekdays=None):
+    """
+    Calculates the date after adding a time delta.
+    
+    Along with adding the two dates, this adds time on specific dates and
+    weekdays.
+    
+    :Parameters:
+        dt
+            The date and time
+        delta
+            The difference to add
+    :Keywords:
+        tz : datetime.tzinfo
+            The timezone to calculate dates in, defaulting to the config value
+            of ``hvz.timezone``.  If you get the wrong timezone, your results
+            will possibly be **very incorrect**.  This is because the algorithm
+            should be looking at dates in the players' timezone, which is
+            rarely UTC.
+        ignore_dates : list of datetime.date
+            Days that are added to the date
+        ignore_weekdays : list of int
+            Weekdays that are added to the date (given as ISO weekday numbers)
+    :Returns: The date with the delta added
+    :ReturnType: datetime.datetime
+    """
+    # Get arguments
+    if tz is None:
+        tz = _get_local_timezone()
+    if ignore_dates is None:
+        ignore_dates = []
+    if ignore_weekdays is None:
+        ignore_weekdays = []
+    datetime1 = to_local(dt, tz)
+    datetime2 = datetime1 + delta
+    # Find date range
+    date1, date2 = (datetime1.date(), datetime2.date())
+    # Loop through all dates in-between date1 and date2
+    accum_date = date1
+    while accum_date <= date2:
+        if accum_date in ignore_dates or \
+           accum_date.isoweekday() in ignore_weekdays:
+            # This date is an ignore day, so let's decide what to do:
+            if accum_date == date1:
+                # This is the first date, so get the amount of time remaining
+                # in the day on datetime1 and add it to the sum
+                this_day = datetime1.replace(hour=0, minute=0, second=0,
+                                             microsecond=0)
+                next_day = this_day + timedelta(1)
+                datetime2 += next_day - datetime1
+            elif accum_date == date2:
+                # This is the last date, so get the amount of time elapsed
+                # in the day on datetime2 and add it to the sum
+                this_day = datetime2.replace(hour=0, minute=0, second=0,
+                                             microsecond=0)
+                datetime2 += datetime2 - this_day
+            else:
+                # Woo-hoo!  This is a full ignore day, so let's do simple math.
+                datetime2 += timedelta(1)
+            date2 = datetime2.date()
+        # Okay, let's take up the next day
+        accum_date += timedelta(1)
+    # Return result
+    return datetime2

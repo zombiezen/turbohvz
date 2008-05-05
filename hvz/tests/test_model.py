@@ -64,6 +64,30 @@ class SADBTest(unittest.TestCase):
         # Drop all model tables
         database.metadata.drop_all(checkfirst=True)
 
+class TestDateCalculation(unittest.TestCase):
+    def test_difference(self):
+        dt1 = as_local(datetime(2008, 5, 5, 10, 45))
+        dt2 = as_local(datetime(2008, 5, 9, 11, 0))
+        ignore_dates = [date(2008, 5, 6)]
+        ignore_days = [3]
+        result = model.dates.calc_timedelta(dt1, dt2,
+                                            ignore_dates=ignore_dates,
+                                            ignore_weekdays=ignore_days,)
+        assert result == timedelta(days=2, minutes=15), \
+            "Subtracting yields wrong delta"
+    
+    def test_sum(self):
+        """Adding a timedelta should consider ignore dates"""
+        dt = as_local(datetime(2008, 5, 5, 10, 45))
+        delta = timedelta(days=2, minutes=15)
+        ignore_dates = [date(2008, 5, 6)]
+        ignore_days = [3]
+        result = model.dates.calc_addtimedelta(dt, delta,
+                                               ignore_dates=ignore_dates,
+                                               ignore_weekdays=ignore_days,)
+        assert result == as_local(datetime(2008, 5, 9, 11, 0)), \
+            "Adding yields wrong date"
+
 class TestUser(SADBTest):
     def test_creation(self):
         """User creation should set all necessary attributes"""
@@ -294,8 +318,10 @@ class TestGameplay(SADBTest):
         """Game should automatically detect human survival"""
         self._choose_oz()
         self._start_game()
-        self.game.update(as_local(datetime(2008, 4, 23, 18, 15)))
+        end_time = self.entry1.death_date + self.game.zombie_starve_timedelta
+        self.game.update(end_time + self.game.zombie_report_timedelta + timedelta(minutes=1))
         assert not self.game.in_progress, "Game is still advancing"
+        assert self.game.ended == end_time, "Wrong end time"
     
     def test_check_zombie_end(self):
         """Game should automatically detect zombie victory"""
@@ -305,8 +331,10 @@ class TestGameplay(SADBTest):
         self.entry1.kill(self.entry2, kill_time, kill_time)
         kill_time = as_local(datetime(2008, 4, 22, 14, 30))
         self.entry1.kill(self.entry3, kill_time, kill_time)
-        self.game.update(as_local(datetime(2008, 4, 27)))
+        self.game.update(kill_time)
+        end_time = kill_time + self.game.human_undead_timedelta
         assert not self.game.in_progress, "Game is still advancing"
+        assert self.game.ended == end_time, "Wrong end time"
     
     def test_force_to_human(self):
         """Forcing to human should revert any zombie attributes"""

@@ -32,7 +32,8 @@ from sqlalchemy.orm import backref, relation, synonym
 from turbogears.database import mapper, metadata, session
 
 from hvz.model import identity
-from hvz.model.dates import now, date_prop, calc_timedelta, make_aware
+from hvz.model.dates import (now, date_prop, make_aware,
+                             calc_timedelta, calc_addtimedelta)
 from hvz.model.errors import WrongStateError, InvalidTimeError
 
 __author__ = 'Ross Light'
@@ -367,10 +368,41 @@ class PlayerEntry(object):
                 The date we're comparing to.  This may not actually be *now*.
                 For example, this may be the time of a reported kill.
         :Returns: The amount of game time until starvation
-        :ReturnType: timedelta
+        :ReturnType: datetime.timedelta
         """
         return (self.game.zombie_starve_timedelta -
                 self.calculate_time_since_last_feeding(time))
+    
+    def calculate_starve_time(self, time=None):
+        """
+        Calculates when the zombie will starve.
+        
+        This calculation is a projection; if the zombie feeds before this time,
+        the starve time will be extended.
+        
+        If the player has not fed yet (i.e. this is their first kill since
+        becoming a zombie), then his or her death date is used for the
+        calculation.
+        
+        :Parameters:
+            time : datetime.datetime
+                The date we're comparing to.  This may not actually be *now*.
+                For example, this may be the time of a reported kill.
+        :Returns: The time when the zombie will starve
+        :ReturnType: datetime.datetime
+        """
+        # Default date
+        if time is None:
+            time = now()
+        else:
+            time = make_aware(time)
+        # Check which date to compare
+        if self.feed_date is None:
+            feed_date = self.death_date
+        else:
+            feed_date = self.feed_date
+        starve_delta = self.game.zombie_starve_timedelta
+        return self.game.calculate_addtimedelta(feed_date, starve_delta)
     
     def can_report_kill(self, time=None):
         """
@@ -678,13 +710,16 @@ class Game(object):
             update_time = now()
         else:
             update_time = make_aware(update_time)
+        session.flush()
         # Hey, we're not playing.  Don't update!
         if not self.in_progress:
             return
         # Update
-        self._update_starved(update_time)
-        self._update_infected(update_time)
-        self._update_check_end(update_time)
+        self._update_check_zombie_win(update_time)
+        if self.in_progress:
+            self._update_infected(update_time)
+            self._update_starved(update_time)
+            self._update_check_human_win(update_time)
     
     def _update_starved(self, update_time):
         """
@@ -700,7 +735,7 @@ class Game(object):
         for zombie in zombies:
             delta = zombie.calculate_time_since_last_feeding(update_time)
             if delta >= self.zombie_starve_timedelta:
-                zombie.starve()
+                zombie.starve(zombie.calculate_starve_time())
         session.flush()
     
     def _update_infected(self, update_time):
@@ -720,9 +755,30 @@ class Game(object):
                 player.state = PlayerEntry.STATE_ZOMBIE
         session.flush()
     
-    def _update_check_end(self, update_time):
+    def _update_check_zombie_win(self, update_time):
         """
-        Checks if the game is over, and if necessary, forcibly end the game.
+        Checks if the humans have expired, and if necessary, forcibly end the
+        game.
+        
+        :Parameters:
+            update_time : datetime.datetime
+                The time at which the update commenced
+        """
+        from sqlalchemy import or_
+        players = PlayerEntry.query.filter_by(game=self)
+        humans = players.filter_by(state=PlayerEntry.STATE_HUMAN)
+        if humans.count() == 0:
+            zombies = players.filter(
+                or_(PlayerEntry.state == PlayerEntry.STATE_ZOMBIE,
+                    PlayerEntry.state == PlayerEntry.STATE_ORIGINAL_ZOMBIE,
+                    PlayerEntry.state == PlayerEntry.STATE_INFECTED))
+            ultimate_end = max(zombie.death_date for zombie in zombies)
+            self.end(ultimate_end)
+    
+    def _update_check_human_win(self, update_time):
+        """
+        Checks if the zombies have died, and if necessary, forcibly end the
+        game.
         
         :Parameters:
             update_time : datetime.datetime
@@ -731,7 +787,6 @@ class Game(object):
         from sqlalchemy import or_
         # Fetch the different groups
         players = PlayerEntry.query.filter(PlayerEntry.game == self)
-        humans = players.filter(PlayerEntry.state == PlayerEntry.STATE_HUMAN)
         zombies = players.filter(
             or_(PlayerEntry.state == PlayerEntry.STATE_ZOMBIE,
                 PlayerEntry.state == PlayerEntry.STATE_ORIGINAL_ZOMBIE,
@@ -743,11 +798,7 @@ class Game(object):
         # The two closing scenarios:
         #   1. Humans have all died.
         #   2. Zombies have all starved and there are humans left.
-        should_end = False
-        if humans.count() == 0:
-            # Biosigns are negative, Jim.
-            should_end = True
-        elif zombies.count() == 0:
+        if zombies.count() == 0:
             # Zombies appear to have died off...
             # But there may still be dead ones who can report a kill.
             for corpse in dead:
@@ -755,11 +806,8 @@ class Game(object):
                     # Someone could still report a kill!
                     break
             else:
-                # Everyone has truly starved.  Give up.
-                should_end = True
-        # Do we end the game?
-        if should_end:
-            self.end()
+                ultimate_end = max(corpse.starve_date for corpse in dead)
+                self.end(ultimate_end)
     
     def calculate_timedelta(self, datetime1, datetime2):
         """
@@ -779,6 +827,25 @@ class Game(object):
         return calc_timedelta(datetime1, datetime2,
                               ignore_dates=self.ignore_dates,
                               ignore_weekdays=self.ignore_weekdays,)
+    
+    def calculate_addtimedelta(self, dt, delta):
+        """
+        Calculates the date after a delta.
+        
+        Along with adding the two dates, this adds time on specific dates and
+        weekdays.
+        
+        :Parameters:
+            dt
+                The date and time
+            delta
+                The delta
+        :Returns: The date with the delta added
+        :ReturnType: datetime.datetime
+        """
+        return calc_addtimedelta(dt, delta,
+                                 ignore_dates=self.ignore_dates,
+                                 ignore_weekdays=self.ignore_weekdays,)
     
     def previous_state(self, time=None):
         """
