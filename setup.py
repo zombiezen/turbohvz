@@ -50,6 +50,8 @@ setup(
         "Genshi >= 0.4.4",
         "SQLAlchemy>=0.4.2",
         "pytz",
+        "TurboMail >= 2.1",
+        "PIL >= 1.1.6",
     ],
     zip_safe=False,
     packages=packages,
