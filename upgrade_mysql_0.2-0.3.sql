@@ -17,10 +17,12 @@ ALTER TABLE group_permission CHANGE COLUMN `permission_permission_id` `permissio
 
 -- Upgrade entry table
 ALTER TABLE entries CHANGE COLUMN `killed_by` `killer_id` INTEGER;
-ALTER TABLE tg_user ADD COLUMN `notify_sms` BOOLEAN;
+ALTER TABLE entries ADD COLUMN `notify_sms` BOOLEAN;
+UPDATE entries SET `notify_sms` = 0;
 
 -- Upgrade game table
 ALTER TABLE game ADD COLUMN `human_undead_time` INTEGER;
+UPDATE game SET `human_undead_time` = 0;
 
 -- Add new permissions
 INSERT INTO permission (`permission_name`, `description`)
