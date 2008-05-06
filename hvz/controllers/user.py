@@ -206,7 +206,8 @@ class UserController(base.BaseController):
             raise identity.IdentityFailure("Current user cannot edit "
                                            "others' accounts.")
         # Create image
-        if not clear_user_image and new_image.filename:
+        allow_images = turbogears.config.get('hvz.user_images', True)
+        if allow_images and not clear_user_image and new_image.filename:
             image_obj = Image()
             image_obj.write(new_image.file)
         else:
