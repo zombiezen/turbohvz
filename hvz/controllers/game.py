@@ -250,13 +250,18 @@ class GameController(base.BaseController):
                     options=options,
                     form=forms.original_zombie_form,)
     
-    @expose("hvz.templates.game.rules")
+    @expose("hvz.templates.game.rules.goucher")
     def rules(self, game_id):
         game_id = int(game_id)
         requested_game = Game.query.get(game_id)
         if requested_game is None:
             raise base.NotFound()
-        return dict(game=requested_game)
+        if turbogears.config.get('hvz.goucher_rules', True):
+            template = "hvz.templates.game.rules.goucher"
+        else:
+            template = "hvz.templates.game.rules.high_school"
+        return dict(tg_template=template,
+                    game=requested_game)
     
     @expose()
     @identity.require(identity.not_anonymous())

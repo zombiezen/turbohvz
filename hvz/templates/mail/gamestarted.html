@@ -16,7 +16,7 @@
         <li>Write down your Player ID on a 3x5 index card.  You can find your Player ID by visiting <a href="${tg.abslink(tg.hvz.game_link(game))}">the game page</a>.</li>
         <li>Review <a href="${tg.abslink(tg.hvz.game_link(game, 'rules'))}">the rules</a> to ensure that you know where the safe zones are, and any game-specific information.</li>
         <li>Equip yourself with several socks to protect yourself from any zombies.</li>
-        <li>Wear your wristband identifying yourself as a player of the game (for more information, consult <a href="${tg.abslink(tg.hvz.game_link(game, 'rules'))}">the rules</a>).</li>
+        <li>Wear your <py:choose><py:when="tg.config('hvz.goucher_rules', True)">bandana</py:when><py:otherwise>wristband</py:otherwise></py:choose> identifying yourself as a player of the game (for more information, consult <a href="${tg.abslink(tg.hvz.game_link(game, 'rules'))}">the rules</a>).</li>
     </ul>
     <p>If you encounter problems or have questions at any time during the game, please contact a moderator.</p>
     <p>Good luck!</p>

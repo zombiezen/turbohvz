@@ -14,36 +14,36 @@
 </py:def>
 
 <py:match path="content">
-    <p>High School Rules written by Ross Light and TJ Ferrell<br />
-    Based on <a href="http://media.goucherzombies.com/hvzsource/rules.htm">the original by Brad Sappington and Chris Weed</a></p>
+    <p><a href="http://media.goucherzombies.com/hvzsource/rules.htm">"Goucher-Style" Rules</a> by Brad Sappington and Chris Weed</p>
     <h2 id="sect_overview">Overview</h2>
     <p>Humans vs. Zombies is a game of tag. All players begin as humans, and one is randomly chosen to be the “Original Zombie.” The Original Zombie tags human players and turns them into zombies. The zombies must tag and “feed” on a human every <span py:replace="tg.display_date(game.zombie_starve_timedelta)">[time]</span> or he starves to death and is out of the game.</p>
-    <h2>Objectives</h2>
+    <h2>Objective</h2>
     <p>The Zombies win when all human players have been tagged and turned into zombies. The Humans win by surviving long enough for all of the zombies to starve.</p>
     <h2 id="sect_safety">Safety Rules</h2>
+    <p>Rules created for the safety of all players are strictly enforced. Violation of safety rules will result in a ban from the game.</p>
     <ul>
-        <li>No weaponry of any kind, just socks</li>
-        <li>Players may not use cars</li>
-        <li>Socks may not contain anything and must be clean</li>
+        <li>No realistic looking weaponry.</li>
+        <li>Guns may not be visible inside of academic buildings or jobs on campus.</li>
+        <li>Players may not use cars.</li>
+        <li>Darts must not hurt on impact. (If you’re not sure about this, fire it at point-blank range into your own eye and see if it hurts. Obviously this is a joke, but you get what what me mean. If you’re still not sure, just speak with a moderator.)</li>
     </ul>
     <h2 id="sect_equipment">Equipment</h2>
     <p>This gear is required for all players:</p>
     <ul>
-        <li>Wristband*</li>
-        <li>Socks</li>
+        <li>Bandana</li>
+        <li>Nerf Gun and/or socks</li>
         <li>One 3x5 index ID card</li>
     </ul>
-    <p class="footnote">* The wristbands can be sweatbands or the elastic part of a sock (recommended for cost-efficiency), but they must be reversible.  Regardless, the wristband must look like this:</p>
-    <p><img src="${tg.url('/static/images/wristband.png')}" alt="Wristband diagram" /></p>
     <h2 id="sect_safe_zones">Safe Zones</h2>
     <ul>
         <li py:for="zone in game.safe_zones" py:content="zone">[zone]</li>
     </ul>
     <h2 id="sect_human_rules">Human Rules</h2>
-    <p><span class="rule_name">ID Number</span> Humans must keep one index card with their unique identification number (player GID) on them at all times</p>
-    <p><span class="rule_name">Stunning a Zombie</span> Humans may stun a Zombie for 15 minutes by throwing a sock at them.</p>
-    <p><span class="rule_name">When Tagged By a Zombie</span> When tagged by a Zombie, a Human is required to distribute their ID card.  After <span py:replace="tg.display_date(game.human_undead_timedelta)">[time]</span>, a Human becomes a member of the Zombie team. Reverse your wristband to show the "Z"&#x2014;you are now allowed to tag other Humans.</p>
-    <p><span class="rule_name">Wearing a Wristband</span> Humans must wear a wristband showing the "H" around an arm or leg to identify them as players of the game.</p>
+    <p><span class="rule_name">Staying on Campus</span> Humans must sleep on campus. If you need to leave campus for longer than 24 hours, we apologize, but there are no exceptions.</p>
+    <p><span class="rule_name">ID Number</span> Humans must keep one index card with their unique identification number (player GID) on them at all times.</p>
+    <p><span class="rule_name">Stunning a Zombie</span> Humans may stun a Zombie for 15 minutes by shooting a Nerf gun or throwing a sock at them.</p>
+    <p><span class="rule_name">When Tagged By a Zombie</span> When tagged by a Zombie, a Human is required to distribute their ID card.  After <span py:replace="tg.display_date(game.human_undead_timedelta)">[time]</span>, a Human becomes a member of the Zombie team.  Wear your bandana around your head&#x2014;now you get to eat humans!</p>
+    <p><span class="rule_name">Wearing a Headband</span> Humans must wear a headband around an arm or leg to identify them as players of the game. (This headband will come in handy when you become a zombie!)</p>
     <h2 id="sect_zombie_rules">Zombie Rules</h2>
     <p><span class="rule_name">Feeding</span> Zombies must feed every <span py:replace="tg.display_date(game.zombie_starve_timedelta)">[time]</span>. A zombie feeds by <a href="${tg.hvz.game_link(game, 'reportkill')}">reporting their tags on the website</a>. Time on certain days (depends on the game) does not count toward the time limit.  For example, if the game ignores weekends, has 48 hour starve time, and a zombie tags someone six hours before a Saturday, then the zombie will have forty-two hours (48 - 6 = 42) from midnight on Monday to tag someone.</p>
     <py:if test="game.ignore_weekdays">
@@ -60,12 +60,12 @@
                 py:content="tg.display_date(date)">[date]</li>
         </ul>
     </py:if>
-    <p><span class="rule_name">Wearing your Wristband</span> The Zombie team must wear a wristband showing the "Z" around their arms at all times. The Original Zombie must wear a wristband, but it does not need to be showing the "Z".</p>
-    <p><span class="rule_name">Tagging</span> A tag is a firm touch to any part of a Human. After tagging a Human, the Zombie must collect their ID card. Kills must be <a href="${tg.hvz.game_link(game, 'reportkill')}">reported</a> within <span py:replace="tg.display_date(game.zombie_report_timedelta)">[time]</span>.</p>
-    <p><span class="rule_name">Getting Hit</span> When hit with a sock, a zombie is stunned for 15 minutes. A stunned zombie may not interact with the game in any way. This includes shielding other zombies from socks or continuing to run toward a human. If hit while stunned, a zombie remains stunned for the next 15 minutes.</p>
+    <p><span class="rule_name">Wearing your Headband</span> The Zombie team must wear a bandana around their head at all times. The Original Zombie does not need to wear a headband.</p>
+    <p><span class="rule_name">Tagging</span> A tag is a firm touch to any part of a Human. After tagging a Human, the Zombie must collect his or her ID card. Kills must be <a href="${tg.hvz.game_link(game, 'reportkill')}">reported</a> within <span py:replace="tg.display_date(game.zombie_report_timedelta)">[time]</span>.</p>
+    <p><span class="rule_name">Getting Hit</span> When shot with a Nerf gun or hit with a sock a Zombie is stunned for 15 minutes. Stunned zombies must wear their bandanas around their necks until their stun time is over. A stunned zombie may not interact with the game in any way. This includes shielding other zombies from bullets or continuing to run toward a human. If shot while stunned, a zombie remains stunned for the next 15 minutes.</p>
     <h2 id="sect_other_rules">Other Rules</h2>
     <ul>
-        <li>Hitting non-players with socks is a bannable offense.</li>
+        <li>Shooting non-players with Nerf darts is a bannable offense.</li>
         <li>People who are not registered participants may not directly interact with the game. This includes bringing food to humans or spying for either team.</li>
         <li>A zombie must have both feet outside of a safe zone to tag a human. Zombies may not use shields to deflect socks.</li>
         <li>Athletes are safe during official practices, but not on the way to or from practice.</li>
@@ -80,12 +80,12 @@
     <div id="sect_license">
         <p>
             <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/3.0/"><img alt="Creative Commons License" class="cclicense" src="http://i.creativecommons.org/l/by-nc-sa/3.0/us/88x31.png"/></a><br />
-            Copyright &#xA9; 2008 Ross Light, Copyright &#xA9; 2008 Chris Weed<br />
+            Copyright &#xA9; 2008 Chris Weed<br />
             This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/3.0/">Creative Commons Attribution-Noncommercial-Share Alike 3.0 License</a>.
         </p>
     </div>
 </py:match>
 
-<xi:include href="../master.html" />
+<xi:include href="../../master.html" />
 
 </html>

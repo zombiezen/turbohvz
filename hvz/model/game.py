@@ -661,10 +661,11 @@ class Game(object):
     DEFAULT_ZOMBIE_REPORT_TIME = 3
     DEFAULT_HUMAN_UNDEAD_TIME = 60
     DEFAULT_GID_LENGTH = 16
-    DEFAULT_SAFE_ZONES = [_("Bathrooms"),
+    DEFAULT_SAFE_ZONES = [_("Dorm rooms"),
+                          _("Bathrooms"),
                           _("Academic buildings"),
                           _("Library"),
-                          _("Student center"),
+                          _("SRC"),
                           _("Health center"),
                           _("Dining halls"),]
     
