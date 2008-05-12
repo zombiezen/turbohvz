@@ -119,7 +119,7 @@
         </div>
     </py:if>
     <h2 id="sect_entry_list">Player Roster</h2>
-    <div py:if="'send-mail' in tg.identity.permissions" class="buttons">
+    <div py:if="tg.config('mail.on', False) and 'send-mail' in tg.identity.permissions" class="buttons">
         <button id="email_all_button">Email All</button>
         <button id="email_humans_button">Email Humans</button>
         <button id="email_zombies_button">Email Zombies</button>

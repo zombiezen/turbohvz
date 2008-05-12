@@ -14,7 +14,7 @@
     <span py:replace="tg.display(grid, users)"></span>
     <div class="buttons">
         <button id="register_button">Register</button>
-        <button py:if="'send-mail' in tg.identity.permissions" id="email_button">Email All</button>
+        <button py:if="tg.config('mail.on', False) and 'send-mail' in tg.identity.permissions" id="email_button">Email All</button>
     </div>
     <script type="text/javascript">
         // EVENTS //
