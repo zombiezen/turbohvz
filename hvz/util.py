@@ -40,6 +40,7 @@ __date__ = 'March 30, 2008'
 __docformat__ = 'reStructuredText'
 __all__ = ['abslink',
            'absurl',
+           'bbcode',
            'change_params',
            'change_password_link',
            'display',
@@ -83,6 +84,23 @@ def abslink(path):
 def absurl(*args, **kw):
     """Create an absolute URL with the same signature as tg.url."""
     return abslink(turbogears.url(*args, **kw))
+
+def bbcode(code):
+    """
+    Renders BBCode as XHTML.
+    
+    :Parameters:
+        code : unicode
+            BBCode to render
+    :Returns: Rendered XHTML
+    :ReturnType: unicode
+    """
+    from hvz.markup import render_bbcode
+    from hvz.controllers.base import log
+    code = unicode(code)
+    code = _nl_pattern.sub('\n', code)
+    log.debug("Rendering with %r", code)
+    return render_bbcode(unicode(code))
 
 def change_params(url=None, d=None, **kw):
     if url is None:
@@ -331,6 +349,7 @@ def add_template_variables(vars):
     lookup = dict(hvz=hvzNamespace,
                   abslink=abslink,
                   absurl=absurl,
+                  bbcode=bbcode,
                   change_params=change_params,
                   display=display,
                   display_date=display_date,

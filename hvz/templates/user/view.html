@@ -41,7 +41,7 @@
         Legendary
     </div>
     <py:choose>
-        <div py:when="user.profile" py:replace="HTML(tg.plain2html(user.profile))">[profile]</div>
+        <div py:when="user.profile" py:content="HTML(tg.bbcode(user.profile))">[profile]</div>
         <p py:otherwise="" class="no_profile">This user has not written a profile.</p>
     </py:choose>
     <h2 id="sect_games">Games</h2>

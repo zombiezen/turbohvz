@@ -74,7 +74,7 @@
     </ul>
     <py:if test="game.rules_notes">
         <h2 id="sect_notes">Notes</h2>
-        <div py:replace="HTML(tg.plain2html(game.rules_notes))">[notes]</div>
+        <div py:replace="HTML(tg.bbcode(game.rules_notes))">[notes]</div>
     </py:if>
     
     <div id="sect_license">
