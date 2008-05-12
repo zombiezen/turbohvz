@@ -175,6 +175,7 @@
             {
                 redirect(${tg.jsencode(tg.hvz.game_link(game, 'join'))});
             });
+        <py:if test="tg.config('mail.on', False) and 'send-mail' in tg.identity.permissions">
         safe_connect('email_all_button', 'onclick',
             function()
             {
@@ -195,6 +196,7 @@
             {
                 redirect(${tg.jsencode(tg.url('/mail', recipients=starved_emails))});
             });
+        </py:if>
         // CLOCK //
         callLater(1, update_server_clock);
     </script>

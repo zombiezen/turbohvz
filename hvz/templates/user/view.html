@@ -87,11 +87,13 @@
             {
                 redirect(${tg.jsencode(tg.url('/action.sudo', user_name=user.user_name))});
             });
+        <py:if test="tg.config('mail.on', False) and 'send-mail' in tg.identity.permissions">
         safe_connect('email_button', 'onclick',
             function()
             {
                 redirect(${tg.jsencode(tg.url('/mail', recipients=[user.email_address]))});
             });
+        </py:if>
     </script>
 </py:match>
 
