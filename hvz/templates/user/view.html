@@ -31,7 +31,7 @@
     <div id="sect_actions" class="buttons">
         <button py:if="'edit-user' in tg.identity.permissions or tg.identity.user == user" id="edit_button">Edit</button>
         <button py:if="'sudo-login' in tg.identity.permissions and tg.identity.user != user" id="sudo_button">Sudo</button>
-        <button py:if="'send-mail' in tg.identity.permissions" id="email_button">Email</button>
+        <button py:if="tg.config('mail.on', False) and 'send-mail' in tg.identity.permissions" id="email_button">Email</button>
     </div>
     <h2 id="sect_profile">Profile</h2>
     <img py:if="tg.config('hvz.user_images', True) and user.image" id="user_profile_image" src="${tg.hvz.image_link(user.image)}" alt="User picture" />
@@ -87,11 +87,13 @@
             {
                 redirect(${tg.jsencode(tg.url('/action.sudo', user_name=user.user_name))});
             });
+        <py:if test="tg.config('mail.on', False) and 'send-mail' in tg.identity.permissions">
         safe_connect('email_button', 'onclick',
             function()
             {
                 redirect(${tg.jsencode(tg.url('/mail', recipients=[user.email_address]))});
             });
+        </py:if>
     </script>
 </py:match>
 

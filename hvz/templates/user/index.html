@@ -14,7 +14,7 @@
     <span py:replace="tg.display(grid, users)"></span>
     <div class="buttons">
         <button id="register_button">Register</button>
-        <button py:if="'send-mail' in tg.identity.permissions" id="email_button">Email All</button>
+        <button py:if="tg.config('mail.on', False) and 'send-mail' in tg.identity.permissions" id="email_button">Email All</button>
     </div>
     <script type="text/javascript">
         // EVENTS //
@@ -23,11 +23,13 @@
             {
                 redirect(${tg.jsencode(tg.hvz.register_link())});
             });
+        <py:if test="tg.config('mail.on', False) and 'send-mail' in tg.identity.permissions">
         safe_connect('email_button', 'onclick',
             function()
             {
                 redirect(${tg.jsencode(tg.url('/mail', recipients=emails))});
             });
+        </py:if>
     </script>
 </py:match>
 
