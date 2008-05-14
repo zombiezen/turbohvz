@@ -20,6 +20,7 @@
 #
 
 from __future__ import division
+from datetime import datetime
 import random
 
 import cherrypy
@@ -198,6 +199,8 @@ class GameController(base.BaseController):
             new_value = getattr(requested_entry, name)
             if new_value is None:
                 values[name] = u''
+            elif isinstance(new_value, datetime):
+                values[name] = model.dates.to_local(new_value)
             else:
                 values[name] = new_value
         return dict(entry=requested_entry,
