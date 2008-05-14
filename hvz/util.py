@@ -135,11 +135,15 @@ def display(widget, *args, **kw):
     data = widget.render(format='html', *args, **kw)
     return genshi.HTML(turbogears.util.to_unicode(data))
 
-def display_date(date):
+def display_date(date, utc=False):
     """Format dates uniformly"""
     if isinstance(date, datetime.datetime):
-        from model.dates import to_local
-        return unicode(to_local(date).replace(microsecond=0).isoformat())
+        from model.dates import to_local, to_utc
+        if utc:
+            date = to_utc(date)
+        else:
+            date = to_local(date)
+        return unicode(date.replace(microsecond=0).isoformat())
     elif isinstance(date, datetime.date):
         return unicode(date.isoformat())
     elif isinstance(date, datetime.time):

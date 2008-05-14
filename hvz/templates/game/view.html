@@ -7,6 +7,8 @@
 
 <py:def function="page_title">Game <span py:replace="game.game_id">#</span> - <span py:replace="game.display_name">[name]</span></py:def>
 <py:def function="head_info">
+    <link href="${tg.hvz.game_link(game, 'feed.rss')}" rel="alternate" type="application/rss+xml" title="News Feed (RSS 2.0)" />
+    <link href="${tg.hvz.game_link(game, 'feed.atom')}" rel="alternate" type="application/atom+xml" title="News Feed (Atom 1.0)" />
     <script type="text/javascript">
         function update_server_clock()
         {

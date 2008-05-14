@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<rss version="2.0"
+     xmlns:py="http://genshi.edgewall.org/">
+    <channel>
+        <title>${feed.title}</title>
+        <description py:if="feed.description">${feed.description}</description>
+        <link py:if="feed.main_link">${feed.main_link}</link>
+        <pubDate>${tg.display_date(now, utc=True)}</pubDate>
+        <lastBuildDate>${tg.display_date(now, utc=True)}</lastBuildDate>
+        <generator>${version_info}</generator>
+        <item py:for="item in feed.sorted_items">
+            <guid isPermaLink="false">${item.id}</guid>
+            <title>${item.title}</title>
+            <link py:if="item.link">${item.link}</link>
+            <pubDate py:if="item.created">${tg.display_date(item.created, utc=True)}</pubDate>
+            <description>${item.summary}</description>
+        </item>
+    </channel>
+</rss>
