@@ -224,13 +224,10 @@ class GameController(base.BaseController):
         requested_game = Game.query.get(game_id)
         if requested_game is None:
             raise base.NotFound()
-        values = {}
-        for field in forms.game_form.fields:
-            name = field.name
-            values[name] = getattr(requested_game, name)
         return dict(game=requested_game,
                     form=forms.game_form,
-                    values=values,)
+                    values=base.build_form_values(forms.game_form,
+                                                  requested_game),)
     
     @expose("hvz.templates.game.editentry")
     @identity.require(identity.has_permission('edit-entry'))
@@ -239,17 +236,10 @@ class GameController(base.BaseController):
         requested_entry = PlayerEntry.query.get(entry_id)
         if requested_entry is None:
             raise base.NotFound()
-        values = {}
-        for field in forms.edit_entry_form.fields:
-            name = field.name
-            new_value = getattr(requested_entry, name)
-            if new_value is None:
-                values[name] = u''
-            else:
-                values[name] = new_value
         return dict(entry=requested_entry,
                     form=forms.edit_entry_form,
-                    values=values,)
+                    values=base.build_form_values(forms.edit_entry_form,
+                                                  requested_entry),)
     
     @expose("hvz.templates.game.reportkill")
     @identity.require(identity.not_anonymous())
