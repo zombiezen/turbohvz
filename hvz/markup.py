@@ -3,6 +3,7 @@
 """
 Post Markup
 Author: Will McGugan (http://www.willmcgugan.com)
+Modified by Ross Light for TurboHvZ.
 """
 
 __version__ = "1.0.7"
@@ -53,7 +54,7 @@ def create(include=None, exclude=None, use_pygments=pygments_available):
         if include is None or name in include:
             if exclude is not None and name in exclude:
                 return
-            markup.add_tag(name, tag_class, *args)
+            return markup.add_tag(name, tag_class, *args)
 
     add_tag(u'b', SimpleTag, u'b', u'strong')
     add_tag(u'i', SimpleTag, u'i', u'em')
@@ -80,7 +81,7 @@ def create(include=None, exclude=None, use_pygments=pygments_available):
         assert pygments_available, "Install pygments (http://pygments.org/) or call create with use_pygments=False"
         add_tag(u'code', PygmentsCodeTag, u'code')
     else:
-        add_tag(u'code', SimpleTag, u'code', u'pre')
+        add_tag(u'code', SimpleCodeTag, u'code')
 
     return markup
 
@@ -142,6 +143,7 @@ class TagBase(object):
         self.open_pos = None
         self.close_pos = None
         self.raw = None
+        self.block = False
 
     def open(self, open_pos):
         """Called when the tag is opened. Should return a string or a
@@ -386,6 +388,7 @@ class ListTag(TagBase):
 
     def __init__(self):
         TagBase.__init__(self, "list")
+        self.block = True
 
     def open(self, open_pos):
         """Called to render the opened tag."""
@@ -414,6 +417,7 @@ class ListItemTag(TagBase):
     def __init__(self):
         TagBase.__init__(self, u"*")
         self.closed = False
+        self.block = True
 
     def open(self, open_pos):
         """Called to render the opened tag."""
@@ -444,6 +448,11 @@ class ListItemTag(TagBase):
         return u"</li>"
 
 
+class SimpleCodeTag(SimpleTag):
+    def __init__(self, name):
+        SimpleTag.__init__(self, name, 'pre')
+        self.enclosed = True
+
 
 class PygmentsCodeTag(TagBase):
 
@@ -453,6 +462,7 @@ class PygmentsCodeTag(TagBase):
     def __init__(self, name):
         TagBase.__init__(self, name)
         self.enclosed = True
+        self.block = True
 
     def open(self, open_pos):
         self.open_pos = open_pos
@@ -535,7 +545,7 @@ class PostMarkup(object):
     standard_replace = MultiReplace({   u'<':u'&lt;',
                                         u'>':u'&gt;',
                                         u'&':u'&amp;',
-                                        u'\n\n':u'<br/><br/>'})
+                                        u'\n':u'<br/>'})
 
     TOKEN_TAG, TOKEN_PTAG, TOKEN_TEXT = range(3)
 
@@ -649,7 +659,9 @@ class PostMarkup(object):
         args -- Aditional parameters for the tag class
 
         """
-        self.tags[name] = PostMarkup.TagFactory(tag_class, *args)
+        tag = PostMarkup.TagFactory(tag_class, *args)
+        self.tags[name] = tag
+        return tag
 
 
     def __call__(self, *args, **kwargs):
@@ -679,6 +691,8 @@ class PostMarkup(object):
         tag_stack = []
         break_stack = []
         enclosed = False
+        
+        previous_tag = None
 
         def check_tag_stack(tag_name):
             """Check to see if a tag has been opened."""
@@ -700,6 +714,8 @@ class PostMarkup(object):
             raw_tag_token = tag_token
             if tag_type == PostMarkup.TOKEN_TEXT:
                 redo_break_stack()
+                if previous_tag is not None and previous_tag.block:
+                    tag_token = tag_token.lstrip()
                 post.append(StringToken(tag_token))
                 continue
             elif tag_type == PostMarkup.TOKEN_TAG:
@@ -746,6 +762,18 @@ class PostMarkup(object):
                 post.append(tag.open(len(post)))
                 if tag.auto_close:
                     end_tag = True
+                
+                # Remove leading newlines from blocks
+                if tag.block:
+                    try:
+                        last_token = post[-2]
+                    except IndexError:
+                        pass
+                    else:
+                        if isinstance(last_token, StringToken):
+                            last_token.raw = last_token.raw.rstrip()
+                
+                previous_tag = tag
 
             if end_tag:
                 if not check_tag_stack(tag_name):
@@ -753,12 +781,20 @@ class PostMarkup(object):
                         post.append(StringToken(raw_tag_token))
                     continue
                 enclosed = False
+                try:
+                    last_token = post[-1]
+                except IndexError:
+                    last_token = None
                 while tag_stack[-1].name != tag_name:
                     tag = tag_stack.pop()
                     break_stack.append(tag)
                     if not enclosed:
                         post.append(tag.close(len(post), post))
-                post.append(tag_stack.pop().close(len(post), post))
+                tag = tag_stack.pop()
+                if tag.block and isinstance(last_token, StringToken):
+                    last_token.raw = last_token.raw.rstrip()
+                post.append(tag.close(len(post), post))
+                previous_tag = tag
 
         if tag_stack:
             redo_break_stack()
