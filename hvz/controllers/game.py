@@ -20,6 +20,7 @@
 #
 
 from __future__ import division
+from datetime import datetime
 import random
 
 import cherrypy
@@ -39,53 +40,6 @@ __all__ = ['GameController']
 
 def _get_seconds(delta):
     return delta.days * 24 * 60 * 60 + delta.seconds
-
-def build_feed(game):
-    from hvz.controllers.feeds import Feed
-    from hvz.util import absurl, game_link, display_date
-    def oz_safe(entry):
-        return (not entry.is_original_zombie or 
-                entry.game.revealed_original_zombie)
-    feed = Feed(_("HvZ \"%s\" News") % (game.display_name),
-                _("Updates on the game"),
-                feed_id="urn:hvz-game:%i" % (game.game_id),
-                link=absurl(game_link(game)))
-    # Player deaths
-    zombies = [entry for entry in game.entries
-               if entry.death_date and oz_safe(entry)]
-    for zombie in zombies:
-        item_id = "urn:hvz-player:%i-death" % (zombie.entry_id)
-        feed.add_item(_("%s was Infected") % (zombie.player),
-                      _("%s was infected with the zombie plague on %s") %
-                          (zombie.player, display_date(zombie.death_date)),
-                      item_id=item_id,
-                      date=zombie.death_date,)
-    # Player starvations
-    corpses = [entry for entry in game.entries if entry.is_dead
-               if entry.starve_date and oz_safe(entry)]
-    for corpse in corpses:
-        item_id = "urn:hvz-player:%i-starve" % (corpse.entry_id)
-        summary = _("%s starved on %s") % \
-            (corpse.player, display_date(corpse.starve_date))
-        feed.add_item(_("%s Starved") % (corpse.player), summary,
-                      item_id=item_id,
-                      date=corpse.starve_date,)
-    # Start game
-    # We're doing this down here so that Original Zombie infection comes after
-    # the start-of-game item
-    if game.started:
-        feed.add_item(_("Game Started"), _("The zombie-fest has begun!"),
-                      item_id="urn:hvz-game:%i-start" % (game.game_id),
-                      link=absurl(game_link(game)),
-                      date=game.started,)
-    # End game
-    if game.ended:
-        feed.add_item(_("Game Ended"), _("The game ended."),
-                      item_id="urn:hvz-game:%i-end" % (game.game_id),
-                      link=absurl(game_link(game)),
-                      date=game.ended,)
-    # Return resulting feed
-    return feed
 
 class GameController(base.BaseController):
     @staticmethod
@@ -224,10 +178,13 @@ class GameController(base.BaseController):
         requested_game = Game.query.get(game_id)
         if requested_game is None:
             raise base.NotFound()
+        values = {}
+        for field in forms.game_form.fields:
+            name = field.name
+            values[name] = getattr(requested_game, name)
         return dict(game=requested_game,
                     form=forms.game_form,
-                    values=base.build_form_values(forms.game_form,
-                                                  requested_game),)
+                    values=values,)
     
     @expose("hvz.templates.game.editentry")
     @identity.require(identity.has_permission('edit-entry'))
@@ -236,10 +193,19 @@ class GameController(base.BaseController):
         requested_entry = PlayerEntry.query.get(entry_id)
         if requested_entry is None:
             raise base.NotFound()
+        values = {}
+        for field in forms.edit_entry_form.fields:
+            name = field.name
+            new_value = getattr(requested_entry, name)
+            if new_value is None:
+                values[name] = u''
+            elif isinstance(new_value, datetime):
+                values[name] = model.dates.to_local(new_value)
+            else:
+                values[name] = new_value
         return dict(entry=requested_entry,
                     form=forms.edit_entry_form,
-                    values=base.build_form_values(forms.edit_entry_form,
-                                                  requested_entry),)
+                    values=values,)
     
     @expose("hvz.templates.game.reportkill")
     @identity.require(identity.not_anonymous())
@@ -271,24 +237,6 @@ class GameController(base.BaseController):
     def create(self):
         return dict(form=forms.game_form,)
     
-    @expose()
-    def feed_atom(self, game_id):
-        game_id = int(game_id)
-        requested_game = Game.query.get(game_id)
-        if requested_game is None:
-            raise base.NotFound()
-        feed = build_feed(requested_game)
-        return feed.render('atom')
-    
-    @expose(format='xml')
-    def feed_rss(self, game_id):
-        game_id = int(game_id)
-        requested_game = Game.query.get(game_id)
-        if requested_game is None:
-            raise base.NotFound()
-        feed = build_feed(requested_game)
-        return feed.render('rss')
-    
     @expose("hvz.templates.game.choose_oz")
     @identity.require(identity.has_permission('stage-game'))
     def choose_oz(self, game_id):
@@ -305,13 +253,18 @@ class GameController(base.BaseController):
                     options=options,
                     form=forms.original_zombie_form,)
     
-    @expose("hvz.templates.game.rules")
+    @expose("hvz.templates.game.rules.goucher")
     def rules(self, game_id):
         game_id = int(game_id)
         requested_game = Game.query.get(game_id)
         if requested_game is None:
             raise base.NotFound()
-        return dict(game=requested_game)
+        if turbogears.config.get('hvz.goucher_rules', True):
+            template = "hvz.templates.game.rules.goucher"
+        else:
+            template = "hvz.templates.game.rules.high_school"
+        return dict(tg_template=template,
+                    game=requested_game)
     
     @expose()
     @identity.require(identity.not_anonymous())

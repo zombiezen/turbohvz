@@ -19,7 +19,6 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import datetime
 import logging
 import sys
 
@@ -34,7 +33,6 @@ __author__ = 'Ross Light'
 __date__ = 'April 18, 2008'
 __all__ = ['log',
            'manual_login',
-           'build_form_values',
            'NotFound',
            'BaseController',
            'Root',]
@@ -63,44 +61,6 @@ def manual_login(user):
         session.save(visit_link)
     else:
         visit_link.user = user
-
-def build_form_values(form, obj, include=None, exclude=None):
-    """
-    Creates a dictionary of values for a form derived from an object.
-    
-    :Parameters:
-        form : turbogears.widgets.Form
-            A form to grab field names from
-        obj
-            The object to get values from
-    :Keywords:
-        include : list of str
-            Attribute names to specifically include
-        exclude : list of str
-            Attribute names to specifically exclude
-    :Returns: The values to pass to the form
-    :ReturnType: dict
-    """
-    values = dict()
-    for field in form.fields:
-        name = field.name
-        # Skip fields we don't want
-        if not (exclude is None or name in exclude) and \
-           not (include is None or name not in include):
-            continue
-        # Fill in field value
-        try:
-            new_value = getattr(obj, name)
-        except AttributeError:
-            pass
-        else:
-            if new_value is None:
-                values[name] = u''
-            elif isinstance(new_value, datetime.datetime):
-                values[name] = model.dates.to_local(new_value)
-            else:
-                values[name] = new_value
-    return values
 
 class NotFound(Exception):
     """Exception raised when a controller can't find a resource."""

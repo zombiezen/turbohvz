@@ -66,7 +66,6 @@ class SADBTest(unittest.TestCase):
 
 class TestDateCalculation(unittest.TestCase):
     def test_difference(self):
-        """Subtracting two datetimes should ignore dates"""
         dt1 = as_local(datetime(2008, 5, 5, 10, 45))
         dt2 = as_local(datetime(2008, 5, 9, 11, 0))
         ignore_dates = [date(2008, 5, 6)]

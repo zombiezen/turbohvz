@@ -115,7 +115,13 @@ class UserController(base.BaseController):
             raise identity.IdentityFailure("Current user cannot edit "
                                            "others' accounts.")
         # Compile template values
-        values = base.build_form_values(forms.edit_user_form, requested_user)
+        values = {}
+        for field in forms.edit_user_form.fields:
+            name = field.name
+            try:
+                values[name] = getattr(requested_user, name)
+            except AttributeError:
+                pass
         return dict(user=requested_user,
                     form=forms.edit_user_form,
                     values=values,)
