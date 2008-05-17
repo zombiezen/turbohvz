@@ -477,7 +477,9 @@ class PlayerEntry(object):
             self.death_date = time
             self.state = self.STATE_ZOMBIE
         elif self.is_dead:
-            self.feed_date = time # Renew the zombie's "life"
+            if self.calculate_starve_time() <= time:
+                # Renew the zombie's "life"
+                self.feed_date = time
             self.starve_date = None
             if self.is_original_zombie:
                 self.state = self.STATE_ORIGINAL_ZOMBIE
@@ -886,6 +888,7 @@ class Game(object):
                 The date when we go to the next state.  This may not actually
                 be *now*.
         """
+        from sqlalchemy import or_
         if time is None:
             time = now()
         else:
@@ -902,6 +905,14 @@ class Game(object):
             self.original_zombie.make_original_zombie(time) # Refresh kill date
         elif self.state == self.STATE_ENDED:
             self.ended = time
+            # Resurrect those who haven't actually starved
+            players = PlayerEntry.query.filter(PlayerEntry.game == self)
+            dead = players.filter(
+                or_(PlayerEntry.state == PlayerEntry.STATE_DEAD,
+                    PlayerEntry.state == PlayerEntry.STATE_DEAD_OZ))
+            for corpse in dead:
+                if corpse.starve_date > self.ended:
+                    corpse.force_to_zombie(self.ended)
     
     def end(self, end_time=None):
         """
