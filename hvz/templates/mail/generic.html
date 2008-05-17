@@ -9,7 +9,7 @@
 <py:def function="head_info"></py:def>
 
 <py:match path="content">
-    <div py:replace="HTML(tg.plain2html(content))"></div>
+    <div py:replace="HTML(tg.bbcode(content))"></div>
 </py:match>
 
 <xi:include href="mail_template.html" />
