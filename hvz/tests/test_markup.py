@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#   test_controllers.py
+#   test_markup.py
 #   TurboHvZ
 #
 #   Copyright (C) 2008 Ross Light
@@ -19,7 +19,7 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-"""Test controller objects"""
+"""Test markup rendering"""
 
 import unittest
 
