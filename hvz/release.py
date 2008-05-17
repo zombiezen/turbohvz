@@ -21,7 +21,7 @@
 
 """Release information about HvZ"""
 
-version = "0.3.0rc2"
+version = "0.3.0"
 
 description = "A web application for the game Humans vs. Zombies"
 long_description = "Humans vs. Zombies, created by Brad Sappington and " \
