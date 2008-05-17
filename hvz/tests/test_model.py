@@ -434,3 +434,17 @@ class TestGameplay(SADBTest):
             "Has not been killed"
         assert self.entry2.death_date == time, "Wrong death date"
         assert self.entry2.starve_date == time, "Wrong starve date"
+    
+    def test_end_resurrection(self):
+        """Zombies that starved after the game's end should be resurrected"""
+        self._choose_oz()
+        self._start_game()
+        kill1_time = as_local(datetime(2008, 4, 22, 14, 15))
+        kill2_time = as_local(datetime(2008, 4, 24, 12, 30))
+        report_time = as_local(datetime(2008, 4, 24, 15, 26))
+        self.entry1.kill(self.entry2, kill1_time, kill1_time)
+        self.game.update(report_time)
+        self.entry2.kill(self.entry3, kill2_time, report_time)
+        self.game.update(report_time)
+        assert not self.entry1.is_dead, "OZ should not be dead!"
+        assert not self.entry2.is_dead, "Z2 should not be dead!"
