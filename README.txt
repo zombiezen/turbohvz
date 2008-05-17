@@ -11,4 +11,9 @@ This is a TurboGears <http://www.turbogears.org> web application to manage a
 game of Humans vs. Zombies.  It can be started by running the start-turbohvz.py
 script.
 
-INSTALLATION: Consult <http://docs.turbogears.org/1.0/Deployment>
+INSTALLATION
+
+http://code.google.com/p/turbohvz/wiki/Installation
+
+We have written a step-by-step walkthrough of installing TurboHvZ on the
+project wiki, which provides the most up-to-date method of installation.
