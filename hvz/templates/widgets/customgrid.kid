@@ -23,7 +23,7 @@
         </tr>
     </thead>
     <tbody>
-        <tr py:if="no_data_msg is not None and not value or (hasattr(value, 'count') and callable(value.count) and value.count() == 0)" class="no_data"><td colspan="${len(columns)}" py:content="no_data_msg">No data</td></tr>
+        <tr py:if="no_data_msg is not None and not value or (not isinstance(value, (list, tuple)) and hasattr(value, 'count') and callable(value.count) and value.count() == 0)" class="no_data"><td colspan="${len(columns)}" py:content="no_data_msg">No data</td></tr>
         <tr py:for="i, row in enumerate(value)" class="${i % 2 and 'odd' or 'even'}">
             <td py:for="col in columns" class="${col}_column" py:content="get_cell(row, col)">[value]</td>
         </tr>
