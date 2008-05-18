@@ -26,11 +26,11 @@ __all__ = ['dates',
            'game',
            'identity',
            'images',
-           'messaging',]
+           'social',]
 
 from hvz.model import (dates,
                        errors,
                        game,
                        identity,
                        images,
-                       messaging,)
+                       social,)

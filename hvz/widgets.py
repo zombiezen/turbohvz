@@ -239,3 +239,34 @@ class UserList(CustomDataGrid):
                        href=util.user_link(row))
         link.text = row.display_name
         return link
+
+class AllianceList(CustomDataGrid):
+    name = "alliance_list"
+    grid_class = "custom_grid alliance_list"
+    default_columns = ['display_name', 'owner', '_created', 'member_count']
+    exclude_sorting = ['member_count']
+    column_titles = {'alliance_id': _("ID"),
+                     'display_name': _("Name"),
+                     'owner': _("Owner"),
+                     '_created': _("Created"),
+                     'member_count': _("Members"),}
+    accessors = {'display_name': '_get_display_name_col',
+                 '_created': _get_date_col,
+                 'owner': '_get_owner_col',
+                 'member_count': (lambda r, c: len(r.users)),
+                 '*': 'default_accessor',}
+    no_data_msg = _("No alliances")
+    
+    @staticmethod
+    def _get_display_name_col(row, column):
+        link = Element("{http://www.w3.org/1999/xhtml}a",
+                       href=util.alliance_link(row))
+        link.text = row.display_name
+        return link
+    
+    @staticmethod
+    def _get_owner_col(row, column):
+        link = Element("{http://www.w3.org/1999/xhtml}a",
+                       href=util.user_link(row.owner))
+        link.text = row.owner.display_name
+        return link

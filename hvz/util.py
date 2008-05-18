@@ -40,6 +40,7 @@ __date__ = 'March 30, 2008'
 __docformat__ = 'reStructuredText'
 __all__ = ['abslink',
            'absurl',
+           'alliance_link',
            'bbcode',
            'change_params',
            'change_password_link',
@@ -84,6 +85,11 @@ def abslink(path):
 def absurl(*args, **kw):
     """Create an absolute URL with the same signature as tg.url."""
     return abslink(turbogears.url(*args, **kw))
+
+def alliance_link(alliance, action='view', **params):
+    base = '/user/alliance/%s/%s' % (quote(action, ''),
+                                     quote(str(alliance.alliance_id), ''))
+    return _make_app_link(base, params)
 
 def bbcode(code):
     """
@@ -344,7 +350,8 @@ def user_link(user, action='view', **params):
     return _make_app_link(base, params)
 
 def add_template_variables(vars):
-    hvzNamespace = DictObj(change_password_link=change_password_link,
+    hvzNamespace = DictObj(alliance_link=alliance_link,
+                           change_password_link=change_password_link,
                            game_link=game_link,
                            image_link=image_link,
                            login_link=login_link,

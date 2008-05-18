@@ -15,6 +15,7 @@
         <li py:if="tg.identity.anonymous"><a href="${tg.hvz.login_link()}">Login</a></li>
         <li><a href="${tg.url('/game/index')}">Games</a></li>
         <li><a href="${tg.url('/user/index')}">Users</a></li>
+        <li><a href="${tg.url('/user/alliance/index')}">Alliances</a></li>
         <li><a href="${tg.hvz.register_link()}">Register</a></li>
         <li py:if="'send-mail' in tg.identity.permissions"><a href="${tg.url('/mail')}">Send Mail</a></li>
         <li><a href="${tg.url('/help')}">Help</a></li>

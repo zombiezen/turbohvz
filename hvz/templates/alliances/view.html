@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+
+<py:def function="page_title"><span py:replace="alliance">[alliance]</span></py:def>
+<py:def function="head_info"></py:def>
+<py:def function="page_parents">
+    <a href="${tg.url('/user/index')}">Users</a>
+    <a href="${tg.url('/user/alliance/index')}">Alliances</a>
+</py:def>
+
+<py:match path="content">
+    <table id="alliance_info" class="info_table">
+        <tbody>
+            <tr>
+                <th>Created:</th>
+                <td><span class="date" py:content="tg.display_date(alliance.created)">[date]</span></td>
+            </tr>
+            <tr>
+                <th>Owner:</th>
+                <td><a href="${tg.hvz.user_link(alliance.owner)}" py:content="alliance.owner">[user]</a></td>
+            </tr>
+        </tbody>
+    </table>
+    <h2 id="sect_profile">Profile</h2>
+    <py:choose>
+        <div py:when="alliance.description" py:content="HTML(tg.bbcode(alliance.description))">[profile]</div>
+        <p py:otherwise="" class="no_profile">This alliance has no description.</p>
+    </py:choose>
+    <h2 id="sect_members">Members</h2>
+    <div py:replace="tg.display(grid, alliance.users, name='alliance_member_list')"></div>
+</py:match>
+
+<xi:include href="../master.html" />
+
+</html>

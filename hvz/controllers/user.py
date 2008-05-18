@@ -31,10 +31,12 @@ from hvz import email, forms, util, widgets
 from hvz.controllers import base
 from hvz.model.identity import User, Group
 from hvz.model.images import Image
+from hvz.model.social import Alliance
 
 __author__ = 'Ross Light'
 __date__ = 'April 18, 2008'
-__all__ = ['UserController']
+__all__ = ['UserController',
+           'AllianceController',]
 
 def _calc_avg(raw_data):
     from datetime import timedelta
@@ -48,6 +50,9 @@ def _calc_avg(raw_data):
             return sum(data) / len(data)
 
 class UserController(base.BaseController):
+    def __init__(self):
+        self.alliance = AllianceController()
+    
     @expose("hvz.templates.user.index")
     @paginate('users', limit=20, default_order='display_name')
     def index(self):
@@ -93,11 +98,13 @@ class UserController(base.BaseController):
             kill_ratio=kill_ratio,)
         # Get template variables
         grid = widgets.GameList()
+        alliance_grid = widgets.AllianceList()
         games = [entry.game for entry in entries]
         games.sort(key=(lambda g: g.created), reverse=True)
         return dict(user=requested_user,
                     games=games,
                     game_grid=grid,
+                    alliance_grid=alliance_grid,
                     stats=stats,)
     
     @expose("hvz.templates.user.edit")
@@ -249,3 +256,23 @@ class UserController(base.BaseController):
         # Go back to user's page
         turbogears.flash(_("Your password has been changed."))
         raise redirect(util.user_link(requested_user, redirect=True))
+
+class AllianceController(base.BaseController):
+    @expose("hvz.templates.alliances.index")
+    @paginate('alliances', limit=20, default_order='display_name')
+    def index(self):
+        all_alliances = session.query(Alliance)
+        grid = widgets.AllianceList(sortable=True)
+        pager = widgets.Pager()
+        return dict(alliances=all_alliances,
+                    grid=grid,
+                    pager=pager,)
+    
+    @expose("hvz.templates.alliances.view")
+    def view(self, alliance_id):
+        requested_alliance = Alliance.query.get(alliance_id)
+        if requested_alliance is None:
+            raise base.NotFound()
+        grid = widgets.UserList(sortable=False)
+        return dict(alliance=requested_alliance,
+                    grid=grid,)
