@@ -21,6 +21,7 @@
 
 """Widgets for the various forms throughout HvZ"""
 
+from datetime import date, timedelta
 import re
 import string
 
@@ -103,22 +104,47 @@ class DateListValidator(validators.FancyValidator):
     date_regex = re.compile(r'^(\d{4})-(\d{2})-(\d{2})$')
     messages = {'invalid_date': "Date must be YYYY-MM-DD",}
     
+    @classmethod
+    def _parse_date(cls, text):
+        match = cls.date_regex.match(text)
+        if match:
+            year, month, day = match.groups()
+            year, month, day = int(year, 10), int(month, 10), int(day, 10)
+            return date(year, month, day)
+        else:
+            return None
+    
     def _to_python(self, value, state):
-        from datetime import date
         result = []
         for line in value.splitlines():
             line = line.strip()
             if not line:
                 continue
-            match = self.date_regex.match(line)
-            if match:
-                year, month, day = match.groups()
-                year, month, day = int(year, 10), int(month, 10), int(day, 10)
-                new_date = date(year, month, day)
-                result.append(new_date)
+            if ':' in line:
+                # Possible date range
+                sub1, sub2 = line.split(':', 1)
+                sub1, sub2 = sub1.strip(), sub2.strip()
+                date1, date2 = self._parse_date(sub1), self._parse_date(sub2)
+                if date1 is None or date2 is None:
+                    msg = self.message('invalid_date', state)
+                    raise validators.Invalid(msg, value, state)
+                # Add results
+                if date1 == date2:
+                    result.append(date1)
+                else:
+                    if date1 > date2:
+                        date1, date2 = date2, date1
+                    accum_date = date1
+                    while accum_date <= date2:
+                        result.append(accum_date)
+                        accum_date += timedelta(days=1)
             else:
-                raise validators.Invalid(self.message('invalid_date', state),
-                                         value, state)
+                # Single date
+                new_date = self._parse_date(line)
+                if new_date is None:
+                    msg = self.message('invalid_date', state)
+                    raise validators.Invalid(msg, value, state)
+                result.append(new_date)
         return result
     
     def _from_python(self, value, state):
@@ -415,7 +441,8 @@ class GameFields(WidgetsList):
         label=_("Ignore Dates"),
         help_text=_("Individual dates to ignore when considering starve "
                     "time.  Each date must be put on a separate line in ISO "
-                    "YYYY-MM-DD format."),
+                    "YYYY-MM-DD format.  To specify a range of dates, use "
+                    "YYYY-MM-DD:YYYY-MM-DD."),
         validator=DateListValidator()) # This ensures from_python gets called
     safe_zones = widgets.TextArea(
         label=_("Safe Zones"),

@@ -228,10 +228,11 @@ class GameController(base.BaseController):
         requested_game = Game.query.get(game_id)
         if requested_game is None:
             raise base.NotFound()
+        values = base.build_form_values(forms.game_form, requested_game)
+        values['ignore_dates'] = sorted(values['ignore_dates'])
         return dict(game=requested_game,
                     form=forms.game_form,
-                    values=base.build_form_values(forms.game_form,
-                                                  requested_game),)
+                    values=values,)
     
     @expose("hvz.templates.game.editentry")
     @identity.require(identity.has_permission('edit-entry'))
