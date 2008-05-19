@@ -19,8 +19,11 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+"""Core data for the server"""
+
 __author__ = 'Ross Light'
 __date__ = 'April 18, 2008'
+__docformat__ = 'reStructuredText'
 __all__ = ['dates',
            'errors',
            'game',

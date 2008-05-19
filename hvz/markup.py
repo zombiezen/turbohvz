@@ -21,9 +21,10 @@
 #
 
 """
-Post Markup
+BBCode renderer
 
-Author: Will McGugan (http://www.willmcgugan.com)
+Derived from "Post Markup" by Will McGugan http://www.willmcgugan.com
+
 Modified by Ross Light for TurboHvZ.
 """
 
@@ -32,6 +33,22 @@ from urllib import quote, unquote, quote_plus
 from urlparse import urlparse, urlunparse
 from copy import copy
 
+__author__ = 'Will McGugan'
+__license__ = 'Public Domain'
+__docformat__ = 'plaintext'
+__all__ = ['create',
+           'render_bbcode',
+           'TagBase',
+           'SimpleTag',
+           'LinkTag',
+           'QuoteTag',
+           'SearchTag',
+           'ImgTag',
+           'ListTag',
+           'ListItemTag',
+           'SimpleCodeTag',
+           'PygmentsCodeTag',
+           'PostMarkup',]
 
 pygments_available = True
 try:
@@ -133,7 +150,7 @@ re_excerpt = re.compile(r'\[".*?\]+?.*?\[/".*?\]+?', re.DOTALL)
 re_remove_markup = re.compile(r'\[.*?\]', re.DOTALL)
 
 def remove_markup(post):
-    """Removes html tags from a string."""
+    """Removes BBCode tags from a string."""
     return re_remove_markup.sub("", post)
 
 def get_excerpt(post):

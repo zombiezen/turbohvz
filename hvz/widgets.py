@@ -19,6 +19,8 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+"""Various non-form widgets for TurboHvZ"""
+
 from kid import Element
 from pkg_resources import resource_filename
 import turbogears
@@ -30,6 +32,7 @@ from hvz.model.game import PlayerEntry
 
 __author__ = "Ross Light"
 __date__ = "March 31, 2008"
+__docformat__ = 'reStructuredText'
 __all__ = ['Pager',
            'FieldList',
            'CustomDataGrid',
@@ -45,9 +48,16 @@ turbogears.widgets.register_static_directory('hvz', static_dir)
 ## WIDGETS ##
 
 class Pager(Widget):
+    """
+    A widget that allows the user to choose the page for the TurboGears
+    built-in pagination.
+    """
     template = "hvz.templates.widgets.pager"
 
 class FieldList(FormField):
+    """
+    A JavaScript set of fields that can dynamically add more of itself.
+    """
     template = "hvz.templates.widgets.fieldlist"
     field_class = 'text_field_list'
     css = [widgets.CSSLink('hvz', 'fieldlist.css')]
@@ -66,6 +76,32 @@ def _get_date_col(row, column):
         return util.display_date(date)
 
 class CustomDataGrid(Widget):
+    """
+    A highly flexible data grid table.
+    
+    :CVariables:
+        grid_class : str
+            The CSS class to give the table
+        no_data_msg : unicode
+            Message to display if there is no data
+        column_titles : dict of unicode
+            Human-readable labels for the columns
+        default_columns : list of str
+            Columns to include if none are given
+        exclude_sorting : list of str
+            Columns to remove from sorting
+        accessors : dict
+            Column accessors.  Each value can be a callable or a string.  If it
+            is a string, then the corresponding method in the class is used.
+            Each callback takes two parameters: ``row`` and ``column``.  The
+            function is expected to return the value of the column.  The
+            special key ``*`` is called when no other column matches.
+    :IVariables:
+        sortable : bool
+            Whether to enable ``tg.paginate`` sorting
+        columns : list of str
+            Which columns to display
+    """
     name = "custom_grid"
     grid_class = "custom_grid"
     template = "hvz.templates.widgets.customgrid"
@@ -121,9 +157,19 @@ class CustomDataGrid(Widget):
         return accessor(row, column)
     
     def get_column_title(self, column):
+        """
+        Retrieves the title for the column.
+        
+        :Parameters:
+            column : str
+                The column's identifier
+        :Returns: The column's title
+        :ReturnType: unicode
+        """
         return self.column_titles.get(column, column)
 
 class GameList(CustomDataGrid):
+    """A list of games"""
     name = "game_list"
     grid_class = "custom_grid game_list"
     default_columns = ['game_id', 'display_name', '_created', 'player_count']
@@ -151,6 +197,7 @@ class GameList(CustomDataGrid):
         return link
 
 class EntryList(CustomDataGrid):
+    """A list of entries"""
     name = "player_list"
     grid_class = "custom_grid player_list"
     default_columns = ['name', 'affiliation', '_death_date',
@@ -220,6 +267,7 @@ class EntryList(CustomDataGrid):
         return link
 
 class UserList(CustomDataGrid):
+    """A list of users"""
     name = "user_list"
     grid_class = "custom_grid user_list"
     default_columns = ['display_name', '_created']
@@ -241,6 +289,7 @@ class UserList(CustomDataGrid):
         return link
 
 class AllianceList(CustomDataGrid):
+    """A list of alliances"""
     name = "alliance_list"
     grid_class = "custom_grid alliance_list"
     default_columns = ['display_name', 'owner', '_created', 'member_count']

@@ -19,6 +19,14 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+"""
+Controller support and root controller
+
+:Variables:
+    log : logging.Logger
+        The controller base log
+"""
+
 import datetime
 import logging
 import sys
@@ -32,6 +40,7 @@ from hvz import email, forms, model, util, widgets #, json
 
 __author__ = 'Ross Light'
 __date__ = 'April 18, 2008'
+__docformat__ = 'reStructuredText'
 __all__ = ['log',
            'manual_login',
            'build_form_values',
@@ -42,6 +51,13 @@ __all__ = ['log',
 log = logging.getLogger("hvz.controllers")
 
 def manual_login(user):
+    """
+    Programmatically force the login of a user.
+    
+    :Parameters:
+        user : `model.identity.User`
+            The user to log in as
+    """
     # Log the login attempt
     if identity.current.anonymous:
         current_uname = "<ANONYMOUS>"
@@ -106,6 +122,7 @@ class NotFound(Exception):
     """Exception raised when a controller can't find a resource."""
 
 class BaseController(turbogears.controllers.Controller):
+    """Abstract base class for all controllers"""
     @turbogears.errorhandling.dispatch_error.when(
         "isinstance(tg_exceptions, model.errors.ModelError)")
     def handle_model_error(self, tg_source, tg_errors, tg_exception,
@@ -136,6 +153,7 @@ class BaseController(turbogears.controllers.Controller):
         raise NotFound()
 
 class Root(turbogears.controllers.RootController, BaseController):
+    """Top-level controller for application"""
     def __init__(self):
         import random
         from hvz.controllers.game import GameController

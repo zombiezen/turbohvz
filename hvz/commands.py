@@ -19,7 +19,7 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-"""This module contains functions called from console script entry points."""
+"""Functions called from console script entry points"""
 
 import os
 import sys
@@ -33,6 +33,7 @@ import turbogears
 
 __author__ = 'Ross Light'
 __date__ = 'March 30, 2008'
+__docformat__ = 'reStructuredText'
 __all__ = ['ConfigurationError',
            'start',
            'start_wsgi',
@@ -42,6 +43,7 @@ __all__ = ['ConfigurationError',
 cherrypy.lowercase_api = True
 
 class ConfigurationError(Exception):
+    """Exception raised when no configuration is found."""
     pass
 
 def _load_config(configfile=None):
@@ -79,10 +81,20 @@ def _load_config(configfile=None):
     turbogears.update_config(configfile=configfile, modulename="hvz.config")
 
 def start(args=None):
-    """Start the CherryPy application server."""
+    """
+    Start the CherryPy application server.
+    
+    :Parameters:
+        args : list of str (or str)
+            Command-line arguments.  If a string is given, it is used as the
+            sole parameter.  If no arguments are specified, the command line is
+            used.
+    """
     # Read arguments
     if args is None:
         args = sys.argv[1:]
+    elif isinstance(args, basestring):
+        args = [args]
     if len(args) > 0:
         _load_config(args[0])
     else:
@@ -92,10 +104,22 @@ def start(args=None):
     turbogears.start_server(Root())
 
 def start_wsgi(args=None):
-    """Start the CherryPy application server as an WSGI application."""
+    """
+    Start the CherryPy application server as an WSGI application.
+    
+    Generally, this is only used for WSGI server scripts.
+    
+    :Parameters:
+        args : list of str (or str)
+            Command-line arguments.  If a string is given, it is used as the
+            sole parameter.  If no arguments are specified, the command line is
+            used.
+    """
     # Read arguments
     if args is None:
         args = sys.argv[1:]
+    elif isinstance(args, basestring):
+        args = [args]
     if len(args) > 0:
         _load_config(args[0])
     else:
@@ -108,10 +132,20 @@ def start_wsgi(args=None):
     cherrypy.server.start(init_only=True, server_class=None)
 
 def create_permissions(args=None):
-    """Creates default groups and permissions"""
+    """
+    Creates default groups and permissions.
+    
+    :Parameters:
+        args : list of str (or str)
+            Command-line arguments.  If a string is given, it is used as the
+            sole parameter.  If no arguments are specified, the command line is
+            used.
+    """
     # Read arguments
     if args is None:
         args = sys.argv[1:]
+    elif isinstance(args, basestring):
+        args = [args]
     if len(args) > 0:
         _load_config(args[0])
     else:
@@ -150,10 +184,20 @@ def create_permissions(args=None):
     session.flush()
 
 def create_admin(args=None):
-    """Creates the administrator account"""
+    """
+    Creates the administrator account.
+    
+    :Parameters:
+        args : list of str (or str)
+            Command-line arguments.  If a string is given, it is used as the
+            sole parameter.  If no arguments are specified, the command line is
+            used.
+    """
     # Read arguments
     if args is None:
         args = sys.argv[1:]
+    elif isinstance(args, basestring):
+        args = [args]
     if len(args) > 0:
         _load_config(args[0])
     else:

@@ -20,7 +20,7 @@
 #
 
 """
-A JSON-based API(view) for your app.
+A JSON-based API.
 
 Most rules would look like::
 
@@ -34,6 +34,7 @@ strings.
 
 __author__ = 'Ross Light'
 __date__ = 'March 30, 2008'
+__docformat__ = 'reStructuredText'
 __all__ = []
 
 from turbojson.jsonify import jsonify

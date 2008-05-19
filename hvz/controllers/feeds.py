@@ -19,10 +19,13 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+"""News feed generator"""
+
 from uuid import UUID, uuid4
 
 __author__ = 'Ross Light'
 __date__ = 'May 13, 2008'
+__docformat__ = 'reStructuredText'
 __all__ = ['Feed',
            'FeedItem',]
 
@@ -30,6 +33,9 @@ class Feed(object):
     """
     A syndicated news feed.
     
+    :CVariables:
+        formats : dict
+            The supported formats
     :IVariables:
         title : unicode
             Name of the feed
@@ -70,12 +76,33 @@ class Feed(object):
         self.items = []
     
     def add_item(self, *args, **kw):
+        """
+        Adds an item to the feed.
+        
+        If only one argument is given, it is used as the item to add.
+        Otherwise, all arguments are passed on to `FeedItem.__init__`.
+        
+        :Returns: The newly added item
+        :ReturnType: `FeedItem`
+        """
         if len(args) == 1 and isinstance(args[0], FeedItem):
-            self.items.append(args[0])
+            item = args[0]
         else:
-            self.items.append(FeedItem(*args, **kw))
+            item = FeedItem(*args, **kw)
+        self.items.append(item)
+        return item
     
     def render(self, format='atom'):
+        """
+        Render the feed.
+        
+        :Parameters:
+            format : str
+                The format of the feed.  Must be one of those in `formats`.
+        :Raises ValueError: If feed format is invalid
+        :Returns: The rendered feed date
+        :ReturnType: str
+        """
         import cherrypy
         from turbogears.view import render
         from hvz.model.dates import now

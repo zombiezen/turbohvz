@@ -34,6 +34,7 @@ from turbomail.message import Message
 
 __author__ = 'Ross Light'
 __date__ = 'April 16, 2008'
+__docformat__ = 'reStructuredText'
 __all__ = ['GenshiMessage',
            'sendmail',
            'send_generic_mail',
@@ -107,7 +108,6 @@ class GenshiMessage(Message):
                 # Only allow one blank line between text chunks
                 lines.append(line)
         return '\r\n'.join(lines)
-        '\r\n'.join(line.strip() for line in text.splitlines())
 
 def sendmail(recipient, subject, template, variables={}, **kw):
     """
@@ -154,8 +154,10 @@ def send_sms(numbers, subject, template, variables={}):
             pair where number is a ten-digit US phone number.
         subject : unicode
             Subject to send with
-        message : unicode
-            Text to send
+        template : unicode
+            Template to use
+        variables : dict
+            Variables to pass to template
     :Returns: The newly created message
     :ReturnType: turbomail.message.Message
     """

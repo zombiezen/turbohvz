@@ -144,7 +144,7 @@ class Group(object):
             The time at which the group was created
         users : list of `User`
             The members of the group
-        permissions : list of `Permissions`
+        permissions : frozenset of `Permission`
             The actions the group can perform
     """
     
@@ -246,7 +246,7 @@ class Group(object):
         Removes a user from the group.
         
         :Parameters:
-            permission : `User` or unicode
+            user : `User` or unicode
                 The user to remove.  If a unicode object is given, then the
                 user with the given internal name is fetched and removed.
         :Raises TypeError: If the parameter is not a user
@@ -290,7 +290,9 @@ class User(object):
         profile : unicode
             A user-provided text profile
         entries : list of `game.PlayerEntry`
-            All the game entries that the user has joined
+            All of the game entries that the user has joined
+        alliances : list of `social.Alliance`
+            All of the alliances the user is a part of
         groups : list of `Group`
             All groups that the user is a member of
         permissions : set of `Permission`
@@ -302,6 +304,10 @@ class User(object):
             The user's cell phone number
         cell_provider : str
             The user's cell phone provider
+        image_uuid : uuid.UUID
+            The UUID of the profile image.  Usually, you should use `image`.
+        image : `model.images.Image`
+            The user's profile image
     :See: game.PlayerEntry
     """
     

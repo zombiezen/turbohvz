@@ -36,6 +36,21 @@ __all__ = ['Chart',
            'GoogleOMeter',]
 
 class Chart(object):
+    """
+    Abstract base class for charts.
+    
+    Each chart can have several data sets, the meaning of which depends on the
+    chart type.  Most charts only have one data set.
+    
+    :CVariables:
+        chart_type : str
+            The Google Chart API chart type
+    :IVariables:
+        data : list of list of numbers
+            The data set(s) for the chart
+        colors : list of hex strings
+            The colors of the chart components
+    """
     chart_type = None
     
     def __init__(self, data, colors=None):
@@ -48,7 +63,18 @@ class Chart(object):
         self.colors = colors
     
     def build_link(self, size, transparent=True):
-        """Builds the link to the chart"""
+        """
+        Builds the link to the chart.
+        
+        :Parameters:
+            size : tuple of int
+                The size of the chart image (in pixels)
+        :Keywords:
+            transparent : bool
+                Whether the background should be transparent
+        :Returns: The link to the chart
+        :ReturnType: str
+        """
         params = self._get_params()
         params['chs'] = '%ix%i' % (size[0], size[1])
         params['cht'] = self._get_type()
@@ -62,10 +88,26 @@ class Chart(object):
         return "http://chart.apis.google.com/chart?" + urlencode(params)
     
     def _get_params(self):
-        """Returns type-specific params"""
+        """
+        Returns type-specific parameters.
+        
+        This method exists solely for subclasses to override.
+        
+        :Returns: Additional parameters to give to the link
+        :ReturnType: dict
+        """
         return dict()
     
     def _get_type(self):
+        """
+        Returns chart type.
+        
+        This method exists solely for subclasses to override.  Default
+        implementation returns `chart_type`.
+        
+        :Returns: Chart type
+        :ReturnType: str
+        """
         return self.chart_type
     
     def __build_data(self):
@@ -144,6 +186,17 @@ class Chart(object):
         return ('e:' + ','.join(encoded_sets), None)
 
 class PieChart(Chart):
+    """
+    A circular chart representing portions of a general whole.
+    
+    :IVariables:
+        title : str
+            The title to show above the chart
+        labels : list of str
+            Labels for the different regions
+        pie3D : bool
+            Whether the chart should appear three-dimensional
+    """
     chart_type = 'p'
     def __init__(self, *args, **kw):
         self.title = kw.pop('title', None)
@@ -166,4 +219,7 @@ class PieChart(Chart):
             return self.chart_type
 
 class GoogleOMeter(Chart):
+    """
+    A gauge that goes from left to right as the value increases from 0 to 100.
+    """
     chart_type = 'gom'

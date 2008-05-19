@@ -19,12 +19,17 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+"""Classes to handle client-data interactions"""
+
 __author__ = 'Ross Light'
 __date__ = 'April 18, 2008'
+__docformat__ = 'reStructuredText'
 __all__ = ['base',
+           'feeds',
            'game',
            'user',]
 
 from hvz.controllers import (base,
+                             feeds,
                              game,
                              user,)

@@ -58,7 +58,6 @@ __all__ = ['abslink',
            'register_link',
            'securelink',
            'secureurl',
-           'str2bool',
            'to_uuid',
            'user_link',
            'add_template_variables',]
@@ -66,6 +65,20 @@ __all__ = ['abslink',
 _nl_pattern = re.compile(r'((?:\r\n)|[\r\n])')
 
 def _make_app_link(base, params):
+    """
+    Creates an application link.
+    
+    If the key ``redirect`` is present in params, then the URI is returned as a
+    relative-to-application link that can be passed into tg.url.
+    
+    :Parameters:
+        base : str
+            The format for the URI
+        params : dict
+            Additional parameters to append to the query
+    :Returns: An application link
+    :ReturnType: dict
+    """
     redirect = params.pop('redirect', False)
     # The redirect parameter allows you to use the return value in a
     # redirect function call
@@ -79,14 +92,40 @@ def _make_app_link(base, params):
         return turbogears.url(base, params)
 
 def abslink(path):
-    """Create an absolute URL from a pre-constructed path."""
+    """
+    Create an absolute URL from a pre-constructed path.
+    
+    :Parameters:
+        path : str
+            The path to convert
+    :Returns: The canonical URI
+    :ReturnType: str
+    """
     return cherrypy.request.base + path
 
 def absurl(*args, **kw):
-    """Create an absolute URL with the same signature as tg.url."""
+    """
+    Create an absolute URL with the same signature as ``turbogears.url``.
+    
+    :Returns: The canonical URI
+    :ReturnType: str
+    """
     return abslink(turbogears.url(*args, **kw))
 
 def alliance_link(alliance, action='view', **params):
+    """
+    Create a link to an alliance.
+    
+    Any additional keyword parameters are sent as GET parameters.
+    
+    :Parameters:
+        alliance : `hvz.model.social.Alliance`
+            The alliance to link to
+        action : str
+            The action to use
+    :Returns: The link to the object
+    :ReturnType: str
+    """
     base = '/user/alliance/%s/%s' % (quote(action, ''),
                                      quote(str(alliance.alliance_id), ''))
     return _make_app_link(base, params)
@@ -109,6 +148,17 @@ def bbcode(code):
     return render_bbcode(unicode(code))
 
 def change_params(url=None, d=None, **kw):
+    """
+    Change the parameters of a URL.
+    
+    :Parameters:
+        url : str
+            The URL to change.  If no URL is given, the current one is used.
+        d : dict
+            Parameters to change.
+    :Returns: The modified URL
+    :ReturnType: str
+    """
     if url is None:
         newValues = cherrypy.request.params.copy()
     else:
@@ -128,7 +178,12 @@ def change_params(url=None, d=None, **kw):
         return urlunparse(parse_result)
 
 def change_password_link():
-    """Returns the proper URL to the change password page."""
+    """
+    Determines the proper URL to the change password page.
+    
+    :Returns: The URI for the page
+    :ReturnType: str
+    """
     if turbogears.config.get('hvz.secure_login', False):
         # Secure login
         return secureurl('/user/changepassword')
@@ -137,12 +192,37 @@ def change_password_link():
         return turbogears.url('/user/changepassword')
 
 def display(widget, *args, **kw):
-    """Display a widget in Genshi"""
+    """
+    Display a widget in Genshi.
+    
+    Since TurboGears uses Kid, any ``widget.display(...)`` calls don't do "the
+    right thing" for Genshi.  So instead, we call ``tg.display(widget, ...)``
+    and that does "the right thing".
+    
+    :Parameters:
+        widget : ``turbogears.widgets.Widget``
+            A widget to render
+    :Returns: Immediately usable Genshi markup
+    :ReturnType: ``genshi.core.Stream``
+    """
     data = widget.render(format='html', *args, **kw)
     return genshi.HTML(turbogears.util.to_unicode(data))
 
 def display_date(date, utc=False):
-    """Format dates uniformly"""
+    """
+    Format dates uniformly.
+    
+    Despite the name, this works on all datetime module objects.
+    
+    :Parameters:
+        date
+            A date-like object to format
+    :Keywords:
+        utc : bool
+            Whether the date should be in canonical UTC format
+    :Returns: A human-readable version of the date
+    :ReturnType: unicode
+    """
     if isinstance(date, datetime.datetime):
         from model.dates import to_local, to_utc
         if utc:
@@ -199,7 +279,15 @@ def display_file_size(size):
         return _("%g PiB") % (size / (base ** 5))
 
 def display_weekday(day):
-    """Turn an ISO weekday to a name"""
+    """
+    Turn an ISO weekday to a name.
+    
+    :Parameters:
+        day : int
+            An ISO weekday
+    :Returns: The localized name of that day
+    :ReturnType: unicode
+    """
     lookup = {1: _("Monday"),
               2: _("Tuesday"),
               3: _("Wednesday"),
@@ -210,6 +298,19 @@ def display_weekday(day):
     return lookup[day]
 
 def game_link(game, action='view', **params):
+    """
+    Create a link to a game.
+    
+    Any additional keyword parameters are sent as GET parameters.
+    
+    :Parameters:
+        game : `hvz.model.game.Game` or int
+            The game to link to
+        action : str
+            The action to use
+    :Returns: The link to the object
+    :ReturnType: str
+    """
     if isinstance(game, (int, long)):
         pass
     else:
@@ -218,6 +319,17 @@ def game_link(game, action='view', **params):
     return _make_app_link(base, params)
 
 def image_link(image, **params):
+    """
+    Create a link to an image.
+    
+    Any additional keyword parameters are sent as GET parameters.
+    
+    :Parameters:
+        image : `hvz.model.images.Image` or UUID
+            The image to link to
+    :Returns: The link to the object
+    :ReturnType: str
+    """
     from hvz.model.images import Image
     if isinstance(image, Image):
         image_uuid = image.uuid
@@ -227,18 +339,36 @@ def image_link(image, **params):
     return _make_app_link(base, params)
 
 def insecurelink(path):
-    """Create an insecure URL from a pre-constructed path."""
+    """
+    Create an insecure URL from a pre-constructed path.
+    
+    :Parameters:
+        path : str
+            The path to convert
+    :Returns: The insecure, absolute URI
+    :ReturnType: str
+    """
     baseURL = cherrypy.request.base
     # Replace URL's protocol with http
     baseURL = 'http' + baseURL[baseURL.index(':'):]
     return baseURL + path
 
 def insecureurl(*args, **kw):
-    """Create an insecure URL with the same signature as tg.url."""
+    """
+    Create an insecure URL with the same signature as ``turbogears.url``.
+    
+    :Returns: The insecure, absolute URI
+    :ReturnType: str
+    """
     return insecurelink(turbogears.url(*args, **kw))
 
 def login_link():
-    """Returns the proper URL to the login page."""
+    """
+    Returns the proper URL to the login page.
+    
+    :Returns: The URI for the page
+    :ReturnType: str
+    """
     if turbogears.config.get('hvz.secure_login', False):
         # Secure login
         return secureurl('/login')
@@ -285,7 +415,12 @@ def pluralize(value, singular, plural):
         return plural
 
 def register_link():
-    """Returns the proper URL to the register page."""
+    """
+    Returns the proper URL to the register page.
+    
+    :Returns: The URI for the page
+    :ReturnType: str
+    """
     if turbogears.config.get('hvz.secure_login', False):
         # Secure login
         return secureurl('/user/register')
@@ -294,34 +429,40 @@ def register_link():
         return turbogears.url('/user/register')
 
 def securelink(path):
-    """Create a secure URL from a pre-constructed path."""
+    """
+    Create a secure URL from a pre-constructed path.
+    
+    :Parameters:
+        path : str
+            The path to convert
+    :Returns: The secure, absolute URI
+    :ReturnType: str
+    """
     baseURL = cherrypy.request.base
     # Replace URL's protocol with https
     baseURL = 'https' + baseURL[baseURL.index(':'):]
     return baseURL + path
 
 def secureurl(*args, **kw):
-    """Create a secure URL with the same signature as tg.url."""
+    """
+    Create a secure URL with the same signature as ``turbogears.url``.
+    
+    :Returns: The secure, absolute URI
+    :ReturnType: str
+    """
     return securelink(turbogears.url(*args, **kw))
 
-def str2bool(s, *args):
-    if len(args) > 1:
-        raise TypeError("str2bool takes 2 arguments at the most")
-    s = s.strip().lower()
-    if s == 'true':
-        return True
-    elif s == 'false':
-        return False
-    else:
-        try:
-            return bool(int(s, 10))
-        except ValueError:
-            if len(args) >= 1:
-                return args[0]
-            else:
-                raise ValueError("Invalid bool: %r" % s)
-
 def to_uuid(value):
+    """
+    Converts an object to a UUID.
+    
+    :Parameters:
+        value
+            A value to convert to a UUID
+    :Raises TypeError: If the value could not be converted
+    :Returns: The UUID equivalent of the value
+    :ReturnType: uuid.UUID
+    """
     if isinstance(value, UUID) or value is None:
         return value
     elif isinstance(value, basestring):
@@ -331,11 +472,26 @@ def to_uuid(value):
             return UUID(value)
     elif isinstance(value, (int, long)):
         return UUID(int=value)
+    elif isinstance(value, (list, tuple)):
+        return UUID(fields=value)
     else:
         raise TypeError("Unrecognized type for UUID, got '%s'" %
                         (type(value).__name__))
 
 def user_link(user, action='view', **params):
+    """
+    Create a link to a user.
+    
+    Any additional keyword parameters are sent as GET parameters.
+    
+    :Parameters:
+        user : `hvz.model.identity.User`
+            The user to link to
+        action : str
+            The action to use
+    :Returns: The link to the object
+    :ReturnType: str
+    """
     from hvz.model.identity import User
     if isinstance(user, User):
         base = '/user/%s/%s' % (quote(action, ''), quote(user.user_name, ''))
@@ -349,7 +505,16 @@ def user_link(user, action='view', **params):
     base = '/user/%s/%s' % (quote(action, ''), quote(str(user), ''))
     return _make_app_link(base, params)
 
-def add_template_variables(vars):
+def add_template_variables(template_vars):
+    """
+    Adds functions to the template ``tg`` namespace.
+    
+    :Parameters:
+        template_vars : dict
+            The variable namespace to update
+    :Returns: The updated namespace
+    :ReturnType: dict
+    """
     hvzNamespace = DictObj(alliance_link=alliance_link,
                            change_password_link=change_password_link,
                            game_link=game_link,
@@ -373,6 +538,6 @@ def add_template_variables(vars):
                   pluralize=pluralize,
                   securelink=securelink,
                   secureurl=secureurl,)
-    return vars.update(lookup)
+    return template_vars.update(lookup)
 
 turbogears.view.variable_providers.append(add_template_variables)

@@ -19,6 +19,8 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+"""Game handling"""
+
 from __future__ import division
 import random
 
@@ -35,6 +37,7 @@ from hvz.model.game import PlayerEntry, Game
 
 __author__ = 'Ross Light'
 __date__ = 'March 30, 2008'
+__docformat__ = 'reStructuredText'
 __all__ = ['GameController']
 
 def _get_seconds(delta):

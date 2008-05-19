@@ -19,6 +19,8 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+"""Gameplay-specific data objects"""
+
 from datetime import timedelta
 import random
 import string
@@ -102,7 +104,11 @@ class PlayerEntry(object):
             The constant for a human who has been tagged state
         STATE_NAMES : dict of {int: unicode}
             State-to-human-readable-name lookup table
+        STATE_INTERNAL_NAMES : dict of {int: unicode}
+            State-to-administrator-readable-name lookup table
     :IVariables:
+        entry_id : int
+            The entry's database identifier
         player : `identity.User`
             The player this is associated with
         game : `Game`
@@ -110,8 +116,7 @@ class PlayerEntry(object):
         player_gid : str
             In-game player identifier (Player Game Identifier)
         state : int
-            -1 is zombie, -2 is original zombie, 0 is dead, 1 is human (-3 and
-            2 are mysteries)
+            The player's current state (see the ``STATE_*`` constants)
         death_date : datetime.datetime
             When the player died (tagged by zombie)
         feed_date : datetime.datetime
@@ -128,6 +133,22 @@ class PlayerEntry(object):
         notify_sms : bool
             Whether the user wants to be notified by text message when the game
             is updated
+        affiliation : unicode
+            A human-readable name for the player's state
+        is_undead : bool
+            Whether the player is a zombie
+        is_human : bool
+            Whether the player is human
+        is_dead : bool
+            Whether the player has starved
+        is_original_zombie : bool
+            Whether the player is the original zombie
+        is_infected : bool
+            Whether the player is currently infected
+        survival_time : datetime.timedelta
+            The amount of time the player has survived for this game
+        undead_time : datetime.timedelta
+            The amount of time the player has been a zombie for this game
     :See: identity.User
     """
     STATE_ORIGINAL_ZOMBIE = -2
@@ -444,7 +465,13 @@ class PlayerEntry(object):
         session.delete(self)
     
     def force_to_human(self, time=None):
-        """Force the player to become human."""
+        """
+        Force the player to become human.
+        
+        :Parameters:
+            time : datetime.datetime
+                The time at which they are being forced.  Defaults to now.
+        """
         if time is None:
             time = now()
         else:
@@ -452,7 +479,13 @@ class PlayerEntry(object):
         self.reset()
     
     def force_to_infected(self, time=None):
-        """Force the player to become infected."""
+        """
+        Force the player to become infected.
+        
+        :Parameters:
+            time : datetime.datetime
+                The time at which they are being forced.  Defaults to now.
+        """
         if time is None:
             time = now()
         else:
@@ -466,7 +499,13 @@ class PlayerEntry(object):
         self.state = self.STATE_INFECTED
     
     def force_to_zombie(self, time=None):
-        """Force the player to become undead."""
+        """
+        Force the player to become undead.
+        
+        :Parameters:
+            time : datetime.datetime
+                The time at which they are being forced.  Defaults to now.
+        """
         if time is None:
             time = now()
         else:
@@ -489,7 +528,13 @@ class PlayerEntry(object):
             raise AssertionError("Unknown state when forced to zombie")
     
     def force_to_dead(self, time=None):
-        """Force the player to become dead."""
+        """
+        Force the player to become dead.
+        
+        :Parameters:
+            time : datetime.datetime
+                The time at which they are being forced.  Defaults to now.
+        """
         if time is None:
             time = now()
         else:
@@ -590,6 +635,10 @@ class Game(object):
         DEFAULT_SAFE_ZONES : list of unicode
             The default safe zones
     :IVariables:
+        game_id : int
+            The database identifier for the game
+        display_name : unicode
+            The human-readable name for the game
         created : datetime.datetime
             The time at which the game was created
         started : datetime.datetime

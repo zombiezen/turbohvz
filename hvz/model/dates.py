@@ -19,6 +19,8 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+"""Date manipulation functions"""
+
 from datetime import datetime, timedelta
 
 import pkg_resources
@@ -183,6 +185,16 @@ def _set_date_prop(name, default_tz=pytz.utc):
     return set_prop
 
 def date_prop(name, default_tz=pytz.utc):
+    """
+    Makes a timezone-aware property for a date.
+    
+    :Parameters:
+        name : str
+            The internal attribute name
+        default_tz : datetime.tzinfo
+            The timezone to assume for naive dates
+    :Returns: A property object
+    """
     return property(_get_date_prop(name),
                     _set_date_prop(name, default_tz=default_tz))
 

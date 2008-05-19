@@ -60,6 +60,13 @@ pil_mime_types = {'BMP':  'image/x-ms-bmp',
                   'XPM':  'image/x-xpm',}
 
 class Image(object):
+    """
+    A user-submitted image.
+    
+    :IVariables:
+        uuid : uuid.UUID
+            The image's identifier
+    """
     @staticmethod
     def _get_image_dir():
         dirname = config.get('hvz.image_dir',
@@ -74,15 +81,33 @@ class Image(object):
     
     @staticmethod
     def get_max_file_size():
+        """
+        Finds the maximum image file size.
+        
+        :Returns: The maximum file size (in bytes)
+        :ReturnType: int
+        """
         # Defaults to 1MiB
         return config.get('hvz.image_max_file_size', 1024 * 1024)
     
     @staticmethod
     def get_max_image_size():
+        """
+        Finds the maximum image size.
+        
+        :Returns: The maximum image size (in pixels)
+        :ReturnType: tuple of int
+        """
         return config.get('hvz.image_max_image_size', (512, 512))
     
     @staticmethod
     def get_allowed_formats():
+        """
+        Finds the allowed file formats.
+        
+        :Returns: The allowed formats
+        :ReturnType: frozenset of str
+        """
         return frozenset(config.get('hvz.allowed_image_formats',
                                     ['JPEG', 'GIF', 'PNG']))
     
@@ -101,6 +126,15 @@ class Image(object):
     
     @classmethod
     def by_uuid(cls, uuid):
+        """
+        Retrieves an image by its identifier.
+        
+        :Parameters:
+            uuid : uuid.UUID
+                The identifier to query
+        :Returns: The image requested, or ``None`` if not found
+        :ReturnType: Image
+        """
         path = cls._get_image_path(uuid)
         if os.path.exists(path):
             return Image(uuid)
@@ -113,6 +147,18 @@ class Image(object):
         self.uuid = hvz.util.to_uuid(uuid)
     
     def get_mime_type(self):
+        """
+        Determines the MIME type of the file.
+        
+        This is a relatively expensive operation because it requires that
+        PIL must open up the file and try to read it.
+        
+        :Raises IOError: If the image does not exist
+        :Raises errors.InvalidImageTypeError:
+            If the image is in an unrecognized format
+        :Returns: The MIME type of the file
+        :ReturnType: str
+        """
         path = self.path
         if not os.path.exists(path):
             raise IOError("Image does not exist")
@@ -124,6 +170,15 @@ class Image(object):
             return pil_mime_types.get(img.format, 'application/octet-stream')
     
     def write(self, data):
+        """
+        Writes data to the image file.
+        
+        :Parameters:
+            data : str or file-like object
+                The data to write (strings are converted to StringIO files)
+        :Raises errors.ImageTooLargeError: If the image is too large
+        :Raises errors.InvalidImageTypeError: If the data is not a valid format
+        """
         from shutil import copyfileobj
         # Convert to StringIO if data is string
         if isinstance(data, basestring):
@@ -132,8 +187,8 @@ class Image(object):
         max_size = self.get_max_file_size()
         img_buffer = data.read(max_size + 1)
         if len(img_buffer) > max_size:
-            raise InvalidImageTypeError("Image is greater than %i bytes" %
-                                        max_size)
+            raise ImageTooLargeError("Image is greater than %i bytes" %
+                                     max_size)
         data.seek(0)
         # Check for acceptable types
         try:
@@ -148,8 +203,8 @@ class Image(object):
         max_width, max_height = self.get_max_image_size()
         img_width, img_height = img.size
         if img_width > max_width or img_height > max_height:
-            raise InvalidImageTypeError("Image is larger than %ix%i" %
-                                        (max_width, max_height))
+            raise ImageTooLargeError("Image is larger than %ix%i" %
+                                     (max_width, max_height))
         # Clean up PIL image
         del img
         data.seek(0)
@@ -160,6 +215,11 @@ class Image(object):
         f.close()
     
     def delete(self):
+        """
+        Deletes the image from disk.
+        
+        :Raises errors.ImageNotFoundError: If the image is not found
+        """
         path = self._get_image_path(self.uuid)
         if os.path.exists(path):
             os.remove(path)

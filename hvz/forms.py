@@ -30,8 +30,9 @@ from turbogears.widgets import WidgetsList
 from hvz import model, widgets as hvz_widgets
 from hvz.model.game import Game
 
-__author__ = "Ross Light"
-__date__ = "April 8, 2008"
+__author__ = 'Ross Light'
+__date__ = 'April 8, 2008'
+__docformat__ = 'reStructuredText'
 __all__ = ['UserNameValidator',
            'ZoneListConverter',
            'DateListValidator',

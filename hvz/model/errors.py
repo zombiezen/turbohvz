@@ -19,6 +19,8 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+"""Model errors and exceptions"""
+
 __author__ = 'Ross Light'
 __date__ = 'April 18, 2008'
 __docformat__ = 'reStructuredText'
@@ -27,6 +29,7 @@ __all__ = ['ModelError',
            'InvalidTimeError',
            'PlayerNotFoundError',
            'ImageError',
+           'ImageTooLargeError',
            'InvalidImageTypeError',
            'ImageNotFoundError',]
 
@@ -116,6 +119,9 @@ class PlayerNotFoundError(ModelError):
 
 class ImageError(Exception):
     """Base exception for all image-related errors."""
+
+class ImageTooLargeError(ImageError):
+    """Raised when an image is too large for the server."""
 
 class InvalidImageTypeError(ImageError):
     """Raised when the image's type is not allowed or not known."""

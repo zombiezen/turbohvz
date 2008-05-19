@@ -19,6 +19,8 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+"""User and alliance handling"""
+
 from __future__ import division
 
 import cherrypy
@@ -35,6 +37,7 @@ from hvz.model.social import Alliance
 
 __author__ = 'Ross Light'
 __date__ = 'April 18, 2008'
+__docformat__ = 'reStructuredText'
 __all__ = ['UserController',
            'AllianceController',]
 
