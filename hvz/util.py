@@ -492,11 +492,7 @@ def user_link(user, action='view', **params):
     :Returns: The link to the object
     :ReturnType: str
     """
-    from hvz.model.identity import User
-    if isinstance(user, User):
-        base = '/user/%s/%s' % (quote(action, ''), quote(user.user_name, ''))
-        return _make_app_link(base, params)
-    elif isinstance(user, (int, long)):
+    if isinstance(user, (int, long)):
         pass
     elif hasattr(user, 'player_id'):
         user = user.player_id
