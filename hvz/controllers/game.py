@@ -53,6 +53,13 @@ def build_feed(game):
                 _("Updates on the game"),
                 feed_id="urn:hvz-game:%i" % (game.game_id),
                 link=absurl(game_link(game)))
+    # End game
+    # We're doing this up here so starving comes before the end-of-game item
+    if game.ended:
+        feed.add_item(_("Game Ended"), _("The game ended."),
+                      item_id="urn:hvz-game:%i-end" % (game.game_id),
+                      link=absurl(game_link(game)),
+                      date=game.ended,)
     # Player deaths
     zombies = [entry for entry in game.entries
                if entry.death_date and oz_safe(entry)]
@@ -81,12 +88,6 @@ def build_feed(game):
                       item_id="urn:hvz-game:%i-start" % (game.game_id),
                       link=absurl(game_link(game)),
                       date=game.started,)
-    # End game
-    if game.ended:
-        feed.add_item(_("Game Ended"), _("The game ended."),
-                      item_id="urn:hvz-game:%i-end" % (game.game_id),
-                      link=absurl(game_link(game)),
-                      date=game.ended,)
     # Return resulting feed
     return feed
 
