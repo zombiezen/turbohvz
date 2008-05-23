@@ -56,22 +56,26 @@ def build_feed(game):
     # End game
     # We're doing this up here so starving comes before the end-of-game item
     if game.ended:
-        feed.add_item(_("Game Ended"), _("The game ended."),
+        if game.winner == 'human':
+            description = _("After a tremendous struggle, the humans have "
+                            "managed to outlive the undead threat.")
+        elif game.winner == 'zombie':
+            description = _("All of the human resistance has succumbed to "
+                            "the undead.  All hope for humanity is lost.")
+        feed.add_item(_("Game Ended"), description,
                       item_id="urn:hvz-game:%i-end" % (game.game_id),
                       link=absurl(game_link(game)),
                       date=game.ended,)
-    # Player deaths
-    zombies = [entry for entry in game.entries
-               if entry.death_date and oz_safe(entry)]
-    for zombie in zombies:
-        item_id = "urn:hvz-player:%i-death" % (zombie.entry_id)
-        feed.add_item(_("%s was Infected") % (zombie.player),
-                      _("%s was infected with the zombie plague on %s") %
-                          (zombie.player, display_date(zombie.death_date)),
+    # Reveal OZ
+    if game.revealed_original_zombie and game.reveal_oz_date:
+        item_id = "urn:hvz-player:%i-oz" % (game.original_zombie.entry_id)
+        description = _("The original zombie has been identified as %s.") % \
+            (game.original_zombie)
+        feed.add_item(_("Original Zombie Identified"), description,
                       item_id=item_id,
-                      date=zombie.death_date,)
+                      date=game.reveal_oz_date,)
     # Player starvations
-    corpses = [entry for entry in game.entries if entry.is_dead
+    corpses = [entry for entry in game.entries
                if entry.starve_date and oz_safe(entry)]
     for corpse in corpses:
         item_id = "urn:hvz-player:%i-starve" % (corpse.entry_id)
@@ -80,11 +84,35 @@ def build_feed(game):
         feed.add_item(_("%s Starved") % (corpse.player), summary,
                       item_id=item_id,
                       date=corpse.starve_date,)
+    # Player deaths
+    zombies = [entry for entry in game.entries
+               if entry.death_date and oz_safe(entry)]
+    for zombie in zombies:
+        item_id = "urn:hvz-player:%i-death" % (zombie.entry_id)
+        if zombie.killed_by is not None and \
+           oz_safe(PlayerEntry.by_player(game, zombie.killed_by)):
+            description = _("%s was infected by %s with the zombie plague "
+                            "on %s") % \
+                (zombie.player, zombie.killed_by,
+                 display_date(zombie.death_date))
+        else:
+            description = _("%s was infected with the zombie plague on %s") % \
+                (zombie.player, display_date(zombie.death_date))
+        feed.add_item(_("%s was Infected") % (zombie.player), description,
+                      item_id=item_id,
+                      date=zombie.death_date,)
     # Start game
     # We're doing this down here so that Original Zombie infection comes after
     # the start-of-game item
     if game.started:
-        feed.add_item(_("Game Started"), _("The zombie-fest has begun!"),
+        description = _("News stories have indicated that there has been a "
+                        "tragic accident at a nearby laboratory experimenting "
+                        "with longevity.  All of the scientists have been "
+                        "killed and their corpses appear to have been "
+                        "mutilated, as though eaten alive. One eyewitness "
+                        "claims that an outsider has been bitten, but no "
+                        "identification has been given.")
+        feed.add_item(_("Game Started"), description,
                       item_id="urn:hvz-game:%i-start" % (game.game_id),
                       link=absurl(game_link(game)),
                       date=game.started,)

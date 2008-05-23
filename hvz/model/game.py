@@ -36,7 +36,7 @@ from turbogears.database import mapper, metadata, session
 from hvz.model import identity
 from hvz.model.dates import (now, date_prop, make_aware,
                              calc_timedelta, calc_addtimedelta)
-from hvz.model.errors import WrongStateError, InvalidTimeError
+from hvz.model.errors import ModelError, WrongStateError, InvalidTimeError
 
 __author__ = 'Ross Light'
 __date__ = 'April 18, 2008'
@@ -81,6 +81,7 @@ games_table = Table('game', metadata,
     Column('gid_length', Integer),
     Column('safe_zones', Unicode(2048)),
     Column('rules_notes', Unicode(4096)),
+    Column('reveal_oz_date', DateTime),
 )
 
 ## CLASSES ##
@@ -693,6 +694,12 @@ class Game(object):
             Safe zones
         rules_notes : unicode
             Extra notes for the rules
+        reveal_oz_date : datetime.datetime
+            The date and time at which the original zombie was revealed
+        winner : str
+            [Read-only] Who won the game.  ``None`` if the game is not
+            finished, ``'human'`` if humans outlived the zombies, and
+            ``'zombie'`` if the zombies won.
     """
     STATE_CREATED = 0
     STATE_OPEN = 1
@@ -736,6 +743,7 @@ class Game(object):
         self.gid_length = self.DEFAULT_GID_LENGTH
         self.safe_zones = self.DEFAULT_SAFE_ZONES
         self.rules_notes = None
+        self.reveal_oz_date = None
     
     ## STRING REPRESENTATION ##
     
@@ -927,6 +935,8 @@ class Game(object):
         elif prev_state == self.STATE_CHOOSE_ZOMBIE:
             for entry in self.entries:
                 entry.reset()
+        elif prev_state == self.STATE_REVEAL_ZOMBIE:
+            self.reveal_oz_date = None
     
     def next_state(self, time=None):
         """
@@ -962,6 +972,8 @@ class Game(object):
             for corpse in dead:
                 if corpse.starve_date > self.ended:
                     corpse.force_to_zombie(self.ended)
+        elif self.state == self.STATE_REVEAL_ZOMBIE:
+            self.reveal_oz_date = now()
     
     def end(self, end_time=None):
         """
@@ -1043,6 +1055,23 @@ class Game(object):
     def original_zombie_pool(self):
         return [entry for entry in self.entries if entry.original_pool]
     
+    @property
+    def winner(self):
+        from sqlalchemy import or_
+        players = PlayerEntry.query.filter(PlayerEntry.game == self)
+        humans = players.filter(PlayerEntry.state == PlayerEntry.STATE_HUMAN)
+        zombies = players.filter(
+            or_(PlayerEntry.state == PlayerEntry.STATE_ZOMBIE,
+                PlayerEntry.state == PlayerEntry.STATE_ORIGINAL_ZOMBIE))
+        if self.state != self.STATE_ENDED:
+            return None
+        elif humans.count() == 0:
+            return 'zombie'
+        elif zombies.count() == 0:
+            return 'human'
+        else:
+            raise ModelError(self, "Game should not have ended")
+    
     def _get_oz(self):
         results = [entry for entry in self.entries if entry.is_original_zombie]
         if len(results) == 0:
@@ -1121,6 +1150,7 @@ class Game(object):
     ignore_dates = property(_get_ignore_dates, _set_ignore_dates)
     ignore_weekdays = property(_get_ignore_weekdays, _set_ignore_weekdays)
     safe_zones = property(_get_safe_zones, _set_safe_zones)
+    reveal_oz_date = date_prop('_reveal_oz_date')
 
 ### MAPPERS ###
 
@@ -1153,4 +1183,5 @@ mapper(Game, games_table, properties={
     'ignore_dates': synonym('_ignore_dates', map_column=True),
     'ignore_weekdays': synonym('_ignore_weekdays', map_column=True),
     'safe_zones': synonym('_safe_zones', map_column=True),
+    'reveal_oz_date': synonym('_reveal_oz_date', map_column=True),
 })
