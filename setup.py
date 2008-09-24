@@ -48,7 +48,7 @@ setup(
     install_requires=[
         "TurboGears >= 1.0.4.4",
         "Genshi >= 0.4.4",
-        "SQLAlchemy>=0.4.2",
+        "SQLAlchemy>=0.4.2,<0.5a1",
         "pytz",
         "TurboMail >= 2.1",
         "PIL >= 1.1.6",
